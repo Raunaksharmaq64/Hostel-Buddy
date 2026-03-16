@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Hostel Buddy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            padding-top: 80px; 
+        }
+
+        .sidebar {
+            width: 250px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: fixed;
+            height: calc(100vh - 80px);
+            border-right: 1px solid var(--glass-border);
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-item {
+            padding: 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: var(--surface);
+            color: var(--primary);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 2rem 5%;
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            color: var(--text-main);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Analytics Grid */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+        }
+
+        /* Lists */
+        .admin-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .list-item {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem 2rem;
+            border-radius: 16px;
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid var(--glass-border);
+            transition: var(--transition);
+        }
+        
+        .list-item:hover {
+            background: rgba(30, 41, 59, 0.7);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar glass-panel">
+        <div class="logo">HostelBuddy <span style="font-size:1rem;color:var(--text-muted)">| Admin</span></div>
+        <div class="nav-links">
+            <span style="font-weight:bold; color:var(--primary)">Super Admin</span>
+            <button class="btn btn-outline" style="padding: 0.5rem 1rem" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="nav-item active" onclick="switchTab('analytics')">📈 Analytics</div>
+            <div class="nav-item" onclick="switchTab('verifications')">✅ Verifications</div>
+            <div class="nav-item" onclick="switchTab('students')">🎓 Students</div>
+            <div class="nav-item" onclick="switchTab('owners')">👔 Owners</div>
+            <div class="nav-item" onclick="switchTab('listings')">🏨 Listings</div>
+            <div class="nav-item" onclick="switchTab('enquiries')">✉️ Enquiries</div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Analytics Tab -->
+            <div id="analytics" class="tab-content active">
+                <div class="section-header">
+                    <h2>Platform Analytics</h2>
+                    <p class="text-muted">High-level view of system performance.</p>
+                </div>
+                
+                <div class="analytics-grid" id="statsContainer">
+                    <p>Loading stats...</p>
+                </div>
+            </div>
+
+            <!-- Verifications Tab -->
+            <div id="verifications" class="tab-content">
+                <div class="section-header">
+                    <h2>Verification Requests</h2>
+                    <p class="text-muted">Review and approve owner verification requests.</p>
+                </div>
+                <div class="admin-list" id="verificationsContainer">
+                    Loading requests...
+                </div>
+            </div>
+
+            <!-- Students Tab -->
+            <div id="students" class="tab-content">
+                <div class="section-header">
+                    <h2>Student Management</h2>
+                    <p class="text-muted">Monitor and manage student accounts.</p>
+                </div>
+                <div class="admin-list" id="studentsContainer">
+                    Loading students...
+                </div>
+            </div>
+
+            <!-- Owners Tab -->
+            <div id="owners" class="tab-content">
+                <div class="section-header">
+                    <h2>Owner Management</h2>
+                    <p class="text-muted">Monitor and manage hostel owner accounts.</p>
+                </div>
+                <div class="admin-list" id="ownersContainer">
+                    Loading owners...
+                </div>
+            </div>
+
+            <!-- Listings Tab -->
+            <div id="listings" class="tab-content">
+                <div class="section-header">
+                    <h2>Hostel Listings</h2>
+                    <p class="text-muted">Review and manage properties on the platform.</p>
+                </div>
+                <div class="admin-list" id="hostelsContainer">
+                    Loading hostels...
+                </div>
+            </div>
+
+            <!-- Enquiries Tab -->
+            <div id="enquiries" class="tab-content">
+                <div class="section-header">
+                    <h2>Student Enquiries</h2>
+                    <p class="text-muted">Track and respond to student enquiries directly.</p>
+                </div>
+                <div class="admin-list" id="enquiriesContainer">
+                    Loading enquiries...
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Hostel Buddy | Premium Accommodation Discovery</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- GSAP for advanced animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar glass-panel">
+        <div class="logo">HostelBuddy</div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="#discover">Discover</a>
+            <a href="login.html" class="btn btn-outline">Log In</a>
+            <a href="signup.html" class="btn btn-primary">Sign Up</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1 class="hero-title">Find Your Perfect <br> <span>Stay Today</span>.</h1>
+        <p class="hero-subtitle">Discover premium hostels and PG accommodations tailored for students with detailed insights, transparent pricing, and direct owner contact.</p>
+        
+        <div class="search-container glass-panel card-3d">
+            <input type="text" class="search-input" placeholder="Search by city, college, or location..." id="heroSearch">
+            <button class="btn btn-primary" onclick="performSearch()">Search Hubs</button>
+        </div>
+    </section>
+
+    <!-- JS -->
+    <script src="js/main.js"></script>
+    <script>
+        // Hero entry animation
+        gsap.from(".hero-title", { y: 50, opacity: 0, duration: 1, delay: 0.2, ease: "power3.out" });
+        gsap.from(".hero-subtitle", { y: 30, opacity: 0, duration: 1, delay: 0.4, ease: "power3.out" });
+        gsap.from(".search-container", { scale: 0.9, opacity: 0, duration: 1, delay: 0.6, ease: "back.out(1.7)" });
+        gsap.from(".navbar", { y: -50, opacity: 0, duration: 1, ease: "power3.out" });
+    </script>
+</body>
+</html>

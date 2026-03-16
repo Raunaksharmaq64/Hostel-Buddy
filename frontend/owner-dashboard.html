@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Owner Dashboard - Hostel Buddy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+            padding-top: 80px; 
+        }
+
+        .sidebar {
+            width: 250px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: fixed;
+            height: calc(100vh - 80px);
+            border-right: 1px solid var(--glass-border);
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-item {
+            padding: 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: var(--surface);
+            color: var(--primary);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 2rem 5%;
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            color: var(--text-main);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            flex: 1;
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(15, 23, 42, 0.5);
+            color: white;
+            transition: var(--transition);
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .form-select option {
+            background-color: var(--surface);
+            color: white;
+        }
+
+        /* List Items */
+        .list-item {
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hostels-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar glass-panel">
+        <div class="logo">HostelBuddy <span style="font-size:1rem;color:var(--text-muted)">| Owner</span></div>
+        <div class="nav-links">
+            <span id="userNameDisplay" style="font-weight:bold; color:var(--primary)">Hello, Owner</span>
+            <button class="btn btn-outline" style="padding: 0.5rem 1rem" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="nav-item active" onclick="switchTab('dashboard')">📊 Dashboard</div>
+            <div class="nav-item" onclick="switchTab('my-hostels')">🏢 My Hostels</div>
+            <div class="nav-item" onclick="switchTab('add-hostel')">➕ Add Listing</div>
+            <div class="nav-item" onclick="switchTab('enquiries')">✉️ Enquiries</div>
+            <div class="nav-item" onclick="switchTab('profile')">👤 My Profile</div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <div class="section-header">
+                    <h2>Overview</h2>
+                    <p class="text-muted">Quick stats about your properties.</p>
+                </div>
+                <!-- Mini Stats (Simulated via js) -->
+                <div class="hostels-grid">
+                    <div class="glass-panel card-3d" style="padding:2rem;">
+                        <h3 style="color:var(--text-muted)">Total Hostels Listed</h3>
+                        <h1 style="font-size: 3rem; color: var(--primary)" id="stat-hostels">0</h1>
+                    </div>
+                    <div class="glass-panel card-3d" style="padding:2rem;">
+                        <h3 style="color:var(--text-muted)">Total Enquiries</h3>
+                        <h1 style="font-size: 3rem; color: var(--secondary)" id="stat-enquiries">0</h1>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Hostels Tab -->
+            <div id="my-hostels" class="tab-content">
+                <div class="section-header">
+                    <h2>My Properties</h2>
+                    <p class="text-muted">Manage your listed hostels and PGs.</p>
+                </div>
+                <div class="hostels-grid" id="myHostelsContainer">
+                    <p>Loading your properties...</p>
+                </div>
+            </div>
+
+            <!-- Add Hostel Tab -->
+            <div id="add-hostel" class="tab-content">
+                <div class="section-header">
+                    <h2>Add New Listing</h2>
+                    <p class="text-muted">Detailed descriptions and crisp images attract more students.</p>
+                </div>
+                
+                <div class="glass-panel card-3d" style="padding: 2rem; max-width: 800px;">
+                    <form id="hostelForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Hostel / PG Name</label>
+                                <input type="text" id="hName" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Monthly Price (₹)</label>
+                                <input type="number" id="hPrice" class="form-input" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Daily Price (Optional) (₹)</label>
+                                <input type="number" id="hDaily" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Security Deposit (₹)</label>
+                                <input type="number" id="hDeposit" class="form-input" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea id="hDesc" class="form-textarea" rows="4" required></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Address line</label>
+                                <input type="text" id="hAddress" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">City</label>
+                                <input type="text" id="hCity" class="form-input" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">State</label>
+                                <input type="text" id="hState" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Pincode</label>
+                                <input type="text" id="hPincode" class="form-input" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Food Available?</label>
+                                <select id="hFood" class="form-select">
+                                    <option value="false">No</option>
+                                    <option value="true">Yes</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Food Details (e.g. 3 meals/day veg)</label>
+                                <input type="text" id="hFoodDetails" class="form-input">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Hostel Rules</label>
+                            <textarea id="hRules" class="form-textarea" rows="2" placeholder="e.g. No smoking, Gate closes at 10PM..."></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Google Maps Link</label>
+                                <input type="url" id="hGoogleMapLink" class="form-input" placeholder="e.g. https://maps.app.goo.gl/...">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Keywords / Tags</label>
+                                <input type="text" id="hKeywords" class="form-input" placeholder="Comma separated (e.g. LNCT, Boys PG)">
+                            </div>
+                        </div>
+
+                        <div class="image-upload-section" style="margin-top: 2rem;">
+                            <h3 style="margin-bottom: 1rem; color: var(--primary);">Categorized Image Uploads</h3>
+                            <p class="text-muted" style="margin-bottom: 1.5rem; font-size: 0.9rem;">Adding photos to specific categories helps students understand your property better. Hold Ctrl/Cmd to select multiple images.</p>
+
+                            <div class="form-row">
+                                <div class="form-group" style="padding: 1.5rem; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(15, 23, 42, 0.3);">
+                                    <label class="form-label" style="font-weight: 700; color: white;">🏢 Building & Surroundings</label>
+                                    <input type="file" id="hBuildingImages" class="form-input" multiple accept="image/*" style="border: none; padding: 0.5rem 0;">
+                                    <div id="previewBuilding" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;"></div>
+                                </div>
+                                
+                                <div class="form-group" style="padding: 1.5rem; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(15, 23, 42, 0.3);">
+                                    <label class="form-label" style="font-weight: 700; color: white;">🛏️ Room Interiors</label>
+                                    <input type="file" id="hRoomImages" class="form-input" multiple accept="image/*" style="border: none; padding: 0.5rem 0;">
+                                    <div id="previewRooms" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;"></div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group" style="padding: 1.5rem; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(15, 23, 42, 0.3);">
+                                    <label class="form-label" style="font-weight: 700; color: white;">🍽️ Mess & Dining Area</label>
+                                    <input type="file" id="hMessImages" class="form-input" multiple accept="image/*" style="border: none; padding: 0.5rem 0;">
+                                    <div id="previewMess" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;"></div>
+                                </div>
+                                
+                                <div class="form-group" style="padding: 1.5rem; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(15, 23, 42, 0.3);">
+                                    <label class="form-label" style="font-weight: 700; color: white;">🚿 Washrooms</label>
+                                    <input type="file" id="hBathroomImages" class="form-input" multiple accept="image/*" style="border: none; padding: 0.5rem 0;">
+                                    <div id="previewBathrooms" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="addHostelMsg" style="margin-bottom: 1rem; margin-top: 1rem; color: var(--secondary);"></div>
+
+                        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                            <button type="submit" id="submitHostelBtn" class="btn btn-primary" style="flex: 1;">Create Listing</button>
+                            <button type="button" id="cancelEditBtn" class="btn btn-outline" style="flex: 1; display: none;" onclick="cancelHostelEdit()">Cancel Edit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Enquiries Tab -->
+            <div id="enquiries" class="tab-content">
+                <div class="section-header">
+                    <h2>Student Enquiries</h2>
+                    <p class="text-muted">Respond to interested students quickly.</p>
+                </div>
+                <div id="ownerEnquiriesContainer" class="glass-panel" style="padding: 2rem;">
+                    Loading enquiries...
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div id="profile" class="tab-content">
+                <div class="section-header">
+                    <h2>My Profile</h2>
+                    <p class="text-muted">Manage your business details and profile picture.</p>
+                </div>
+                <div class="glass-panel card-3d" style="padding: 2rem; max-width: 600px;">
+                    <form id="ownerProfileForm">
+                        
+                        <!-- Profile Image Upload Section -->
+                        <div class="profile-upload-wrapper" style="text-align: center; margin-bottom: 2rem;">
+                            <div class="profile-image-container" style="position: relative; display: inline-block;">
+                                <img id="ownerProfilePreview" src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png" alt="Profile Picture" class="profile-preview-img" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--secondary); box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); transition: var(--transition);">
+                                <label for="ownerProfilePhotoInput" class="upload-btn" style="position: absolute; bottom: 0; right: 0; background: var(--secondary); color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid var(--surface); box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: var(--transition);">
+                                    📷
+                                </label>
+                                <input type="file" id="ownerProfilePhotoInput" accept="image/*" style="display: none;">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" id="opName" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phone</label>
+                                <input type="text" id="opPhone" class="form-input" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Hostel/PG Name</label>
+                                <input type="text" id="opHostelName" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Aadhaar Number</label>
+                                <input type="text" id="opAadhaarNumber" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">City</label>
+                                <input type="text" id="opCity" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Permanent Address</label>
+                                <textarea id="opAddress" class="form-textarea" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Business Description</label>
+                            <textarea id="opDescription" class="form-textarea" rows="3"></textarea>
+                        </div>
+                        
+                        <div id="verificationStatusCard" style="margin-bottom: 2rem; padding: 1rem; border-radius: 8px; background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="color: white; margin-bottom: 0.5rem;">Account Verification</h4>
+                                <p id="verificationStatusText" style="color: var(--text-muted); font-size: 0.9rem;">Status: Unverified</p>
+                            </div>
+                            <button type="button" id="btnRequestVerification" class="btn btn-outline" style="padding: 0.5rem 1rem;" onclick="requestVerification()">Request Verification</button>
+                        </div>
+
+                        <div id="opMsg" style="margin-bottom: 1rem; color: var(--secondary);"></div>
+                        <button type="submit" class="btn btn-primary">Save Profile</button>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/owner.js"></script>
+</body>
+</html>
