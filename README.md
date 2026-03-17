@@ -24,6 +24,11 @@ The application is structured around three primary roles, each with a unique das
    - Manages and approves/removes owner listings.
    - Accesses platform analytics (most searched hostels, active users, response rates, etc.).
 
+## Key Design Features
+- **Premium Glassmorphism UI**: High-end user interface utilizing GSAP animations, 3D card tilt effects, dynamic tooltips, and responsive glass panels.
+- **Global Footer Navigation**: A premium, responsive footer loaded with quick links and informative "About" details integrated across all views, including dashboards.
+- **Security & Data Handling**: Fast JWT authentication and safe Mongoose cascade deletions to ensure a flawlessly clean database.
+
 ## Tech Stack
 - **Frontend**: HTML5, Vanilla CSS3 (with premium styling, CSS variables, 3D hover effects, and modern fonts), Vanilla JavaScript.
 - **Backend API**: Node.js, Express.js.

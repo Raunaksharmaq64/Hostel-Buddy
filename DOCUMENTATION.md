@@ -104,9 +104,19 @@ RESTful conventions used aggressively. Responses standardly structured as `{ suc
 - **PUT** `/api/resources/:id` (Update completely)
 - **DELETE** `/api/resources/:id` (Delete item)
 
-### CSS
+### CSS & Interface Elements
 - **Utility Tokens**: Global variables stored in `:root` of `style.css` (`--primary`, `--accent`, `--glass-bg`).
 - **Glassmorphism**: Consistent reuse of `.glass-panel` combined with `backdrop-filter: blur()`.
+- **Global Layout Elements**: 
+  - `navbar`: Fixed top navigation.
+  - `premium-footer`: A multi-column, responsive grid footer containing brand 'About' info, localized Quick Links tailored per role, and SVG animated social icons for a professional touch.
+- **Global Pages**: 
+  - `guide.html`: A comprehensive, premium user manual explaining the platform's features for students and owners with step-by-step visuals and instructions.
+  - `about.html`: Detailed vision, mission, and technical highlights of the HostelBuddy ecosystem.
+  - `privacy.html`: Official standard platform privacy policy and data management guidelines.
+  - `safety.html`: Essential safety practices and guidelines for students and owners.
+  - `terms.html`: User roles, account responsibilities, and platform facilitation rules.
+- **Animations**: Handled primarily via GSAP, with native CSS transitions and `transform: preserve-3d` fallback for card hover effects (`.card-3d`).
 
 ## 6. Key API Reference Matrix
 
