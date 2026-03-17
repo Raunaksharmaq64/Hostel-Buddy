@@ -85,6 +85,9 @@ async function loadOwnerProfile() {
             document.getElementById('ownerProfilePreview').src = user.profilePhoto;
         }
 
+        // Load Notifications
+        loadNotifications();
+
         // Display Verified Badge next to name if verified
         const nameDisplay = document.getElementById('userNameDisplay');
         if (user.isVerified && !nameDisplay.innerHTML.includes('verified-badge')) {
@@ -440,9 +443,14 @@ async function loadOwnerEnquiries() {
                     </p>
                 </div>
                 <div style="text-align:right; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end;">
-                    <span style="display:block; margin-bottom: 0.5rem; font-weight:bold; color:${eq.status === 'Pending' ? 'orange' : (eq.status === 'Responded' ? '#10b981' : 'gray')}; background: rgba(255,255,255,0.05); padding: 0.3rem 0.8rem; border-radius: 12px; font-size: 0.85rem;">
-                        ${eq.status}
-                    </span>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+                        <span style="display:block; font-weight:bold; color:${eq.status === 'Pending' ? 'orange' : (eq.status === 'Responded' ? '#10b981' : 'gray')}; background: rgba(255,255,255,0.05); padding: 0.3rem 0.8rem; border-radius: 12px; font-size: 0.85rem;">
+                            ${eq.status}
+                        </span>
+                        <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-color: rgba(244, 63, 94, 0.5); color: var(--accent);" onclick="deleteOwnerEnquiry('${eq._id}')" title="Clear Enquiry">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
                     <div style="margin-top: auto;">
                         ${eq.status === 'Pending' ? 
                             `<button class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.8rem" onclick="updateEnquiry('${eq._id}', 'Responded')">Mark Responded</button>` : 
@@ -466,3 +474,94 @@ window.updateEnquiry = async function(id, status) {
         showToast(err.message, "error");
     }
 }
+
+window.deleteOwnerEnquiry = async function(id) {
+    const isConfirmed = await customConfirm("Are you sure you want to clear this enquiry?");
+    if(!isConfirmed) return;
+    try {
+        await fetchAPI(`/enquiries/${id}`, 'DELETE');
+        showToast("Enquiry cleared successfully.", "success");
+        loadOwnerEnquiries();
+    } catch(err) {
+        showToast(err.message, "error");
+    }
+}
+
+// ---- NOTIFICATIONS LOGIC ----
+async function loadNotifications() {
+    const container = document.getElementById('notificationsContainer');
+    if (!container) return;
+    try {
+        const res = await fetchAPI('/profiles/notifications');
+        const notifications = res.data;
+
+        const clearBtn = document.getElementById('clearNotifBtn');
+        if (clearBtn) clearBtn.style.display = notifications.length > 0 ? 'inline-block' : 'none';
+
+        if (notifications.length === 0) {
+            container.innerHTML = '<p class="text-muted">No notifications yet.</p>';
+            return;
+        }
+
+        container.innerHTML = notifications.map(n => `
+            <div class="glass-panel" style="padding: 1rem; border-left: 4px solid ${n.type === 'warning' ? 'var(--accent)' : (n.type === 'success' ? '#10b981' : 'var(--primary)')}; background: rgba(255,255,255,0.02); margin-bottom: 0.8rem; border-radius: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">${new Date(n.createdAt).toLocaleString()}</span>
+                    ${!n.isRead ? '<span style="background: var(--primary); width: 8px; height: 8px; border-radius: 50%;"></span>' : ''}
+                </div>
+                <p style="font-size: 0.95rem; color: var(--white);">${n.message}</p>
+            </div>
+        `).join('');
+
+        // Mark as read after a short delay
+        setTimeout(markNotificationsRead, 3000);
+    } catch (err) {
+        console.error("Failed to load notifications:", err);
+    }
+}
+
+async function markNotificationsRead() {
+    try {
+        await fetchAPI('/profiles/notifications/read', 'PUT');
+    } catch (err) {
+        console.error("Failed to mark notifications read:", err);
+    }
+}
+
+window.clearNotifications = async function() {
+    const isConfirmed = await customConfirm("Are you sure you want to clear all your notifications?");
+    if(!isConfirmed) return;
+
+    try {
+        await fetchAPI('/profiles/notifications', 'DELETE');
+        showToast("Notifications cleared successfully.", "success");
+        loadNotifications();
+    } catch(err) {
+        showToast(err.message, "error");
+    }
+}
+
+// ---- DEACTIVATION LOGIC ----
+window.openDeactivateModal = function() {
+    document.getElementById('deactivateModal').style.display = 'flex';
+};
+
+window.closeDeactivateModal = function() {
+    document.getElementById('deactivateModal').style.display = 'none';
+};
+
+window.submitDeactivationRequest = async function() {
+    const reason = document.getElementById('deactivateReason').value.trim();
+    if (!reason) {
+        showToast("Please provide a reason for deactivation.", "error");
+        return;
+    }
+
+    try {
+        await fetchAPI('/profiles/request-deactivation', 'POST', { reason });
+        showToast("Deactivation request submitted. Admin will review it.", "success");
+        closeDeactivateModal();
+    } catch (err) {
+        showToast(err.message, "error");
+    }
+};

@@ -20,6 +20,7 @@ function switchTab(tabId) {
     if (tabId === 'owners') loadUsers('Owner');
     if (tabId === 'listings') loadListings();
     if (tabId === 'enquiries') loadEnquiries();
+    if (tabId === 'system-requests') loadDeactivations();
 }
 
 // ---- ANALYTICS ----
@@ -95,6 +96,9 @@ async function loadVerifications() {
                     </button>
                     <button class="btn btn-outline" style="padding:0.6rem 1.2rem; color:var(--accent); border-color:var(--accent); display: flex; align-items: center; gap: 0.4rem;" onclick="handleVerification('${u._id}', 'rejected')">
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg> Reject
+                    </button>
+                    <button class="btn btn-outline" style="padding:0.6rem 1.2rem; display: flex; align-items: center; gap: 0.4rem;" onclick="openNotifyModal('${u._id}')">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg> Notify
                     </button>
                 </div>
             </div>
@@ -316,5 +320,85 @@ window.replyEnquiry = async function(enquiryId) {
         loadEnquiries(); // Refresh the list
     } catch (err) {
         showToast("Error submitting response: " + err.message, "error");
+    }
+};
+
+// ---- DEACTIVATION MANAGEMENT ----
+async function loadDeactivations() {
+    const container = document.getElementById('deactivationsContainer');
+    container.innerHTML = "Loading...";
+
+    try {
+        const res = await fetchAPI('/admin/deactivations');
+        const requests = res.data;
+
+        if (requests.length === 0) {
+            container.innerHTML = "No pending deactivation requests.";
+            return;
+        }
+
+        container.innerHTML = requests.map(r => `
+            <div class="list-item" style="border-left: 4px solid var(--accent);">
+                <div style="flex:1">
+                    <h4 style="font-size:1.2rem; margin-bottom: 0.3rem;">${r.name} (${r.role})</h4>
+                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom: 0.8rem;">✉️ ${r.email} | 📞 ${r.phone}</p>
+                    <div style="background: rgba(244, 63, 94, 0.1); padding: 1rem; border-radius: 8px; border: 1px solid rgba(244, 63, 94, 0.2);">
+                        <p style="font-weight: 600; font-size: 0.8rem; color: var(--accent); margin-bottom: 0.3rem; text-transform: uppercase;">Reason for Deactivation:</p>
+                        <p style="font-size: 1rem; color: var(--white);">${r.deactivationReason}</p>
+                    </div>
+                </div>
+                <div style="display:flex; gap:0.8rem; padding-left: 1rem;">
+                    <button class="btn btn-primary" style="background:var(--accent); border-color:var(--accent)" onclick="handleDeactivation('${r._id}', 'approve')">Approve & Delete</button>
+                    <button class="btn btn-outline" onclick="handleDeactivation('${r._id}', 'reject')">Reject</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        container.innerHTML = "Failed to load deactivation requests.";
+    }
+}
+
+window.handleDeactivation = async function(id, action) {
+    const isConfirmed = await customConfirm(`Are you sure you want to ${action} this deactivation request?`);
+    if(!isConfirmed) return;
+
+    try {
+        await fetchAPI(`/admin/deactivations/${id}`, 'PUT', { action });
+        showToast(`Request ${action === 'approve' ? 'approved' : 'rejected'} successfully.`, "success");
+        loadDeactivations();
+    } catch (err) {
+        showToast(err.message, "error");
+    }
+}
+
+// ---- NOTIFICATION MODAL LOGIC ----
+let currentNotifyUserId = null;
+
+window.openNotifyModal = function(userId) {
+    currentNotifyUserId = userId;
+    document.getElementById('notifyModal').style.display = 'flex';
+};
+
+window.closeNotifyModal = function() {
+    currentNotifyUserId = null;
+    document.getElementById('notifyModal').style.display = 'none';
+    document.getElementById('notifyMessage').value = '';
+};
+
+window.submitNotification = async function() {
+    const message = document.getElementById('notifyMessage').value.trim();
+    const type = document.getElementById('notifyType').value;
+
+    if (!message) {
+        showToast("Please enter a message.", "error");
+        return;
+    }
+
+    try {
+        await fetchAPI(`/admin/notify-owner/${currentNotifyUserId}`, 'POST', { message, type });
+        showToast("Notification sent to owner successfully!", "success");
+        closeNotifyModal();
+    } catch (err) {
+        showToast(err.message, "error");
     }
 };

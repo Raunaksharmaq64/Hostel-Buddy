@@ -149,6 +149,7 @@
             <div class="nav-item" onclick="switchTab('owners')">👔 Owners</div>
             <div class="nav-item" onclick="switchTab('listings')">🏨 Listings</div>
             <div class="nav-item" onclick="switchTab('enquiries')">✉️ Enquiries</div>
+            <div class="nav-item" onclick="switchTab('system-requests')">⚙️ System Requests</div>
         </aside>
 
         <!-- Main Content -->
@@ -221,7 +222,42 @@
                 </div>
             </div>
 
+            <!-- System Requests Tab -->
+            <div id="system-requests" class="tab-content">
+                <div class="section-header">
+                    <h2>System Requests</h2>
+                    <p class="text-muted">Manage account deactivation requests from users.</p>
+                </div>
+                <div class="admin-list" id="deactivationsContainer">
+                    Loading requests...
+                </div>
+            </div>
+
         </main>
+    </div>
+
+    <!-- Notification Modal -->
+    <div id="notifyModal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1001; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+        <div class="glass-panel" style="max-width: 500px; width: 90%; padding: 2.5rem;">
+            <h2 style="color: var(--primary); margin-bottom: 0.5rem;">Notify Owner</h2>
+            <p class="text-muted" style="margin-bottom: 1.5rem;">Send a message to the owner regarding their verification or profile.</p>
+            <div class="form-group">
+                <label class="form-label">Message Type</label>
+                <select id="notifyType" class="form-select" style="margin-bottom: 1rem;">
+                    <option value="warning">Warning (Verification Issue)</option>
+                    <option value="info">Information</option>
+                    <option value="success">Success / Congratulations</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Message Content</label>
+                <textarea id="notifyMessage" class="form-textarea" rows="4" placeholder="e.g. Please upload a clearer photo of your Aadhaar card..."></textarea>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button class="btn btn-outline" style="flex: 1;" onclick="closeNotifyModal()">Cancel</button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="submitNotification()">Send Notification</button>
+            </div>
+        </div>
     </div>
 
     <script src="js/main.js"></script>

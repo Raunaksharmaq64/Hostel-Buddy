@@ -31,8 +31,18 @@ exports.deleteUser = async (req, res) => {
     
     // Also delete associated Hostels and Enquiries (Mock cascade delete)
     if (user.role === 'Owner') {
+      const ownerHostels = await Hostel.find({ ownerId: user._id }, '_id');
+      const hostelIds = ownerHostels.map(h => h._id);
+
       await Hostel.deleteMany({ ownerId: user._id });
       await Enquiry.deleteMany({ ownerId: user._id });
+
+      if (hostelIds.length > 0) {
+        await User.updateMany(
+          { role: 'Student' }, 
+          { $pull: { savedHostels: { $in: hostelIds } } }
+        );
+      }
     } else if (user.role === 'Student') {
       await Enquiry.deleteMany({ studentId: user._id });
     }
@@ -232,8 +242,18 @@ exports.handleDeactivationRequest = async (req, res) => {
     if (action === 'approve') {
       // Cascade delete logic (reusing deleteUser logic)
       if (user.role === 'Owner') {
+        const ownerHostels = await Hostel.find({ ownerId: user._id }, '_id');
+        const hostelIds = ownerHostels.map(h => h._id);
+
         await Hostel.deleteMany({ ownerId: user._id });
         await Enquiry.deleteMany({ ownerId: user._id });
+
+        if (hostelIds.length > 0) {
+          await User.updateMany(
+            { role: 'Student' }, 
+            { $pull: { savedHostels: { $in: hostelIds } } }
+          );
+        }
       } else if (user.role === 'Student') {
         await Enquiry.deleteMany({ studentId: user._id });
       }
