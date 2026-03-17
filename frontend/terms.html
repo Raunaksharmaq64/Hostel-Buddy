@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms & Conditions - HostelBuddy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        .terms-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 10rem 5% 8rem;
+        }
+        .terms-section {
+            margin-bottom: 2.5rem;
+            padding: 2.5rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            opacity: 1; /* Default visible to prevent GSAP failure blank page */
+        }
+        .terms-section h2 {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.6rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+        .terms-section h3 {
+            font-size: 1.15rem;
+            margin: 1.5rem 0 0.8rem;
+            color: var(--text-main);
+        }
+        .terms-section p, .terms-section ul {
+            color: #e2e8f0; /* Brighter slate for better readability on dark bg */
+            line-height: 1.8;
+            font-size: 0.98rem;
+        }
+        .terms-section ul {
+            padding-left: 1.5rem;
+            margin-top: 10px;
+        }
+        .terms-section li { margin-bottom: 10px; }
+        
+        .last-updated {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 3rem;
+            letter-spacing: 1px;
+        }
+        .agreement-box {
+            text-align: center;
+            margin-top: 4rem;
+            padding: 3rem;
+            background: rgba(99, 102, 241, 0.08);
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+        }
+        .warning-tag {
+            background: rgba(244, 63, 94, 0.1);
+            color: #fb7185;
+            padding: 1rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar glass-panel">
+        <a href="index.html" class="logo" style="text-decoration: none;">HostelBuddy</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="privacy.html">Privacy</a>
+            <a href="login.html" class="btn btn-outline">Log In</a>
+        </div>
+    </nav>
+
+    <main class="terms-container">
+        <h1 style="text-align: center; font-size: 3.2rem; margin-bottom: 0.5rem; color: #fff;">📜 Terms & <span style="color: var(--primary);">Conditions</span></h1>
+        <p class="last-updated">VERSION 1.0.2 • LAST UPDATED MARCH 2026</p>
+
+        <section class="terms-section">
+            <p>Welcome to <b>HostelBuddy</b>. These Terms & Conditions govern your access to and use of the platform. By using HostelBuddy, you agree to comply with these terms.</p>
+        </section>
+
+        <section class="terms-section">
+            <h2>📌 1. Acceptance of Terms</h2>
+            <p>By accessing or using HostelBuddy, you confirm that:</p>
+            <ul>
+                <li>You are at least 18 years old (or using under platform-approved supervision).</li>
+                <li>You agree to follow all platform rules, security measures, and community standards.</li>
+                <li>You provide accurate, current, and truthful information at all times.</li>
+            </ul>
+        </section>
+
+        <section class="terms-section">
+            <h2>🎓 2. User Roles on HostelBuddy</h2>
+            
+            <h3>👤 Students</h3>
+            <ul>
+                <li>Search and explore verified hostels and PGs based on real-time data.</li>
+                <li>Send enquiries and communicate directly with property owners.</li>
+                <li>Manage profile settings and room preferences.</li>
+            </ul>
+
+            <h3>🏠 Hostel / PG Owners</h3>
+            <ul>
+                <li>List property details, amenities, and high-quality images.</li>
+                <li>Manage and respond to student enquiries professionally.</li>
+                <li>Maintain accurate pricing and availability information.</li>
+            </ul>
+
+            <h3>🛡️ Admin</h3>
+            <p>The Admin team monitors platform activity, verifies owner identities, approves property listings, and resolves system-level disputes.</p>
+        </section>
+
+        <section class="terms-section">
+            <h2>🧾 3. Account Responsibility</h2>
+            <p>Users are solely responsible for:</p>
+            <ul>
+                <li>Maintaining the confidentiality of account login credentials.</li>
+                <li>All activities that occur under their specific account.</li>
+                <li>Updating information promptly if contact details or status changes.</li>
+            </ul>
+            <p style="margin-top: 10px;">HostelBuddy is not liable for unauthorized access resulting from user negligence.</p>
+        </section>
+
+        <section class="terms-section">
+            <h2>📩 4. Enquiry & Communication Policy</h2>
+            <p>Communication between students and owners should remain professional. All agreements regarding rent, security deposits, and rules happen directly between the two parties.</p>
+            <div class="warning-tag">⚠️ ALERT: HostelBuddy is not responsible for offline agreements, cash payments, or disputes arising outside the platform.</div>
+        </section>
+
+        <section class="terms-section">
+            <h2>🏠 5. Property Listing Rules</h2>
+            <p>To maintain platform trust, Owners must ensure:</p>
+            <ul>
+                <li>Property details and location coordinates are 100% genuine.</li>
+                <li>Images uploaded represent the actual current condition of the property.</li>
+                <li>Amenities (Food, WiFi, AC, etc.) are accurately listed.</li>
+            </ul>
+        </section>
+
+        <section class="terms-section">
+            <h2>✔️ 6. Verification Policy</h2>
+            <p>HostelBuddy reserves the right to request identity proof from owners. A "Verified" badge is awarded only after manual Admin review of submitted documents. Documents are handled securely and never shared with other users.</p>
+        </section>
+
+        <section class="terms-section">
+            <h2>🚫 7. Prohibited Activities</h2>
+            <p>Users are strictly prohibited from:</p>
+            <ul>
+                <li>Using fake identities or impersonating others.</li>
+                <li>Spamming contact information obtained via the platform.</li>
+                <li>Attempting to bypass system security or data integrity.</li>
+                <li>Uploading malicious code or illegal content.</li>
+            </ul>
+        </section>
+
+        <section class="terms-section">
+            <h2>💰 8. Payments & Transactions</h2>
+            <p>HostelBuddy currently facilitates discovery and enquiries. <b>We do NOT process payments or handle booking fees directly on the platform.</b> All financial transactions are the responsibility of the student and owner.</p>
+        </section>
+
+        <section class="terms-section">
+            <h2>⚠️ 9. Limitation of Liability</h2>
+            <p>HostelBuddy is a facilitator, not a service provider. We are not liable for:</p>
+            <ul>
+                <li>Mismatches between listed details and physical property state.</li>
+                <li>Behaviors or conduct of any user (Student or Owner).</li>
+                <li>Loss of data or financial loss due to third-party agreements.</li>
+            </ul>
+        </section>
+
+        <section class="terms-section">
+            <h2>🛡️ 10. Platform Rights</h2>
+            <p>HostelBuddy reserves the absolute right to:</p>
+            <ul>
+                <li>Modify, suspend, or terminate platform features without prior notice.</li>
+                <li>Remove any listing or user account that violates terms.</li>
+                <li>Moderator content to maintain platform safety.</li>
+            </ul>
+        </section>
+
+        <section class="terms-section">
+            <h2>🔄 11. Modifications to Terms</h2>
+            <p>We may update these Terms & Conditions to reflect platform evolution or legal changes. Continued use of HostelBuddy after updates constitutes your acceptance of the new terms.</p>
+        </section>
+
+        <section class="terms-section">
+            <h2>❌ 12. Account Termination</h2>
+            <p>HostelBuddy may suspend or ban accounts found engaging in fraudulent activity, harassment, or multiple violations of the platform policies. Users can also request voluntary account deactivation through the dashboard.</p>
+        </section>
+
+        <section class="terms-section">
+            <h2>📞 13. Contact & Support</h2>
+            <p>For any queries regarding these terms or technical support, please reach out to us:</p>
+            <p style="margin-top: 15px; font-weight: 700; color: #fff;">Email: support@hostelbuddy.com</p>
+            <p style="font-weight: 700; color: #fff;">Location: HostelBuddy HQ / Virtual Support</p>
+        </section>
+
+        <div class="agreement-box">
+            <h2 style="color: #fff; margin-bottom: 1rem;">⚖️ Final Agreement</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">By continuing to use this platform, you acknowledge that you have read and agreed to the most recent version of these Terms & Conditions.</p>
+            <a href="index.html" class="btn btn-primary" style="padding: 1rem 3rem;">Accept & Continue</a>
+        </div>
+    </main>
+
+    <footer class="premium-footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a href="index.html" class="logo" style="text-decoration: none;">HostelBuddy</a>
+                <p class="footer-about" style="color: var(--text-muted);">A trusted bridge between students and premium accommodations.</p>
+            </div>
+            <div>
+                <h4 class="footer-title">Navigation</h4>
+                <ul class="footer-links">
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="terms.html">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth reveal animation
+        gsap.from(".terms-section", {
+            y: 30,
+            opacity: 0,
+            duration: 1,
+            stagger: 0.2,
+            ease: "expo.out",
+            delay: 0.5
+        });
+    </script>
+</body>
+</html>

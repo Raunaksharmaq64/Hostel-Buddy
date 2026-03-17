@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - HostelBuddy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        .about-section { margin-bottom: 6rem; }
+        .feature-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            height: 100%;
+            transition: var(--transition);
+        }
+        .feature-card:hover { 
+            transform: translateY(-10px) scale(1.02); 
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
+        }
+        .icon-circle {
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.1);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+        .tech-pill {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            padding: 0.5rem 1.2rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            display: inline-block;
+            margin: 0.3rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar glass-panel">
+        <a href="index.html" class="logo" style="text-decoration: none;">HostelBuddy</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="guide.html">Guide</a>
+            <a href="login.html" class="btn btn-outline">Log In</a>
+        </div>
+    </nav>
+
+    <header class="hero" style="height: auto; padding: 12rem 5% 6rem;">
+        <h1 class="hero-title">🌟 What is <br> <span>HostelBuddy?</span></h1>
+        <p class="hero-subtitle">Simplifying and modernizing student accommodations with premium full-stack technology.</p>
+    </header>
+
+    <main style="max-width: 1200px; margin: 0 auto; padding: 0 5% 8rem;">
+        
+        <!-- Mission Section -->
+        <section class="about-section">
+            <div class="glass-panel" style="padding: 3rem; text-align: center; border-radius: 30px;">
+                <h2 style="margin-bottom: 2rem; color: var(--primary);">A Trusted Bridge</h2>
+                <div style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 2rem;">
+                    <div style="max-width: 300px;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🎓</div>
+                        <h3>Students</h3>
+                        <p class="text-muted">Searching for a safe and comfortable home.</p>
+                    </div>
+                    <div style="font-size: 2rem; color: var(--text-muted); opacity: 0.5;">↔</div>
+                    <div style="max-width: 300px;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🏠</div>
+                        <h3>Owners</h3>
+                        <p class="text-muted">Looking for verified and reliable tenants.</p>
+                    </div>
+                </div>
+                <p style="margin-top: 3rem; font-size: 1.1rem; color: var(--text-muted); line-height: 1.8;">
+                    By digitizing a traditionally chaotic offline process, HostelBuddy creates a transparent, secure, and efficient ecosystem.
+                </p>
+            </div>
+        </section>
+
+        <!-- Students Benefits -->
+        <section class="about-section">
+            <h2 style="font-size: 2.5rem; margin-bottom: 3rem; text-align: center;">🎓 For Students — Find Your Stay</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+                <div class="feature-card">
+                    <div class="icon-circle">🔍</div>
+                    <h4>Smart Search & Filters</h4>
+                    <p class="text-muted">Search hostels by location, price, room type, and food availability. No more physical visits or guesswork.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-circle">📸</div>
+                    <h4>Real Visual Transparency</h4>
+                    <p class="text-muted">View actual images of Rooms 🛏️, Washrooms 🚿, Dining 🍽️, and Building exterior 🏢. What you see is what you get.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-circle">📩</div>
+                    <h4>Direct Enquiry System</h4>
+                    <p class="text-muted">Send enquiry requests directly to owners. Track responses inside your personal dashboard.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Owners Benefits -->
+        <section class="about-section">
+            <h2 style="font-size: 2.5rem; margin-bottom: 3rem; text-align: center;">🏠 For Owners — Grow Business</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+                <div class="feature-card" style="border-color: rgba(16, 185, 129, 0.2);">
+                    <div class="icon-circle" style="color: var(--secondary); background: rgba(16, 185, 129, 0.1);">📢</div>
+                    <h4>Increased Visibility</h4>
+                    <p class="text-muted">Reach hundreds of students online. Eliminate the need for posters or high-commission brokers.</p>
+                </div>
+                <div class="feature-card" style="border-color: rgba(16, 185, 129, 0.2);">
+                    <div class="icon-circle" style="color: var(--secondary); background: rgba(16, 185, 129, 0.1);">✔️</div>
+                    <h4>Verification Badge</h4>
+                    <p class="text-muted">Submit identity proof and get a "Verified Owner" badge. Builds instant trust with students & parents.</p>
+                </div>
+                <div class="feature-card" style="border-color: rgba(16, 185, 129, 0.2);">
+                    <div class="icon-circle" style="color: var(--secondary); background: rgba(16, 185, 129, 0.1);">⚙️</div>
+                    <h4>Full Profile Control</h4>
+                    <p class="text-muted">Update pricing, food menu, or availability anytime. Manage multiple properties from one single dashboard.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Admin Section -->
+        <section class="about-section">
+            <h2 style="font-size: 2.5rem; margin-bottom: 3rem; text-align: center;">🛡️ Admin Panel — Powering Trust</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                <div class="feature-card" style="border-color: rgba(244, 63, 94, 0.2);">
+                    <div class="icon-circle" style="color: var(--accent); background: rgba(244, 63, 94, 0.1);">🔎</div>
+                    <h4>Property Approval</h4>
+                    <p class="text-muted">Every single listing is manually reviewed by our team before going live to ensure quality and authenticity.</p>
+                </div>
+                <div class="feature-card" style="border-color: rgba(244, 63, 94, 0.2);">
+                    <div class="icon-circle" style="color: var(--accent); background: rgba(244, 63, 94, 0.1);">📊</div>
+                    <h4>Platform Monitoring</h4>
+                    <p class="text-muted">Tracking active users, listings, and enquiry activity to maintain a healthy and high-performing ecosystem.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Technical Excellence -->
+        <section class="about-section">
+            <div class="glass-panel" style="padding: 3rem; border-radius: 30px;">
+                <h2 style="margin-bottom: 2rem; text-align: center;">✨ Technical Excellence</h2>
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-bottom: 2rem;">
+                    <span class="tech-pill">MongoDB (Database)</span>
+                    <span class="tech-pill">Express.js</span>
+                    <span class="tech-pill">Node.js</span>
+                    <span class="tech-pill">Vanilla JS</span>
+                    <span class="tech-pill">GSAP Animations</span>
+                    <span class="tech-pill">Cloudinary Integration</span>
+                    <span class="tech-pill">JWT Security</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-top: 3rem;">
+                    <div>
+                        <h4 style="color: var(--primary);">🎨 UI/UX Design</h4>
+                        <p class="text-muted" style="font-size: 0.9rem;">Glassmorphism-based modern interface with smooth 3D transitions and interactive GSAP effects.</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--secondary);">☁️ Cloud Storage</h4>
+                        <p class="text-muted" style="font-size: 0.9rem;">Images stored securely on Cloudinary for fast loading and optimized mobile performance.</p>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--accent);">📘 Built-in User Guide</h4>
+                        <p class="text-muted" style="font-size: 0.9rem;">Dedicated <a href="guide.html" style="color: var(--accent);">guide.html</a> section explaining workflows for Students, Owners, and Admins.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Vision Statement -->
+        <section style="text-align: center; margin-top: 8rem; padding: 4rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(16, 185, 129, 0.05)); border-radius: 40px; border: 1px solid var(--glass-border);">
+            <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">🚀 Final Vision</h2>
+            <p style="font-size: 1.2rem; color: var(--text-main); margin-bottom: 2rem; max-width: 800px; margin-inline: auto;">
+                HostelBuddy transforms <b>offline chaos, middlemen, and uncertainty</b> into a <b>digital, verified, and seamless</b> housing experience.
+            </p>
+            <p style="font-size: 1.4rem; font-weight: 700; color: var(--primary);">
+                It’s more than just a platform — it’s a complete ecosystem for student living.
+            </p>
+            <div style="margin-top: 3rem;">
+                <a href="signup.html" class="btn btn-primary" style="padding: 1rem 3rem;">Join the Ecosystem</a>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="premium-footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a href="index.html" class="logo" style="text-decoration: none;">HostelBuddy</a>
+                <p class="footer-about">
+                    Premium accommodation discovery and management platform.
+                </p>
+            </div>
+            <div>
+                <h4 class="footer-title">Navigation</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="guide.html">User Guide</a></li>
+                    <li><a href="signup.html">Join Us</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+        gsap.from(".hero-title", { y: 50, opacity: 0, duration: 1, ease: "power3.out" });
+        gsap.utils.toArray(".feature-card, .about-section > .glass-panel").forEach(el => {
+            gsap.from(el, {
+                scrollTrigger: el,
+                y: 50, opacity: 0, 
+                duration: 1, 
+                ease: "power3.out"
+            });
+        });
+    </script>
+</body>
+</html>

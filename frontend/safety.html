@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safety Guidelines - HostelBuddy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- GSAP & ScrollTrigger for Premium Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        .safety-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 10rem 5% 8rem;
+        }
+        .safety-header {
+            text-align: center;
+            margin-bottom: 5rem;
+        }
+        .safety-header h1 {
+            font-size: 3.8rem;
+            margin-bottom: 1.2rem;
+            background: linear-gradient(45deg, var(--primary), #818cf8, #10b981);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+        .safety-grid {
+            display: grid;
+            gap: 3rem;
+        }
+        .safety-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 3.5rem;
+            backdrop-filter: blur(15px);
+            transition: var(--transition);
+            opacity: 1; /* Default visible to prevent GSAP failure blank page */
+        }
+        .safety-card:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        .safety-card h2 {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 2.5rem;
+        }
+        .safety-card h3 {
+            font-size: 1.3rem;
+            color: #fff; /* Bright white for primary subheaders */
+            margin: 2rem 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .safety-card ul {
+            list-style: none;
+            padding: 0;
+        }
+        .safety-card li {
+            position: relative;
+            padding-left: 1.8rem;
+            margin-bottom: 1.2rem;
+            color: #cbd5e1; /* Brighter slate for high contrast */
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+        .safety-card li::before {
+            content: '✦';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+        .alert-box {
+            background: rgba(244, 63, 94, 0.12);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            color: #fb7185;
+            padding: 2rem;
+            border-radius: 20px;
+            margin: 2.5rem 0;
+            font-weight: 600;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        .safety-footer-box {
+            text-align: center;
+            margin-top: 6rem;
+            padding: 4rem;
+            background: rgba(99, 102, 241, 0.08);
+            border-radius: 40px;
+            border: 1px solid var(--glass-border);
+        }
+        .highlight-text {
+            color: var(--primary);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar glass-panel">
+        <a href="index.html" class="logo" style="text-decoration: none;">HostelBuddy</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="login.html" class="btn btn-outline">Log In</a>
+        </div>
+    </nav>
+
+    <main class="safety-container">
+        <div class="safety-header">
+            <h1>🛡️ Safety <span style="color: #fff;">Guidelines</span></h1>
+            <p style="font-size: 1.3rem; color: #94a3b8; max-width: 700px; margin: 0 auto;">Your safety is our priority. HostelBuddy is designed for security, but collective awareness is key.</p>
+        </div>
+
+        <div class="safety-grid">
+            <!-- Student Safety -->
+            <section class="safety-card reveal">
+                <h2>🎓 Safety Guidelines for Students</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 1.5rem;">Finding a hostel is a big decision — don’t rush it.</p>
+                
+                <h3>🔍 1. Verify Before Finalizing</h3>
+                <ul>
+                    <li>Always visit the property physically before booking.</li>
+                    <li>Check: Room condition 🛏️, Washroom hygiene 🚿, Food quality 🍽️.</li>
+                    <li>Do not rely only on photos; physical inspection is mandatory.</li>
+                </ul>
+
+                <h3>📞 2. Communicate Carefully</h3>
+                <ul>
+                    <li>Use HostelBuddy’s enquiry system first to keep communication records.</li>
+                    <li>Avoid sharing personal details too early.</li>
+                    <li>Be cautious if an owner pressures you to book quickly or refuses a visit.</li>
+                </ul>
+
+                <h3>💰 3. Avoid Advance Payments Without Proof</h3>
+                <ul>
+                    <li>Never send money without visiting the property and receiving proper confirmation.</li>
+                    <li>Always ask for a <span class="highlight-text">Receipt</span> and a <span class="highlight-text">Written Agreement</span>.</li>
+                </ul>
+
+                <h3>🧾 4. Check Owner Verification</h3>
+                <p>Prefer listings with the <b style="color: var(--secondary);">“Verified Badge” ✔️</b>. Verified owners are manually reviewed by our Admin team.</p>
+
+                <div class="alert-box">
+                    🚨 <b>Report Suspicious Activity:</b> Immediately report fake photos, misleading details, unsafe behavior, fraud, or payment scams via support.
+                </div>
+            </section>
+
+            <!-- Owner Safety -->
+            <section class="safety-card reveal">
+                <h2>🏠 Safety Guidelines for Hostel Owners</h2>
+                <p style="font-size: 1.1rem; margin-bottom: 1.5rem;">Maintaining platform trust is a shared responsibility.</p>
+                
+                <h3>✔️ 1. Provide Genuine Information</h3>
+                <ul>
+                    <li>Upload real, current images of the actual rooms and facilities.</li>
+                    <li>Mention correct pricing, available facilities, and house rules.</li>
+                </ul>
+
+                <h3>🤝 2. Maintain Professional Communication</h3>
+                <ul>
+                    <li>Respond politely and promptly to student enquiries.</li>
+                    <li>Clearly explain Rent, Food charges, and Security deposit terms.</li>
+                </ul>
+
+                <h3>🧾 3. Verify Tenants Properly</h3>
+                <ul>
+                    <li>Collect valid ID proof from students during the onboarding process.</li>
+                    <li>Maintain basic records for safety and local compliance.</li>
+                </ul>
+
+                <h3>🔒 4. Ensure Property Safety</h3>
+                <ul>
+                    <li>Provide secure locks 🔐 and a hygienic environment 🧹.</li>
+                    <li>Implement basic safety measures throughout the premises.</li>
+                </ul>
+
+                <p style="margin-top: 1.5rem; color: #fb7185; font-weight: 600;">🚫 Violation of these terms may result in immediate account suspension.</p>
+            </section>
+
+            <!-- Platform Safety -->
+            <section class="safety-card reveal">
+                <h2>🛡️ Platform Safety Measures</h2>
+                <p style="margin-bottom: 2rem;">HostelBuddy actively works to keep the platform secure:</p>
+                <ul>
+                    <li><b class="highlight-text">Verified Listings:</b> Only admin-approved properties go live.</li>
+                    <li><b class="highlight-text">Owner Verification:</b> Identity checks reduce fake listings.</li>
+                    <li><b class="highlight-text">Monitoring System:</b> Admin tracks and flags suspicious activities.</li>
+                    <li><b class="highlight-text">Controlled Enquiry:</b> Communication begins within the secure platform.</li>
+                </ul>
+            </section>
+        </div>
+
+        <section class="safety-footer-box reveal">
+            <h3 style="color: #fb7185; justify-content: center; font-size: 1.5rem;">⚠️ Important Disclaimer</h3>
+            <p style="color: #94a3b8; line-height: 1.8; margin-bottom: 2rem; max-width: 800px; margin: 0 auto 2rem;">
+                HostelBuddy acts as a platform to connect students and owners. We do NOT physically verify every property daily, handle payments, or guarantee user behavior.
+                <b>Final decisions must be made carefully by the users.</b>
+            </p>
+            
+            <div style="font-weight: 700; font-size: 1.2rem; color: #fff; margin-bottom: 2.5rem; display: flex; flex-direction: column; gap: 10px;">
+                <span>✅ Always verify before trusting</span>
+                <span>✅ Never rush payments</span>
+                <span>✅ Stay alert and informed</span>
+            </div>
+
+            <a href="index.html" class="btn btn-primary" style="padding: 1.2rem 3.5rem; font-size: 1.1rem;">Accept & Return to Discovery</a>
+            
+            <p style="margin-top: 3rem; font-size: 1rem; color: #94a3b8;">
+                Emergency? Contact: <a href="mailto:support@hostelbuddy.com" style="color: var(--primary); font-weight: 600;">support@hostelbuddy.com</a>
+            </p>
+        </section>
+    </main>
+
+    <footer class="premium-footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a href="index.html" class="logo" style="text-decoration: none;">HostelBuddy</a>
+                <p class="footer-about">Connecting students with reliable homes.</p>
+            </div>
+            <div>
+                <h4 class="footer-title">Help Center</h4>
+                <ul class="footer-links">
+                    <li><a href="guide.html">User Guide</a></li>
+                    <li><a href="safety.html">Safety Guidelines</a></li>
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                    <li><a href="terms.html">Terms of Service</a></li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Header animation
+        gsap.from(".safety-header", {
+            y: -50,
+            opacity: 0,
+            duration: 1.2,
+            ease: "power4.out"
+        });
+
+        // Scroll reveals for cards
+        gsap.utils.toArray(".reveal").forEach((element, i) => {
+            gsap.from(element, {
+                scrollTrigger: {
+                    trigger: element,
+                    start: "top 85%",
+                    toggleActions: "play none none none"
+                },
+                y: 60,
+                opacity: 0,
+                duration: 1,
+                ease: "power3.out",
+                delay: i * 0.1
+            });
+        });
+    </script>
+</body>
+</html>
