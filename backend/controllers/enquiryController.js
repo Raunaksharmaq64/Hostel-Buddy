@@ -81,3 +81,30 @@ exports.updateEnquiryStatus = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
+
+// @desc    Delete an enquiry
+// @route   DELETE /api/enquiries/:id
+// @access  Private (Student/Owner)
+exports.deleteEnquiry = async (req, res) => {
+  try {
+    const enquiry = await Enquiry.findById(req.params.id);
+
+    if (!enquiry) {
+      return res.status(404).json({ success: false, message: 'Enquiry not found' });
+    }
+
+    // Ensure user deleting is either the student who created it or the owner
+    const isStudent = enquiry.studentId.toString() === req.user.id;
+    const isOwner = enquiry.ownerId.toString() === req.user.id;
+
+    if (!isStudent && !isOwner) {
+      return res.status(403).json({ success: false, message: 'Not authorized to delete this enquiry' });
+    }
+
+    await enquiry.deleteOne();
+    res.status(200).json({ success: true, message: 'Enquiry deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+

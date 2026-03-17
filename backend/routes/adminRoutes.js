@@ -8,7 +8,10 @@ const {
   getVerifications,
   approveVerification,
   getAllEnquiries,
-  respondToEnquiry
+  respondToEnquiry,
+  getDeactivationRequests,
+  handleDeactivationRequest,
+  notifyOwner
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -36,5 +39,12 @@ router.put('/verifications/:id', approveVerification);
 // Enquiry Management 
 router.get('/enquiries', getAllEnquiries);
 router.put('/enquiries/:id/respond', respondToEnquiry);
+
+// Deactivation Management
+router.get('/deactivations', getDeactivationRequests);
+router.put('/deactivations/:id', handleDeactivationRequest);
+
+// Notification
+router.post('/notify-owner/:id', notifyOwner);
 
 module.exports = router;

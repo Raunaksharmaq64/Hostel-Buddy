@@ -36,21 +36,31 @@ const userSchema = new mongoose.Schema({
     default: 'unverified' 
   },
 
+  deactivationStatus: { 
+    type: String, 
+    enum: ['none', 'pending'], 
+    default: 'none' 
+  },
+  deactivationReason: { type: String },
+  notifications: [
+    {
+      message: { type: String, required: true },
+      type: { type: String, default: 'info' },
+      isRead: { type: Boolean, default: false },
+      createdAt: { type: Date, default: Date.now }
+    }
+  ],
+
   createdAt: { type: Date, default: Date.now }
 });
 
 // Password hashing middleware
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
   if (!this.isModified('password')) {
-    return next();
+    return;
   }
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 // Match user entered password to hashed password in database

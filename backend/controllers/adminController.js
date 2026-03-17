@@ -204,3 +204,74 @@ exports.respondToEnquiry = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
+
+// @desc    Get Deactivation Requests
+// @route   GET /api/admin/deactivations
+// @access  Private (Admin)
+exports.getDeactivationRequests = async (req, res) => {
+  try {
+    const requests = await User.find({ deactivationStatus: 'pending' }).select('-password');
+    res.status(200).json({ success: true, count: requests.length, data: requests });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Handle Deactivation Request (Approve/Reject)
+// @route   PUT /api/admin/deactivations/:id
+// @access  Private (Admin)
+exports.handleDeactivationRequest = async (req, res) => {
+  try {
+    const { action } = req.body; // 'approve' or 'reject'
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (action === 'approve') {
+      // Cascade delete logic (reusing deleteUser logic)
+      if (user.role === 'Owner') {
+        await Hostel.deleteMany({ ownerId: user._id });
+        await Enquiry.deleteMany({ ownerId: user._id });
+      } else if (user.role === 'Student') {
+        await Enquiry.deleteMany({ studentId: user._id });
+      }
+      await user.deleteOne();
+      return res.status(200).json({ success: true, message: 'User account deactivated and deleted.' });
+    } else {
+      user.deactivationStatus = 'none';
+      user.deactivationReason = '';
+      await user.save();
+      return res.status(200).json({ success: true, message: 'Deactivation request rejected.' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Notify Owner
+// @route   POST /api/admin/notify-owner/:id
+// @access  Private (Admin)
+exports.notifyOwner = async (req, res) => {
+  try {
+    const { message, type } = req.body;
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    user.notifications.push({
+      message,
+      type: type || 'warning',
+      createdAt: Date.now()
+    });
+
+    await user.save();
+    res.status(200).json({ success: true, message: 'Notification sent to owner.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+

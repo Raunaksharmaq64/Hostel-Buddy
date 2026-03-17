@@ -151,3 +151,80 @@ exports.requestVerification = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
+
+// @desc    Request Deactivation
+// @route   POST /api/profiles/request-deactivation
+// @access  Private (Student/Owner)
+exports.requestDeactivation = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    if (!reason) {
+      return res.status(400).json({ success: false, message: 'Please provide a reason for deactivation.' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: { deactivationStatus: 'pending', deactivationReason: reason } },
+      { returnDocument: 'after' }
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.status(200).json({ success: true, message: 'Deactivation request submitted successfully.', data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Get Notifications
+// @route   GET /api/profiles/notifications
+// @access  Private (Owner/Student)
+exports.getNotifications = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('notifications');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    // Sort notifications by date (newest first)
+    const sortedNotifications = user.notifications.sort((a, b) => b.createdAt - a.createdAt);
+    res.status(200).json({ success: true, data: sortedNotifications });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Mark Notifications as Read
+// @route   PUT /api/profiles/notifications/read
+// @access  Private (Owner/Student)
+exports.markNotificationsRead = async (req, res) => {
+  try {
+    await User.updateOne(
+      { _id: req.user.id },
+      { $set: { "notifications.$[].isRead": true } }
+    );
+    res.status(200).json({ success: true, message: 'Notifications marked as read' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Clear all notifications
+// @route   DELETE /api/profiles/notifications
+// @access  Private (Owner/Student)
+exports.clearNotifications = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    user.notifications = []; // Clear array
+    await user.save();
+
+    res.status(200).json({ success: true, message: 'Notifications cleared successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
