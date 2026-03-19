@@ -1,0 +1,13 @@
+{
+  "name": "hostel-buddy-root",
+  "version": "1.0.0",
+  "description": "Root configuration for Render deployment",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "npm start --prefix backend",
+    "build": "npm install --prefix backend"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

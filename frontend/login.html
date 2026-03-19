@@ -113,6 +113,7 @@
         </div>
     </div>
 
+    <script src="js/main.js"></script>
     <script>
         gsap.from(".auth-box", { y: 50, opacity: 0, duration: 1, ease: "power3.out" });
 
@@ -130,17 +131,7 @@
             btn.style.opacity = '0.7';
 
             try {
-                const response = await fetch('http://localhost:5000/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, role })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.message || 'Login failed');
-                }
+                const data = await fetchAPI('/auth/login', 'POST', { email, password, role });
 
                 // Save token and user info
                 localStorage.setItem('token', data.token);
