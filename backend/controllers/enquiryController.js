@@ -50,9 +50,48 @@ exports.getOwnerEnquiries = async (req, res) => {
       .populate('studentId', 'name email phone collegeName')
       .populate('hostelId', 'name');
       
-    res.status(200).json({ success: true, count: enquiries.length, data: enquiries });
+    // Mask student phone number for privacy
+    const maskedEnquiries = enquiries.map(enq => {
+      const eqObj = enq.toObject();
+      if (eqObj.studentId && eqObj.studentId.phone) {
+         const phone = eqObj.studentId.phone;
+         if (phone.length >= 4) {
+             const masked = phone.slice(0, -4).replace(/./g, '*') + phone.slice(-4);
+             eqObj.studentId.phone = masked;
+         }
+      }
+      return eqObj;
+    });
+
+    res.status(200).json({ success: true, count: maskedEnquiries.length, data: maskedEnquiries });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Reply to an enquiry
+// @route   PUT /api/enquiries/:id/reply
+// @access  Private (Owner)
+exports.replyToEnquiry = async (req, res) => {
+  try {
+    const { ownerReply } = req.body;
+    let enquiry = await Enquiry.findById(req.params.id);
+
+    if (!enquiry) {
+      return res.status(404).json({ success: false, message: 'Enquiry not found' });
+    }
+
+    if (enquiry.ownerId.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    enquiry.ownerReply = ownerReply;
+    enquiry.status = 'Responded';
+    await enquiry.save();
+
+    res.status(200).json({ success: true, data: enquiry });
+  } catch(err) {
+    res.status(500).json({ success: false, message: 'Server error', error: err.message });
   }
 };
 

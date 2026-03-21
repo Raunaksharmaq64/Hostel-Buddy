@@ -109,6 +109,10 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                     Enquiries
                 </button>
+                <button class="sidebar-item" id="nav-reviews" onclick="switchTab('reviews')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20.25c-4.97 0-9-4.03-9-9s4.03-9 9-9 9 4.03 9 9-9 9z"/><path d="M12 7v5l3 3"/></svg>
+                    Reviews
+                </button>
                 <button class="sidebar-item" id="nav-system-requests" onclick="switchTab('system-requests')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M4.93 4.93a10 10 0 000 14.14"/></svg>
                     System Requests
@@ -216,6 +220,19 @@
                 </div>
             </div>
 
+            <!-- Reviews Tab -->
+            <div id="reviews" class="tab-content">
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">Platform Reviews</div>
+                        <div class="dash-sub">Monitor student reviews and moderate appropriate content.</div>
+                    </div>
+                </div>
+                <div class="admin-list" id="reviewsContainer">
+                    <div style="text-align:center;padding:2rem;color:var(--text-muted)"><div class="spinner"></div></div>
+                </div>
+            </div>
+
             <!-- System Requests Tab -->
             <div id="system-requests" class="tab-content">
                 <div class="dash-topbar">
@@ -283,8 +300,8 @@
         </div>
     </footer>
 
-    <script src="js/main.js?v=3"></script>
-    <script src="js/admin.js?v=3"></script>
+    <script src="js/main.js?v=5"></script>
+    <script src="js/admin.js?v=5"></script>
     <script>
         // Sidebar active state
         function updateSidebarActive(tab) {

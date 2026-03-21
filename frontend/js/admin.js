@@ -21,6 +21,7 @@ function switchTab(tabId) {
     if (tabId === 'owners') loadUsers('Owner');
     if (tabId === 'listings') loadListings();
     if (tabId === 'enquiries') loadEnquiries();
+    if (tabId === 'reviews') loadReviews();
     if (tabId === 'system-requests') loadDeactivations();
 }
 
@@ -213,6 +214,12 @@ async function loadListings() {
                         <span><strong style="color:var(--text)">Contact:</strong> 📞 ${h.ownerId ? h.ownerId.phone : 'N/A'}</span>
                         <span><strong style="color:var(--text)">Views:</strong> 👁️ ${h.views || 0}</span>
                     </div>
+                    ${h.rules ? `
+                    <div class="info-box" style="margin-top:.75rem; background: rgba(249, 115, 22, 0.05); border-color: rgba(249, 115, 22, 0.2);">
+                        <small style="color: var(--accent); font-weight: 600;">Hostel Rules</small>
+                        <div style="font-size:.88rem;color:var(--text-2);white-space:pre-wrap;margin-top:.25rem;">${h.rules}</div>
+                    </div>
+                    ` : ''}
                 </div>
                 <div style="display:flex;gap:.6rem;flex-wrap:wrap">
                     ${h.isApproved
@@ -316,6 +323,62 @@ window.replyEnquiry = async function(enquiryId) {
         showToast('Error submitting response: ' + err.message, 'error');
     }
 };
+
+// ---- REVIEWS MANAGEMENT ----
+async function loadReviews() {
+    const container = document.getElementById('reviewsContainer');
+    if(!container) return;
+    container.innerHTML = spinner;
+
+    try {
+        const res = await fetchAPI('/reviews');
+        const revs = res.data;
+
+        if (revs.length === 0) {
+            container.innerHTML = `<div class="panel" style="text-align:center;color:var(--text-muted);padding:2.5rem">No reviews submitted yet.</div>`;
+            return;
+        }
+
+        container.innerHTML = revs.map(r => `
+            <div class="list-item" style="flex-direction:column;align-items:stretch;border-left-color:var(--accent)">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+                    <div>
+                        <h4>Hostel: <span style="color:var(--accent)">${r.hostelId ? r.hostelId.name : 'Unknown Property'}</span></h4>
+                        <p><strong>From:</strong> ${r.studentId ? r.studentId.name : 'Unknown Student'}</p>
+                        <div style="color: #F59E0B; font-size: 1.1rem; margin-top: 0.3rem;">
+                            ${"★".repeat(r.rating)}${"☆".repeat(5-r.rating)} <span style="color:var(--text-muted);font-size:.85rem;margin-left:.25rem">${r.rating}/5</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="msg-bubble" style="margin-top:.75rem">"${r.comment}"</div>
+
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.75rem">
+                    <div style="font-size:.75rem;color:var(--text-light)">
+                        Submitted: ${new Date(r.createdAt).toLocaleDateString()}
+                    </div>
+                    <button class="btn btn-sm" style="background:var(--danger-light);color:var(--danger)" onclick="deleteReview('${r._id}')">Delete Review</button>
+                </div>
+            </div>
+        `).join('');
+
+    } catch (err) {
+        console.error('loadReviews Error:', err);
+        container.innerHTML = `<p style="color:var(--danger)">Failed to load reviews.</p>`;
+    }
+}
+
+window.deleteReview = async function(id) {
+    const isConfirmed = await customConfirm('Are you sure you want to delete this review FOREVER?');
+    if(!isConfirmed) return;
+    try {
+        await fetchAPI(`/reviews/${id}`, 'DELETE');
+        showToast('Review deleted successfully.', 'success');
+        loadReviews();
+    } catch(err) {
+        showToast(err.message, 'error');
+    }
+}
 
 // ---- DEACTIVATION MANAGEMENT ----
 async function loadDeactivations() {

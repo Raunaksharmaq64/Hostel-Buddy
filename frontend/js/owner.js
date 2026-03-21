@@ -441,6 +441,17 @@ async function loadOwnerEnquiries() {
                         <strong>From:</strong> ${eq.studentId ? eq.studentId.name : 'N/A'} 
                         | <strong>Contact:</strong> 📞 ${eq.studentId ? eq.studentId.phone : 'N/A'}
                     </p>
+                    ${eq.ownerReply ? `
+                        <div style="background: rgba(14, 165, 233, 0.08); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--primary); margin-top: 1rem;">
+                            <p style="font-size: 0.85rem; color: var(--primary); font-weight: 700; margin-bottom: 0.3rem;">Your Reply:</p>
+                            <p style="font-size: 0.95rem; color: var(--text);">${eq.ownerReply}</p>
+                        </div>
+                    ` : `
+                        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-direction: column; max-width: 500px;">
+                            <textarea id="replyInput_${eq._id}" class="form-textarea" rows="2" placeholder="Write your reply to the student..."></textarea>
+                            <button class="btn btn-primary btn-sm" style="align-self: flex-start;" onclick="submitEnquiryReply('${eq._id}')">Send Reply</button>
+                        </div>
+                    `}
                 </div>
                 <div style="text-align:right; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end;">
                     <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
@@ -451,17 +462,25 @@ async function loadOwnerEnquiries() {
                             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     </div>
-                    <div style="margin-top: auto;">
-                        ${eq.status === 'Pending' ? 
-                            `<button class="btn btn-primary" style="padding:0.4rem 0.8rem; font-size:0.8rem" onclick="updateEnquiry('${eq._id}', 'Responded')">Mark Responded</button>` : 
-                            `<button class="btn btn-outline" style="padding:0.4rem 0.8rem; font-size:0.8rem; border-color: rgba(255,255,255,0.2);" onclick="updateEnquiry('${eq._id}', 'Closed')">Close Tracking</button>`
-                        }
-                    </div>
                 </div>
             </div>
         `).join('');
     } catch(err) {
         container.innerHTML = "Error loading enquiries.";
+    }
+}
+
+window.submitEnquiryReply = async function(id) {
+    const replyInput = document.getElementById(`replyInput_${id}`);
+    const ownerReply = replyInput ? replyInput.value.trim() : '';
+    if(!ownerReply) { showToast("Please type a reply.", "error"); return; }
+    
+    try {
+        await fetchAPI(`/enquiries/${id}/reply`, 'PUT', { ownerReply });
+        showToast("Reply sent successfully.", "success");
+        loadOwnerEnquiries();
+    } catch(err) {
+        showToast(err.message, "error");
     }
 }
 

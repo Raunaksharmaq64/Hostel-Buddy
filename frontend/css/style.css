@@ -993,9 +993,11 @@ h1,h2,h3,h4,h5,h6 {
 
 .main-content {
   flex: 1;
-  margin-left: 260px;
-  padding: 2rem 2rem 2rem;
-  min-height: 100vh;
+  padding: 2rem;
+  padding-bottom: 6rem; /* Huge space before footer */
+  min-height: calc(100vh - 72px);
+  margin-left: 260px; /* corresponds to sidebar width */
+  transition: margin-left 0.3s ease, padding 0.3s ease;
   background: var(--bg);
 }
 

@@ -12,6 +12,7 @@ const enquirySchema = new mongoose.Schema({
     default: 'Pending' 
   },
   adminResponse: { type: String },
+  ownerReply: { type: String },
   
   createdAt: { type: Date, default: Date.now }
 });
