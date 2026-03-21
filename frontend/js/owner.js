@@ -413,60 +413,158 @@ window.deleteHostel = async function(id) {
 // ---- ENQUIRIES LOGIC ----
 async function loadOwnerEnquiries() {
     const container = document.getElementById('ownerEnquiriesContainer');
-    container.innerHTML = "Loading...";
+    container.innerHTML = `<div style="text-align:center;padding:2rem;"><div class="spinner"></div></div>`;
 
     try {
         const res = await fetchAPI('/enquiries/owner');
         const enquiries = res.data;
 
         if (enquiries.length === 0) {
-            container.innerHTML = "No student enquiries right now.";
+            container.innerHTML = `
+                <div style="text-align:center;padding:4rem 2rem;color:var(--text-muted);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+                    <p style="font-size: 1.1rem; font-weight: 600; color: var(--text);">No enquiries yet</p>
+                    <p style="font-size: 0.9rem; margin-top: 0.4rem;">When students enquire about your hostels, they'll appear here.</p>
+                </div>`;
             return;
         }
 
-        container.innerHTML = enquiries.map(eq => `
-            <div class="list-item">
-                <div style="flex:1">
-                    <h4 style="color:var(--primary); font-size: 1.1rem; margin-bottom: 0.5rem;">${eq.hostelId ? eq.hostelId.name : 'Unknown'}</h4>
-                    <div style="background: rgba(15, 23, 42, 0.4); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--primary); margin-bottom: 0.8rem;">
-                        <p style="font-style: italic; font-size: 0.95rem;">"${eq.message}"</p>
+        // Clear All button banner
+        const clearAllBanner = `
+            <div style="display:flex;justify-content:flex-end;margin-bottom:1.25rem;">
+                <button onclick="clearAllOwnerEnquiries()" style="
+                    background: none; border: 1.5px solid var(--danger); color: var(--danger);
+                    border-radius: var(--radius); padding: 0.5rem 1.1rem; cursor: pointer;
+                    font-size: 0.85rem; font-weight: 700; transition: all 0.2s;
+                    display:flex;align-items:center;gap:.4rem;"
+                    onmouseenter="this.style.background='var(--danger)';this.style.color='#fff'"
+                    onmouseleave="this.style.background='none';this.style.color='var(--danger)'">
+                    🗑 Clear All Enquiries
+                </button>
+            </div>`;
+
+        container.innerHTML = clearAllBanner + enquiries.map(eq => {
+            const sentDate = new Date(eq.createdAt).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+            let statusColor = '#94a3b8';
+            let statusBg   = 'var(--surface-3)';
+            let statusDot  = '#94a3b8';
+            if (eq.status === 'Pending')   { statusColor = '#F59E0B'; statusBg = 'rgba(245,158,11,0.12)'; statusDot='#F59E0B'; }
+            if (eq.status === 'Responded') { statusColor = '#10b981'; statusBg = 'rgba(16,185,129,0.12)'; statusDot='#10b981'; }
+
+            return `
+            <div style="
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                overflow: hidden;
+                box-shadow: var(--shadow-sm);
+                transition: box-shadow 0.2s;
+                margin-bottom: 1.25rem;
+            " onmouseenter="this.style.boxShadow='var(--shadow-md)'" onmouseleave="this.style.boxShadow='var(--shadow-sm)'">
+
+                <!-- Card Header -->
+                <div style="
+                    display: flex; justify-content: space-between; align-items: center;
+                    flex-wrap:wrap; gap:.75rem;
+                    padding: 1rem 1.25rem;
+                    background: var(--surface-2);
+                    border-bottom: 1px solid var(--border);
+                ">
+                    <div style="display:flex;align-items:center;gap:0.75rem;">
+                        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--primary));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:#fff;flex-shrink:0;">
+                            ${eq.studentId ? eq.studentId.name.charAt(0).toUpperCase() : 'S'}
+                        </div>
+                        <div>
+                            <div style="font-weight:700;font-size:1rem;color:var(--text);">${eq.studentId ? eq.studentId.name : 'Unknown Student'}</div>
+                            <div style="font-size:0.78rem;color:var(--text-muted);">📞 ${eq.studentId ? eq.studentId.phone : 'N/A'} &nbsp;·&nbsp; 🏠 ${eq.hostelId ? eq.hostelId.name : 'N/A'}</div>
+                        </div>
                     </div>
-                    ${eq.adminResponse ? `
-                        <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--secondary); margin-bottom: 0.8rem;">
-                            <p style="font-size: 0.85rem; color: var(--secondary); font-weight: 600; margin-bottom: 0.2rem;">Official Platform Response:</p>
-                            <p style="font-size: 0.95rem;">${eq.adminResponse}</p>
-                        </div>
-                    ` : ''}
-                    <p style="color:var(--text-muted); font-size:0.9rem;">
-                        <strong>From:</strong> ${eq.studentId ? eq.studentId.name : 'N/A'} 
-                        | <strong>Contact:</strong> 📞 ${eq.studentId ? eq.studentId.phone : 'N/A'}
-                    </p>
-                    ${eq.ownerReply ? `
-                        <div style="background: rgba(14, 165, 233, 0.08); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--primary); margin-top: 1rem;">
-                            <p style="font-size: 0.85rem; color: var(--primary); font-weight: 700; margin-bottom: 0.3rem;">Your Reply:</p>
-                            <p style="font-size: 0.95rem; color: var(--text);">${eq.ownerReply}</p>
-                        </div>
-                    ` : `
-                        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-direction: column; max-width: 500px;">
-                            <textarea id="replyInput_${eq._id}" class="form-textarea" rows="2" placeholder="Write your reply to the student..."></textarea>
-                            <button class="btn btn-primary btn-sm" style="align-self: flex-start;" onclick="submitEnquiryReply('${eq._id}')">Send Reply</button>
-                        </div>
-                    `}
-                </div>
-                <div style="text-align:right; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end;">
-                    <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
-                        <span style="display:block; font-weight:bold; color:${eq.status === 'Pending' ? 'orange' : (eq.status === 'Responded' ? '#10b981' : 'gray')}; background: rgba(255,255,255,0.05); padding: 0.3rem 0.8rem; border-radius: 12px; font-size: 0.85rem;">
+                    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+                        <span style="display:flex;align-items:center;gap:0.4rem;color:${statusColor};background:${statusBg};padding:0.3rem 0.8rem;border-radius:20px;font-size:0.78rem;font-weight:700;">
+                            <span style="width:6px;height:6px;border-radius:50%;background:${statusDot};display:inline-block;"></span>
                             ${eq.status}
                         </span>
-                        <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-color: rgba(244, 63, 94, 0.5); color: var(--accent);" onclick="deleteOwnerEnquiry('${eq._id}')" title="Clear Enquiry">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        <button onclick="deleteOwnerEnquiry('${eq._id}')" style="
+                            background: none; border: 1px solid var(--danger); color: var(--danger);
+                            border-radius: var(--radius); padding: 0.3rem 0.7rem; cursor: pointer;
+                            font-size: 0.78rem; font-weight: 600; transition: all 0.2s;
+                            display:flex;align-items:center;gap:.3rem;"
+                            onmouseenter="this.style.background='var(--danger)';this.style.color='#fff'"
+                            onmouseleave="this.style.background='none';this.style.color='var(--danger)'">
+                            🗑 Clear
                         </button>
                     </div>
                 </div>
+
+                <!-- Conversation Body -->
+                <div style="padding: 1.25rem; display:flex; flex-direction: column; gap: 1rem;">
+
+                    <!-- Student's Message (incoming / left) -->
+                    <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;display:flex;align-items:center;gap:0.3rem;">
+                            <span>👤 ${eq.studentId ? eq.studentId.name : 'Student'}</span> <span>·</span> <span>${sentDate}</span>
+                        </div>
+                        <div style="
+                            background: var(--surface-3);
+                            border: 1px solid var(--border);
+                            padding: 0.9rem 1.1rem;
+                            border-radius: 4px 16px 16px 16px;
+                            max-width: 85%;
+                            font-size: 0.95rem;
+                            line-height: 1.6;
+                            color: var(--text-2);
+                        ">"${eq.message}"</div>
+                    </div>
+
+                    <!-- Official Admin Response if any -->
+                    ${eq.adminResponse ? `
+                        <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">✅ Official HostelBuddy Response</div>
+                            <div style="
+                                background: rgba(16,185,129,0.07);
+                                border: 1px solid rgba(16,185,129,0.3);
+                                padding: 0.9rem 1.1rem;
+                                border-radius: 4px 16px 16px 16px;
+                                max-width: 85%;
+                                font-size: 0.95rem;
+                                line-height: 1.6;
+                                color: var(--text-2);
+                            ">${eq.adminResponse}</div>
+                        </div>
+                    ` : ''}
+
+                    <!-- Owner's Reply (outgoing / right) OR Reply Form -->
+                    ${eq.ownerReply ? `
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;">
+                            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Your Reply</div>
+                            <div style="
+                                background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+                                color: #fff;
+                                padding: 0.9rem 1.1rem;
+                                border-radius: 16px 4px 16px 16px;
+                                max-width: 85%;
+                                font-size: 0.95rem;
+                                line-height: 1.6;
+                                box-shadow: 0 2px 8px rgba(14,165,233,0.25);
+                            ">${eq.ownerReply}</div>
+                        </div>
+                    ` : `
+                        <div style="border-top: 1px dashed var(--border); padding-top: 1rem; display:flex; flex-direction:column; gap: 0.6rem;">
+                            <div style="font-size:0.8rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Reply to Student</div>
+                            <textarea id="replyInput_${eq._id}" class="form-textarea" rows="2" placeholder="Write your reply to this student..." style="resize:vertical;"></textarea>
+                            <div style="display:flex;justify-content:flex-end;">
+                                <button class="btn btn-primary btn-sm" onclick="submitEnquiryReply('${eq._id}')">Send Reply ➤</button>
+                            </div>
+                        </div>
+                    `}
+
+                </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
+
     } catch(err) {
-        container.innerHTML = "Error loading enquiries.";
+        container.innerHTML = `<p style="color:var(--danger);padding:1rem;">Error loading enquiries: ${err.message}</p>`;
     }
 }
 
@@ -499,10 +597,24 @@ window.deleteOwnerEnquiry = async function(id) {
     if(!isConfirmed) return;
     try {
         await fetchAPI(`/enquiries/${id}`, 'DELETE');
-        showToast("Enquiry cleared successfully.", "success");
+        showToast("Enquiry cleared.", "success");
         loadOwnerEnquiries();
     } catch(err) {
         showToast(err.message, "error");
+    }
+}
+
+window.clearAllOwnerEnquiries = async function() {
+    const isConfirmed = await customConfirm("Are you sure you want to clear ALL enquiries? This cannot be undone.");
+    if(!isConfirmed) return;
+    try {
+        const res = await fetchAPI('/enquiries/owner');
+        const enquiries = res.data;
+        await Promise.all(enquiries.map(eq => fetchAPI(`/enquiries/${eq._id}`, 'DELETE')));
+        showToast(`All ${enquiries.length} enquiries cleared.`, "success");
+        loadOwnerEnquiries();
+    } catch(err) {
+        showToast("Failed to clear all enquiries: " + err.message, "error");
     }
 }
 
