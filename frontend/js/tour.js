@@ -3,17 +3,16 @@
    ============================================================ */
 
 window.HostelTour = (function () {
-
-  let steps   = [];
-  let current = 0;
-  let tourKey = '';
+  let steps = []
+  let current = 0
+  let tourKey = ''
 
   // ── DOM Refs ──────────────────────────────────────────────
-  const $ = id => document.getElementById(id);
+  const $ = id => document.getElementById(id)
 
   // ── Inject DOM if not present ─────────────────────────────
-  function injectDOM() {
-    if ($('tourOverlay')) return;
+  function injectDOM () {
+    if ($('tourOverlay')) return
     document.body.insertAdjacentHTML('beforeend', `
       <!-- 4 dark panels forming the spotlight cutout -->
       <div id="tourOverlay">
@@ -57,292 +56,291 @@ window.HostelTour = (function () {
           </div>
         </div>
       </div>
-    `);
+    `)
   }
 
   // ── Welcome Modal ─────────────────────────────────────────
-  function showWelcome(desc) {
-    $('tourWelcomeDesc').textContent = desc;
-    const w = $('tourWelcome');
-    w.style.display = 'flex';
-    requestAnimationFrame(() => w.classList.add('show'));
+  function showWelcome (desc) {
+    $('tourWelcomeDesc').textContent = desc
+    const w = $('tourWelcome')
+    w.style.display = 'flex'
+    requestAnimationFrame(() => w.classList.add('show'))
   }
 
-  function hideWelcome() {
-    const w = $('tourWelcome');
-    w.classList.remove('show');
-    setTimeout(() => w.style.display = 'none', 400);
+  function hideWelcome () {
+    const w = $('tourWelcome')
+    w.classList.remove('show')
+    setTimeout(() => w.style.display = 'none', 400)
   }
 
   // ── Spotlight ─────────────────────────────────────────────
-  function updateSpotlight(el) {
-    const pad = 10;
-    const r   = el.getBoundingClientRect();
-    const sp  = $('tourSpotlight');
-    const ov  = $('tourOverlay');
+  function updateSpotlight (el) {
+    const pad = 10
+    const r = el.getBoundingClientRect()
+    const sp = $('tourSpotlight')
+    const ov = $('tourOverlay')
 
-    const top    = r.top    - pad;
-    const left   = r.left   - pad;
-    const width  = r.width  + pad * 2;
-    const height = r.height + pad * 2;
-    const bottom = r.bottom + pad;
-    const right  = r.right  + pad;
+    const top = r.top - pad
+    const left = r.left - pad
+    const width = r.width + pad * 2
+    const height = r.height + pad * 2
+    const bottom = r.bottom + pad
+    const right = r.right + pad
 
     // Position spotlight cutout
-    sp.style.top    = top + 'px';
-    sp.style.left   = left + 'px';
-    sp.style.width  = width + 'px';
-    sp.style.height = height + 'px';
+    sp.style.top = top + 'px'
+    sp.style.left = left + 'px'
+    sp.style.width = width + 'px'
+    sp.style.height = height + 'px'
 
     // Position dark panels around it
-    $('tpTop').style.cssText    = `top:0;left:0;right:0;height:${top}px`;
-    $('tpBottom').style.cssText = `top:${bottom}px;left:0;right:0;bottom:0`;
-    $('tpLeft').style.cssText   = `top:${top}px;left:0;width:${left}px;height:${height}px`;
-    $('tpRight').style.cssText  = `top:${top}px;left:${right}px;right:0;height:${height}px`;
+    $('tpTop').style.cssText = `top:0;left:0;right:0;height:${top}px`
+    $('tpBottom').style.cssText = `top:${bottom}px;left:0;right:0;bottom:0`
+    $('tpLeft').style.cssText = `top:${top}px;left:0;width:${left}px;height:${height}px`
+    $('tpRight').style.cssText = `top:${top}px;left:${right}px;right:0;height:${height}px`
 
-    ov.classList.add('active');
-    sp.style.display = 'block';
+    ov.classList.add('active')
+    sp.style.display = 'block'
   }
 
-  function hideSpotlight() {
-    const ov = $('tourOverlay');
-    const sp = $('tourSpotlight');
-    if(ov) ov.classList.remove('active');
-    if(sp) sp.style.display = 'none';
-    ['tpTop','tpBottom','tpLeft','tpRight'].forEach(id => {
-      const el = $(id);
-      if(el) el.style.cssText = '';
-    });
+  function hideSpotlight () {
+    const ov = $('tourOverlay')
+    const sp = $('tourSpotlight')
+    if (ov) ov.classList.remove('active')
+    if (sp) sp.style.display = 'none';
+    ['tpTop', 'tpBottom', 'tpLeft', 'tpRight'].forEach(id => {
+      const el = $(id)
+      if (el) el.style.cssText = ''
+    })
   }
 
   // ── Tooltip Positioning ────────────────────────────────────
-  function positionTooltip(el) {
-    const tt   = $('tourTooltip');
-    const pad  = 18;
-    const r    = el.getBoundingClientRect();
-    const tw   = tt.offsetWidth  || 340;
-    const th   = tt.offsetHeight || 220;
-    const vw   = window.innerWidth;
-    const vh   = window.innerHeight;
+  function positionTooltip (el) {
+    const tt = $('tourTooltip')
+    const pad = 18
+    const r = el.getBoundingClientRect()
+    const tw = tt.offsetWidth || 340
+    const th = tt.offsetHeight || 220
+    const vw = window.innerWidth
+    const vh = window.innerHeight
 
-    let top, left, arrow;
+    let top, left, arrow
 
     // Try below first
     if (r.bottom + th + pad < vh) {
-      top   = r.bottom + pad;
-      left  = Math.min(r.left, vw - tw - 12);
-      arrow = 'top';
+      top = r.bottom + pad
+      left = Math.min(r.left, vw - tw - 12)
+      arrow = 'top'
     }
     // Try above
     else if (r.top - th - pad > 0) {
-      top   = r.top - th - pad;
-      left  = Math.min(r.left, vw - tw - 12);
-      arrow = 'bottom';
+      top = r.top - th - pad
+      left = Math.min(r.left, vw - tw - 12)
+      arrow = 'bottom'
     }
     // Try right
     else if (r.right + tw + pad < vw) {
-      top   = Math.max(r.top, 12);
-      left  = r.right + pad;
-      arrow = 'left';
+      top = Math.max(r.top, 12)
+      left = r.right + pad
+      arrow = 'left'
     }
     // Try left
     else if (r.left - tw - pad > 0) {
-      top   = Math.max(r.top, 12);
-      left  = r.left - tw - pad;
-      arrow = 'right';
+      top = Math.max(r.top, 12)
+      left = r.left - tw - pad
+      arrow = 'right'
     }
     // Fallback: center
     else {
-      top   = (vh - th) / 2;
-      left  = (vw - tw) / 2;
-      arrow = 'center';
+      top = (vh - th) / 2
+      left = (vw - tw) / 2
+      arrow = 'center'
     }
 
-    left = Math.max(12, left);
-    top  = Math.max(12, top);
+    left = Math.max(12, left)
+    top = Math.max(12, top)
 
-    tt.style.top  = top + 'px';
-    tt.style.left = left + 'px';
-    tt.setAttribute('data-arrow', arrow);
+    tt.style.top = top + 'px'
+    tt.style.left = left + 'px'
+    tt.setAttribute('data-arrow', arrow)
   }
 
   // ── Render step ───────────────────────────────────────────
-  function renderStep(index) {
-    const step = steps[index];
-    const tt   = $('tourTooltip');
-    const total = steps.length;
+  function renderStep (index) {
+    const step = steps[index]
+    const tt = $('tourTooltip')
+    const total = steps.length
 
     // Find target element
-    let el = step.selector ? document.querySelector(step.selector) : null;
+    const el = step.selector ? document.querySelector(step.selector) : null
 
     // Fallback: if element not visible, scroll sidebar tab into view
     if (el && step.clickBefore) {
-      document.querySelector(step.clickBefore)?.click?.();
-      setTimeout(() => _renderStep(step, el, index, total), 300);
+      document.querySelector(step.clickBefore)?.click?.()
+      setTimeout(() => _renderStep(step, el, index, total), 300)
     } else {
-      _renderStep(step, el, index, total);
+      _renderStep(step, el, index, total)
     }
   }
 
-  function _renderStep(step, el, index, total) {
-    const tt = $('tourTooltip');
+  function _renderStep (step, el, index, total) {
+    const tt = $('tourTooltip')
 
     // Animate out
-    tt.classList.add('entering');
+    tt.classList.add('entering')
 
     setTimeout(() => {
       // Fill content
-      $('tourIcon').textContent  = step.icon  || '✨';
-      $('tourTitle').textContent = step.title || '';
-      $('tourDesc').textContent  = step.desc  || '';
-      $('tourCounter').textContent = `Step ${index + 1} of ${total}`;
+      $('tourIcon').textContent = step.icon || '✨'
+      $('tourTitle').textContent = step.title || ''
+      $('tourDesc').textContent = step.desc || ''
+      $('tourCounter').textContent = `Step ${index + 1} of ${total}`
 
       // Progress dots
       $('tourDots').innerHTML = Array.from({ length: total }, (_, i) =>
         `<div class="tour-dot ${i === index ? 'active' : ''}"></div>`
-      ).join('');
+      ).join('')
 
       // Back button visibility
-      $('tourBackBtn').style.display = index === 0 ? 'none' : '';
+      $('tourBackBtn').style.display = index === 0 ? 'none' : ''
 
       // Next button label
-      const isLast = index === total - 1;
-      $('tourNextLabel').textContent = isLast ? 'Finish' : 'Next';
-      $('tourNextArrow').textContent = isLast ? '🎉' : '→';
+      const isLast = index === total - 1
+      $('tourNextLabel').textContent = isLast ? 'Finish' : 'Next'
+      $('tourNextArrow').textContent = isLast ? '🎉' : '→'
 
       // Show tooltip
-      tt.style.display = 'block';
+      tt.style.display = 'block'
 
       // Spotlight + position
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
         setTimeout(() => {
-          updateSpotlight(el);
-          positionTooltip(el);
-          tt.classList.remove('entering');
-        }, 200);
+          updateSpotlight(el)
+          positionTooltip(el)
+          tt.classList.remove('entering')
+        }, 200)
       } else {
         // No target — center the tooltip
-        hideSpotlight();
-        tt.style.top  = '50%';
-        tt.style.left = '50%';
-        tt.style.transform = 'translate(-50%,-50%)';
-        tt.setAttribute('data-arrow', 'center');
-        tt.classList.remove('entering');
+        hideSpotlight()
+        tt.style.top = '50%'
+        tt.style.left = '50%'
+        tt.style.transform = 'translate(-50%,-50%)'
+        tt.setAttribute('data-arrow', 'center')
+        tt.classList.remove('entering')
       }
-    }, 280);
+    }, 280)
   }
 
   // ── Public API ─────────────────────────────────────────────
-  function init(config) {
-    tourKey = config.key || 'tour_done';
-    steps   = config.steps || [];
-    current = 0;
+  function init (config) {
+    tourKey = config.key || 'tour_done'
+    steps = config.steps || []
+    current = 0
 
-    injectDOM();
+    injectDOM()
 
     // Inject CSS if not already
     if (!document.querySelector('link[href*="tour.css"]')) {
-      const link = document.createElement('link');
-      link.rel  = 'stylesheet';
-      link.href = 'css/tour.css';
-      document.head.appendChild(link);
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = 'css/tour.css'
+      document.head.appendChild(link)
     }
 
     // Show replay button always (visible after tour finishes or if already done)
     if (localStorage.getItem(tourKey)) {
-      setTimeout(() => $('tourReplayBtn')?.classList.add('visible'), 1000);
-      return;
+      setTimeout(() => $('tourReplayBtn')?.classList.add('visible'), 1000)
+      return
     }
 
     // First time — show welcome modal after small delay
     setTimeout(() => {
-      showWelcome(config.welcomeDesc || 'Let us show you around in just a minute!');
-    }, 1200);
+      showWelcome(config.welcomeDesc || 'Let us show you around in just a minute!')
+    }, 1200)
   }
 
-  function startSteps() {
-    hideWelcome();
-    current = 0;
-    renderStep(current);
+  function startSteps () {
+    hideWelcome()
+    current = 0
+    renderStep(current)
   }
 
-  function next() {
+  function next () {
     if (current < steps.length - 1) {
-      current++;
-      renderStep(current);
+      current++
+      renderStep(current)
     } else {
-      finish();
+      finish()
     }
   }
 
-  function prev() {
+  function prev () {
     if (current > 0) {
-      current--;
-      renderStep(current);
+      current--
+      renderStep(current)
     }
   }
 
-  function skip() {
-    hideWelcome();
-    finish();
+  function skip () {
+    hideWelcome()
+    finish()
   }
 
-  function finish() {
-    localStorage.setItem(tourKey, 'true');
-    hideSpotlight();
-    const tt = $('tourTooltip');
-    if (tt) { tt.classList.add('entering'); setTimeout(() => tt.style.display = 'none', 320); }
-    const ov = $('tourOverlay');
-    if (ov) ov.classList.remove('active');
-    setTimeout(() => $('tourReplayBtn')?.classList.add('visible'), 600);
+  function finish () {
+    localStorage.setItem(tourKey, 'true')
+    hideSpotlight()
+    const tt = $('tourTooltip')
+    if (tt) { tt.classList.add('entering'); setTimeout(() => tt.style.display = 'none', 320) }
+    const ov = $('tourOverlay')
+    if (ov) ov.classList.remove('active')
+    setTimeout(() => $('tourReplayBtn')?.classList.add('visible'), 600)
 
     // Confetti burst on finish
-    if (current === steps.length - 1) launchConfetti();
+    if (current === steps.length - 1) launchConfetti()
   }
 
-  function restart() {
-    localStorage.removeItem(tourKey);
-    $('tourReplayBtn')?.classList.remove('visible');
-    current = 0;
-    startSteps();
+  function restart () {
+    localStorage.removeItem(tourKey)
+    $('tourReplayBtn')?.classList.remove('visible')
+    current = 0
+    startSteps()
   }
 
   // ── Mini confetti ─────────────────────────────────────────
-  function launchConfetti() {
-    const colors = ['#0ea5e9','#6366f1','#f59e0b','#10b981','#ec4899'];
+  function launchConfetti () {
+    const colors = ['#0ea5e9', '#6366f1', '#f59e0b', '#10b981', '#ec4899']
     for (let i = 0; i < 60; i++) {
-      const el = document.createElement('div');
+      const el = document.createElement('div')
       el.style.cssText = `
         position:fixed; z-index:9999; pointer-events:none;
-        width:${5 + Math.random()*6}px; height:${5 + Math.random()*6}px;
-        background:${colors[Math.floor(Math.random()*colors.length)]};
-        left:${20 + Math.random()*60}%;
-        top:${20 + Math.random()*30}%;
-        border-radius:${Math.random()>.5?'50%':'2px'};
+        width:${5 + Math.random() * 6}px; height:${5 + Math.random() * 6}px;
+        background:${colors[Math.floor(Math.random() * colors.length)]};
+        left:${20 + Math.random() * 60}%;
+        top:${20 + Math.random() * 30}%;
+        border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
         opacity:1;
-      `;
-      document.body.appendChild(el);
-      const dx = (Math.random() - 0.5) * 400;
-      const dy = -(100 + Math.random() * 300);
-      const rot = Math.random() * 720;
+      `
+      document.body.appendChild(el)
+      const dx = (Math.random() - 0.5) * 400
+      const dy = -(100 + Math.random() * 300)
+      const rot = Math.random() * 720
       el.animate([
         { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
         { transform: `translate(${dx}px,${dy + 400}px) rotate(${rot}deg)`, opacity: 0 }
-      ], { duration: 1200 + Math.random() * 800, easing: 'cubic-bezier(.25,.46,.45,.94)', fill: 'forwards' });
-      setTimeout(() => el.remove(), 2200);
+      ], { duration: 1200 + Math.random() * 800, easing: 'cubic-bezier(.25,.46,.45,.94)', fill: 'forwards' })
+      setTimeout(() => el.remove(), 2200)
     }
   }
 
   // Handle window resize — reposition
   window.addEventListener('resize', () => {
-    const tt = $('tourTooltip');
-    if (!tt || tt.style.display === 'none') return;
-    const step = steps[current];
-    const el = step?.selector ? document.querySelector(step.selector) : null;
-    if (el) { updateSpotlight(el); positionTooltip(el); }
-  });
+    const tt = $('tourTooltip')
+    if (!tt || tt.style.display === 'none') return
+    const step = steps[current]
+    const el = step?.selector ? document.querySelector(step.selector) : null
+    if (el) { updateSpotlight(el); positionTooltip(el) }
+  })
 
-  return { init, startSteps, next, prev, skip, restart, finish };
-
-})();
+  return { init, startSteps, next, prev, skip, restart, finish }
+})()
