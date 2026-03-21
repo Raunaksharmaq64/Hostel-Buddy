@@ -10,6 +10,7 @@ The application is structured around three primary roles, each with a unique das
    - Profiles with personal, college, and contact info.
    - Can search, filter (price, room type, food availability, rating), and discover nearby hostels.
    - Can view detailed property pages including various photos (building, room, washroom, mess), amenities, and rules.
+   - **Review & Rating System**: Can leave feedback and ratings for hostels they've visited.
    - Can send enquiries to hostel owners and save favorite hostels.
 
 2. **Hostel / PG Owner**:
@@ -22,11 +23,14 @@ The application is structured around three primary roles, each with a unique das
    - Full system oversight.
    - Monitors student behavior and limits suspicious activity.
    - Manages and approves/removes owner listings.
+   - **Enquiry Management**: Can view and respond to student enquiries directly.
    - Accesses platform analytics (most searched hostels, active users, response rates, etc.).
 
 ## Key Design Features
 - **Premium Glassmorphism UI**: High-end user interface utilizing GSAP animations, 3D card tilt effects, dynamic tooltips, and responsive glass panels.
+- **Guided Onboarding Tour**: A premium, spotlight-driven interactive tour for new users to quickly learn the platform's features (powered by `tour.js`).
 - **Global Footer Navigation**: A premium, responsive footer loaded with quick links and informative "About" details integrated across all views, including dashboards.
+- **Resource Pages**: Specialized pages for **Safety Guidelines**, **Privacy Policy**, **Terms of Service**, and a comprehensive **User Guide**.
 - **Security & Data Handling**: Fast JWT authentication and safe Mongoose cascade deletions to ensure a flawlessly clean database.
 
 ## Tech Stack

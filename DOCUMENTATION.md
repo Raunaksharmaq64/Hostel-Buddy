@@ -65,6 +65,11 @@ Manages messages between Students and Owners.
 - **Status Tracking**: `status` (Enum: 'Pending', 'Responded', 'Closed').
 - **Admin Response**: `adminResponse` (Admin can leave official replies on enquiries).
 
+### Review
+Handles hostel ratings and feedback from students.
+- **Fields**: `studentId` (ref User), `hostelId` (ref Hostel), `rating` (Number, 0-5), `comment` (String), `createdAt`.
+- **Automation**: Average rating of a Hostel is automatically updated upon new review creation or deletion.
+
 ## 4. Working Workflows
 
 ### 4.1. Authentication Flow
@@ -84,12 +89,23 @@ Manages messages between Students and Owners.
 2. Owner receives the enquiry, reads the context, and marks it as "Responded" or "Closed".
 3. Admin can view all enquiries globally and intervene by providing an `adminResponse` on the platform.
 
-### 4.4. Deactivation & Data Cascade Cleanup Flow
+### 4.4. Review & Rating Flow
+1. Student stays at or visits a hostel and submits a rating/comment.
+2. Backend validates that the student hasn't already reviewed this specific hostel.
+3. On success, the `Hostel` document's `rating` field is recalculated as the average of all associated `Review` documents.
+4. Admin can monitor and delete inappropriate reviews via the Admin Dashboard.
+
+### 4.5. Deactivation & Data Cascade Cleanup Flow
 1. Student or Owner requests account deletion via "Danger Zone".
 2. Admin reviews request in "System Requests" tab.
 3. If approved:
    - If User is Owner: Backend finds all owned `Hostel` IDs, deletes the `Hostel` documents, deletes matching `Enquiry` documents, and **cascades** the deletion by stripping those `Hostel` IDs from all Student `savedHostels` arrays.
    - User account is completely wiped from the DB.
+
+### 4.6. Guided Onboarding Tour
+1. New users (Student/Owner/Admin) are greeted with a "Guided Tour" invitation (powered by `tour.js`).
+2. The engine uses a spotlight effect (`tourOverlay`) to highlight key dashboard elements.
+3. Completion state is tracked in `localStorage` to prevent re-triggering, though users can manually "Replay Tour" from the dashboard settings.
 
 ## 5. Coding & Naming Conventions
 
@@ -117,6 +133,7 @@ RESTful conventions used aggressively. Responses standardly structured as `{ suc
   - `safety.html`: Essential safety practices and guidelines for students and owners.
   - `terms.html`: User roles, account responsibilities, and platform facilitation rules.
 - **Animations**: Handled primarily via GSAP, with native CSS transitions and `transform: preserve-3d` fallback for card hover effects (`.card-3d`).
+- **Tour Engine**: `tour.js` manages step-by-step onboarding using a custom spotlight system and `localStorage` persistence.
 
 ## 6. Key API Reference Matrix
 
@@ -136,6 +153,10 @@ RESTful conventions used aggressively. Responses standardly structured as `{ suc
 | `/api/admin`       | `/analytics`                 | GET    | Admin         | Platform metrics                             |
 |                    | `/deactivations/:id`         | PUT    | Admin         | Approve (delete user + cascade) or Reject    |
 |                    | `/notify-owner/:id`          | POST   | Admin         | Dispatch warning/info message to owner       |
+| `/api/reviews`     | `/hostel/:hostelId`          | GET    | Public        | Get all reviews for a property               |
+|                    | `/`                          | POST   | Student       | Submit a new rating and comment              |
+|                    | `/`                          | GET    | Admin         | View all platform reviews                    |
+|                    | `/:id`                       | DELETE | Admin         | Remove a review                              |
 
 ## 7. Deployment Considerations
 When preparing to deploy (e.g., Render, Heroku, Vercel for frontend/Railway for backend):
