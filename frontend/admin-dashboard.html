@@ -3,297 +3,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Hostel Buddy</title>
-    <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <title>Admin Dashboard — HostelBuddy</title>
+    <link rel="stylesheet" href="css/style.css?v=3">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
     <style>
-        .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-            padding-top: 80px; 
-        }
+        /* Dashboard layout */
+        .dashboard-container { padding-top: 0; }
+        .sidebar { top: 0; height: 100vh; }
+        .tab-content { display: none; animation: fadeUp 0.4s ease; }
+        .tab-content.active { display: block; }
 
-        .sidebar {
-            width: 250px;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            position: fixed;
-            height: calc(100vh - 80px);
-            border-right: 1px solid var(--glass-border);
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(10px);
-        }
+        /* Analytics grid */
+        .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+        .stat-card { padding: 1.5rem; text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: box-shadow 0.3s ease; }
+        .stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+        .stat-card h3 { color: var(--text-muted); font-size: .88rem; font-weight: 600; margin-bottom: .5rem; text-transform: uppercase; letter-spacing: .5px; }
+        .stat-card h1 { font-size: 2.2rem; font-weight: 900; font-family: var(--font-head); line-height: 1; }
 
-        .nav-item {
-            padding: 1rem;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: var(--transition);
-            font-weight: 500;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .nav-item:hover, .nav-item.active {
-            background: var(--surface);
-            color: var(--primary);
-        }
-
-        .main-content {
-            flex: 1;
-            margin-left: 250px;
-            padding: 2rem 5%;
-        }
-
-        .section-header {
-            margin-bottom: 2rem;
-        }
-
-        .section-header h2 {
-            font-size: 2rem;
-            color: var(--text-main);
-        }
-
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Analytics Grid */
-        .analytics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        
-        .stat-card {
-            padding: 1.5rem;
-            text-align: center;
-        }
-
-        .stat-card h3 {
-            color: var(--text-muted);
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-card h1 {
-            color: var(--primary);
-            font-size: 2.5rem;
-        }
-
-        /* Lists */
-        .admin-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
+        /* Admin list items */
+        .admin-list { display: flex; flex-direction: column; gap: 1rem; }
         .list-item {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-            padding: 1.5rem 2rem;
-            border-radius: 16px;
-            background: rgba(30, 41, 59, 0.4);
-            border: 1px solid var(--glass-border);
-            transition: var(--transition);
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+            gap: 1rem; padding: 1.25rem 1.5rem;
+            border-radius: var(--radius-lg);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--border);
+            transition: box-shadow 0.3s ease, background 0.3s ease;
         }
-        
-        .list-item:hover {
-            background: rgba(30, 41, 59, 0.7);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
+        .list-item:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); background: var(--surface-2); }
+        .list-item h4 { color: var(--text); font-size: 1.05rem; margin: 0 0 .25rem; }
+        .list-item p { color: var(--text-muted); font-size: .9rem; margin: 0; }
+        .list-item small { color: var(--text-light); }
+        .action-btns { display: flex; gap: .6rem; flex-wrap: wrap; }
 
-        .action-btns {
-            display: flex;
-            gap: 0.8rem;
-            flex-wrap: wrap;
-        }
+        /* Info box inside list item */
+        .info-box { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; }
+        .info-box small { color: var(--text-muted); display: block; font-size: .78rem; margin-bottom: .2rem; }
+        .info-box strong { color: var(--text); font-size: .95rem; }
+
+        /* Message bubble */
+        .msg-bubble { background: var(--surface-3); border-left: 3px solid var(--primary); border-radius: var(--radius); padding: .75rem 1rem; font-style: italic; color: var(--text-2); font-size: .93rem; }
+        .msg-bubble-success { background: rgba(16,185,129,.07); border-left-color: var(--success); }
+        .msg-bubble-warn { background: rgba(249,115,22,.07); border-left-color: var(--accent); }
+
+        /* Badge styles */
+        .badge-approved { background: rgba(16,185,129,.1); color: #059669; border-radius: 999px; padding: .25rem .75rem; font-size: .8rem; font-weight: 700; }
+        .badge-pending { background: rgba(245,158,11,.1); color: #B45309; border-radius: 999px; padding: .25rem .75rem; font-size: .8rem; font-weight: 700; }
+        .badge-danger { background: rgba(239,68,68,.1); color: var(--danger); border-radius: 999px; padding: .25rem .75rem; font-size: .8rem; font-weight: 700; }
+        .badge-info { background: rgba(14,165,233,.1); color: var(--primary-dark); border-radius: 999px; padding: .25rem .75rem; font-size: .8rem; font-weight: 700; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { display: inline-block; width: 36px; height: 36px; border: 4px solid var(--primary); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
     </style>
 </head>
 <body>
 
     <!-- Navbar -->
-    <nav class="navbar glass-panel">
-        <div class="logo">HostelBuddy <span style="font-size:1rem;color:var(--text-muted)">| Admin</span></div>
-        <div class="nav-links">
-            <span style="font-weight:bold; color:var(--primary)">Super Admin</span>
-            <button class="btn btn-outline" style="padding: 0.5rem 1rem" onclick="logout()">Logout</button>
+    <nav class="navbar scrolled" id="dashNav">
+        <a href="index.html" class="logo">HostelBuddy</a>
+        <div style="display:flex;align-items:center;gap:1rem">
+            <span style="font-weight:600;color:var(--text-muted);font-size:.9rem">⚙️ Admin Panel</span>
+            <button class="btn btn-ghost btn-sm" onclick="logout()">Logout</button>
+
+            <button class="theme-toggle" aria-label="Toggle Dark Mode" style="margin-left: 1rem;">
+              <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+              <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
         </div>
     </nav>
 
     <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="nav-item active" onclick="switchTab('analytics')">📈 Analytics</div>
-            <div class="nav-item" onclick="switchTab('verifications')">✅ Verifications</div>
-            <div class="nav-item" onclick="switchTab('students')">🎓 Students</div>
-            <div class="nav-item" onclick="switchTab('owners')">👔 Owners</div>
-            <div class="nav-item" onclick="switchTab('listings')">🏨 Listings</div>
-            <div class="nav-item" onclick="switchTab('enquiries')">✉️ Enquiries</div>
-            <div class="nav-item" onclick="switchTab('system-requests')">⚙️ System Requests</div>
+            <div class="sidebar-header">
+                <div class="sidebar-avatar" style="background:linear-gradient(135deg,var(--violet),var(--primary))">A</div>
+                <div>
+                    <div class="sidebar-user-name">Super Admin</div>
+                    <div class="sidebar-user-role">Admin Account</div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section-label">Management</div>
+                <button class="sidebar-item active" id="nav-analytics" onclick="switchTab('analytics')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    Analytics
+                </button>
+                <button class="sidebar-item" id="nav-verifications" onclick="switchTab('verifications')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Verifications
+                </button>
+                <button class="sidebar-item" id="nav-students" onclick="switchTab('students')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                    Students
+                </button>
+                <button class="sidebar-item" id="nav-owners" onclick="switchTab('owners')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+                    Owners
+                </button>
+                <button class="sidebar-item" id="nav-listings" onclick="switchTab('listings')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Listings
+                </button>
+                <button class="sidebar-item" id="nav-enquiries" onclick="switchTab('enquiries')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    Enquiries
+                </button>
+                <button class="sidebar-item" id="nav-system-requests" onclick="switchTab('system-requests')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14"/><path d="M4.93 4.93a10 10 0 000 14.14"/></svg>
+                    System Requests
+                </button>
+                <div class="sidebar-section-label" style="margin-top:1rem">Links</div>
+                <a href="guide.html" class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>User Guide</a>
+                <a href="safety.html" class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Safety</a>
+                <button class="sidebar-item sidebar-logout" onclick="logout()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Logout
+                </button>
+            </nav>
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content">
-            
+        <main class="main-content" style="padding-top:5.5rem">
+
             <!-- Analytics Tab -->
             <div id="analytics" class="tab-content active">
-                <div class="section-header">
-                    <h2>Platform Analytics</h2>
-                    <p class="text-muted">High-level view of system performance.</p>
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">Platform Analytics</div>
+                        <div class="dash-sub">High-level view of system performance and user growth.</div>
+                    </div>
                 </div>
-                
                 <div class="analytics-grid" id="statsContainer">
-                    <p>Loading stats...</p>
+                    <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted)">
+                        <div class="spinner"></div>
+                        <p style="margin-top:1rem">Loading analytics...</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <div class="dash-topbar" style="margin-bottom: 1rem;">
+                        <div class="dash-title" style="font-size: 1.25rem;">Popular Properties</div>
+                    </div>
+                    <div class="admin-list" id="mostViewedContainer">
+                        <div style="text-align:center;padding:2rem;color:var(--text-muted)"><div class="spinner"></div></div>
+                    </div>
                 </div>
             </div>
 
             <!-- Verifications Tab -->
             <div id="verifications" class="tab-content">
-                <div class="section-header">
-                    <h2>Verification Requests</h2>
-                    <p class="text-muted">Review and approve owner verification requests.</p>
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">Verification Requests</div>
+                        <div class="dash-sub">Review and approve owner verification documents.</div>
+                    </div>
                 </div>
                 <div class="admin-list" id="verificationsContainer">
-                    Loading requests...
+                    <div style="text-align:center;padding:2rem;color:var(--text-muted)"><div class="spinner"></div></div>
                 </div>
             </div>
 
             <!-- Students Tab -->
             <div id="students" class="tab-content">
-                <div class="section-header">
-                    <h2>Student Management</h2>
-                    <p class="text-muted">Monitor and manage student accounts.</p>
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">Student Management</div>
+                        <div class="dash-sub">Monitor and manage all student accounts on the platform.</div>
+                    </div>
                 </div>
                 <div class="admin-list" id="studentsContainer">
-                    Loading students...
+                    <div style="text-align:center;padding:2rem;color:var(--text-muted)"><div class="spinner"></div></div>
                 </div>
             </div>
 
             <!-- Owners Tab -->
             <div id="owners" class="tab-content">
-                <div class="section-header">
-                    <h2>Owner Management</h2>
-                    <p class="text-muted">Monitor and manage hostel owner accounts.</p>
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">Owner Management</div>
+                        <div class="dash-sub">Monitor and manage hostel owner accounts.</div>
+                    </div>
                 </div>
                 <div class="admin-list" id="ownersContainer">
-                    Loading owners...
+                    <div style="text-align:center;padding:2rem;color:var(--text-muted)"><div class="spinner"></div></div>
                 </div>
             </div>
 
             <!-- Listings Tab -->
             <div id="listings" class="tab-content">
-                <div class="section-header">
-                    <h2>Hostel Listings</h2>
-                    <p class="text-muted">Review and manage properties on the platform.</p>
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">Hostel Listings</div>
+                        <div class="dash-sub">Review, approve, and manage all property listings.</div>
+                    </div>
                 </div>
                 <div class="admin-list" id="hostelsContainer">
-                    Loading hostels...
+                    <div style="text-align:center;padding:2rem;color:var(--text-muted)"><div class="spinner"></div></div>
                 </div>
             </div>
 
             <!-- Enquiries Tab -->
             <div id="enquiries" class="tab-content">
-                <div class="section-header">
-                    <h2>Student Enquiries</h2>
-                    <p class="text-muted">Track and respond to student enquiries directly.</p>
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">Student Enquiries</div>
+                        <div class="dash-sub">Track and respond to student enquiries across all listings.</div>
+                    </div>
                 </div>
                 <div class="admin-list" id="enquiriesContainer">
-                    Loading enquiries...
+                    <div style="text-align:center;padding:2rem;color:var(--text-muted)"><div class="spinner"></div></div>
                 </div>
             </div>
 
             <!-- System Requests Tab -->
             <div id="system-requests" class="tab-content">
-                <div class="section-header">
-                    <h2>System Requests</h2>
-                    <p class="text-muted">Manage account deactivation requests from users.</p>
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">System Requests</div>
+                        <div class="dash-sub">Manage account deactivation requests from users.</div>
+                    </div>
                 </div>
                 <div class="admin-list" id="deactivationsContainer">
-                    Loading requests...
+                    <div style="text-align:center;padding:2rem;color:var(--text-muted)"><div class="spinner"></div></div>
                 </div>
             </div>
 
         </main>
     </div>
 
-    <!-- Notification Modal -->
-    <div id="notifyModal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1001; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
-        <div class="glass-panel" style="max-width: 500px; width: 90%; padding: 2.5rem;">
-            <h2 style="color: var(--primary); margin-bottom: 0.5rem;">Notify Owner</h2>
-            <p class="text-muted" style="margin-bottom: 1.5rem;">Send a message to the owner regarding their verification or profile.</p>
+    <!-- Notify Modal -->
+    <div id="notifyModal" class="modal-overlay" style="display:none">
+        <div class="modal" style="max-width:480px;border-top:3px solid var(--primary)">
+            <div class="modal-header">
+                <h2 class="modal-title">🔔 Notify Owner</h2>
+                <button class="modal-close" onclick="closeNotifyModal()">✕</button>
+            </div>
+            <p style="color:var(--text-muted);margin-bottom:1.25rem;font-size:.92rem">Send an official message to the owner about their verification or account.</p>
             <div class="form-group">
                 <label class="form-label">Message Type</label>
-                <select id="notifyType" class="form-select" style="margin-bottom: 1rem;">
-                    <option value="warning">Warning (Verification Issue)</option>
-                    <option value="info">Information</option>
-                    <option value="success">Success / Congratulations</option>
+                <select id="notifyType" class="form-input" style="cursor:pointer">
+                    <option value="warning">⚠️ Warning (Verification Issue)</option>
+                    <option value="info">ℹ️ Information</option>
+                    <option value="success">✅ Success / Congratulations</option>
                 </select>
             </div>
             <div class="form-group">
                 <label class="form-label">Message Content</label>
                 <textarea id="notifyMessage" class="form-textarea" rows="4" placeholder="e.g. Please upload a clearer photo of your Aadhaar card..."></textarea>
             </div>
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button class="btn btn-outline" style="flex: 1;" onclick="closeNotifyModal()">Cancel</button>
-                <button class="btn btn-primary" style="flex: 1;" onclick="submitNotification()">Send Notification</button>
+            <div style="display:flex;gap:1rem;margin-top:1.5rem">
+                <button class="btn btn-outline w-full" onclick="closeNotifyModal()">Cancel</button>
+                <button class="btn btn-primary w-full" onclick="submitNotification()">Send Notification</button>
             </div>
         </div>
-        <!-- Premium Footer -->
-        <footer class="premium-footer" style="margin-top: 3rem;">
-            <div class="footer-grid" style="grid-template-columns: 2fr 1fr;">
-                <!-- Brand & About -->
-                <div class="footer-brand">
-                    <a href="index.html" class="logo" style="text-decoration: none;">HostelBuddy <span style="font-size: 1rem; color: var(--accent);">Admin Panel</span></a>
-                    <p class="footer-about">
-                        This is the administrative heart of the HostelBuddy platform. System configurations, business verifications, support resolutions, and system health checks are performed from this secure interface.
-                    </p>
-                </div>
-                <!-- Quick Links -->
-                <div>
-                    <h4 class="footer-title">Navigation Tools</h4>
-                    <ul class="footer-links" style="columns: 2;">
-                        <li><a href="admin-dashboard.html" onclick="switchTab('dashboard')">Dashboard</a></li>
-                        <li><a href="admin-dashboard.html" onclick="switchTab('users')">Manage Users</a></li>
-                        <li><a href="admin-dashboard.html" onclick="switchTab('hostels')">Approve Hostels</a></li>
-                        <li><a href="admin-dashboard.html" onclick="switchTab('verifications')">Verifications</a></li>
-                        <li><a href="admin-dashboard.html" onclick="switchTab('enquiries')">All Enquiries</a></li>
-                        <li><a href="admin-dashboard.html" onclick="switchTab('deactivations')">System Requests</a></li>
-                        <li><a href="guide.html">User Guide</a></li>
-                        <li><a href="safety.html">Safety Guidelines</a></li>
-                        <li><a href="about.html">About Developer</a></li>
-                        <li><a href="privacy.html">Privacy Policy</a></li>
-                        <li><a href="terms.html">Terms of Service</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 HostelBuddy. Internal Administrative Use.</p>
-            </div>
-        </footer>
     </div>
-    <!-- End of Dashboard Container Container -->
 
-    <script src="js/main.js"></script>
-    <script src="js/admin.js"></script>
+    <!-- Premium Footer -->
+    <footer class="premium-footer" style="margin-left:260px">
+        <div class="footer-grid" style="grid-template-columns:2fr 1fr">
+            <div class="footer-brand">
+                <a href="index.html" class="logo" style="text-decoration:none;display:inline-block;margin-bottom:1rem">HostelBuddy <span style="font-size:.9rem;color:var(--accent)">Admin</span></a>
+                <p class="footer-about">Administrative control panel of HostelBuddy. System configurations, business verifications, support resolutions, and system health checks are performed from this secure interface.</p>
+            </div>
+            <div>
+                <h4 class="footer-title">Navigation</h4>
+                <ul class="footer-links">
+                    <li><a href="javascript:switchTab('analytics')">Analytics</a></li>
+                    <li><a href="javascript:switchTab('verifications')">Verifications</a></li>
+                    <li><a href="javascript:switchTab('enquiries')">Enquiries</a></li>
+                    <li><a href="guide.html">User Guide</a></li>
+                    <li><a href="safety.html">Safety Guidelines</a></li>
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 HostelBuddy. Internal Administrative Use Only.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js?v=3"></script>
+    <script src="js/admin.js?v=3"></script>
+    <script>
+        // Sidebar active state
+        function updateSidebarActive(tab) {
+            document.querySelectorAll('.sidebar-item[id^="nav-"]').forEach(el => el.classList.remove('active'));
+            const el = document.getElementById('nav-' + tab);
+            if (el) el.classList.add('active');
+        }
+        // Ripple
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const r = document.createElement('span'); r.classList.add('ripple-effect');
+                const rect = this.getBoundingClientRect(), size = Math.max(rect.width, rect.height);
+                r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+                this.appendChild(r); setTimeout(() => r.remove(), 700);
+            });
+        });
+        // Mobile toggle
+        if (window.innerWidth <= 768) {
+            const t = document.createElement('button');
+            t.textContent = '☰';
+            t.style.cssText = 'display:flex;position:fixed;bottom:1.5rem;right:1.5rem;z-index:200;width:52px;height:52px;border-radius:50%;background:var(--primary);border:none;color:#fff;font-size:1.3rem;cursor:pointer;align-items:center;justify-content:center;box-shadow:var(--shadow-glow)';
+            t.onclick = () => document.querySelector('.sidebar').classList.toggle('mobile-open');
+            document.body.appendChild(t);
+        }
+    </script>
 </body>
 </html>

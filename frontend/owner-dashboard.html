@@ -3,227 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Owner Dashboard - Hostel Buddy</title>
-    <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <title>Owner Dashboard — HostelBuddy</title>
+    <link rel="stylesheet" href="css/style.css?v=3">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
     <style>
-        .dashboard-container {
-            display: flex;
-            min-height: 100vh;
-            padding-top: 80px; 
-        }
+        .dashboard-container { padding-top: 0; }
+        .sidebar { top: 0; height: 100vh; }
+        .tab-content { display: none; animation: fadeUp 0.4s ease; }
+        .tab-content.active { display: block; }
 
-        .sidebar {
-            width: 250px;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            position: fixed;
-            height: calc(100vh - 80px);
-            border-right: 1px solid var(--glass-border);
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(10px);
-        }
-
-        .nav-item {
-            padding: 1rem;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: var(--transition);
-            font-weight: 500;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .nav-item:hover, .nav-item.active {
-            background: var(--surface);
-            color: var(--primary);
-        }
-
-        .main-content {
-            flex: 1;
-            margin-left: 250px;
-            padding: 2rem 5%;
-        }
-
-        .section-header {
-            margin-bottom: 2rem;
-        }
-
-        .section-header h2 {
-            font-size: 2rem;
-            color: var(--text-main);
-        }
-
-        .tab-content {
-            display: none;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .form-row {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .form-group {
-            flex: 1;
-            margin-bottom: 1rem;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
+        /* Form overrides for light theme */
         .form-input, .form-textarea, .form-select {
-            width: 100%;
-            padding: 0.8rem;
-            border-radius: 8px;
-            border: 1px solid var(--glass-border);
-            background: rgba(15, 23, 42, 0.5);
-            color: white;
+            width: 100%; padding: .8rem 1rem;
+            border-radius: var(--radius); border: 1.5px solid var(--border-strong);
+            background: var(--surface); color: var(--text);
+            font-family: var(--font-body); font-size: .95rem;
             transition: var(--transition);
         }
-
         .form-input:focus, .form-textarea:focus, .form-select:focus {
-            outline: none;
-            border-color: var(--primary);
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(14,165,233,.12);
         }
-        
-        .form-select option {
-            background-color: var(--surface);
-            color: white;
-        }
+        .form-select option { background: var(--surface); color: var(--text); }
+        .form-label { display: block; margin-bottom: .45rem; color: var(--text-2); font-size: .88rem; font-weight: 600; }
+        .form-row { display: flex; gap: 1rem; margin-bottom: 0; }
+        .form-group { flex: 1; margin-bottom: 1rem; }
 
-        /* List Items */
-        .list-item {
-            border-bottom: 1px solid var(--glass-border);
-            padding: 1.5rem 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        /* Stat cards */
+        .stat-card-owner { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.75rem 2rem; transition: var(--transition); }
+        .stat-card-owner:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+        .stat-card-owner h3 { color: var(--text-muted); font-size: .88rem; font-weight: 600; margin-bottom: .5rem; text-transform: uppercase; letter-spacing: .5px; }
+        .stat-card-owner h1 { font-size: 2.8rem; font-weight: 900; font-family: var(--font-head); line-height: 1; }
 
-        .hostels-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 2rem;
-        }
+        /* Listing cards */
+        .hostels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+        .hostel-manage-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; transition: var(--transition); }
+        .hostel-manage-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+        .hostel-manage-card-body { padding: 1.25rem; }
+        .hostel-manage-card-badge { display: inline-flex; align-items: center; gap: .3rem; font-size: .78rem; font-weight: 700; padding: .25rem .75rem; border-radius: 999px; }
 
-        .action-btns {
-            display: flex;
-            gap: 0.5rem;
-        }
+        /* List items */
+        .enquiry-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1rem; border-left: 4px solid var(--primary); transition: var(--transition); }
+        .enquiry-item:hover { box-shadow: var(--shadow-md); }
+
+        /* Notification badge */
+        .notif-item { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; }
+        .notif-warn { border-left: 4px solid var(--accent); background: rgba(249,115,22,.05); }
+        .notif-success { border-left: 4px solid var(--success); background: rgba(16,185,129,.05); }
+        .notif-info { border-left: 4px solid var(--primary); background: rgba(14,165,233,.05); }
+
+        /* Image upload sections */
+        .img-upload-box { padding: 1.25rem; border: 1.5px dashed var(--border-strong); border-radius: var(--radius); background: var(--surface-3); }
+        .img-upload-box label { font-weight: 700; color: var(--text); font-size: .92rem; margin-bottom: .5rem; display: block; }
+
+        /* Verification card */
+        .verif-status-card { margin-bottom: 1.5rem; padding: 1rem 1.25rem; border-radius: var(--radius); background: var(--surface-3); border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { display: inline-block; width: 36px; height: 36px; border: 4px solid var(--primary); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
     </style>
 </head>
 <body>
 
     <!-- Navbar -->
-    <nav class="navbar glass-panel">
-        <div class="logo">HostelBuddy <span style="font-size:1rem;color:var(--text-muted)">| Owner</span></div>
-        <div class="nav-links">
-            <span id="userNameDisplay" style="font-weight:bold; color:var(--primary)">Hello, Owner</span>
-            <button class="btn btn-outline" style="padding: 0.5rem 1rem" onclick="logout()">Logout</button>
+    <nav class="navbar scrolled" id="dashNav">
+        <a href="index.html" class="logo">HostelBuddy</a>
+        <div style="display:flex;align-items:center;gap:1rem">
+            <span id="userNameDisplay" style="font-weight:600;color:var(--text-muted);font-size:.93rem">Hello, Owner</span>
+            <button class="btn btn-ghost btn-sm" onclick="logout()">Logout</button>
+
+            <button class="theme-toggle" aria-label="Toggle Dark Mode" style="margin-left: 1rem;">
+              <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+              <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
         </div>
     </nav>
 
+    <!-- Mobile toggle -->
+    <button id="sidebarToggle" onclick="document.querySelector('.sidebar').classList.toggle('mobile-open')"
+        style="display:none;position:fixed;bottom:1.5rem;right:1.5rem;z-index:200;width:52px;height:52px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:1.3rem;cursor:pointer;box-shadow:var(--shadow-glow)">☰</button>
+
     <div class="dashboard-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="nav-item active" onclick="switchTab('dashboard')">📊 Dashboard</div>
-            <div class="nav-item" onclick="switchTab('my-hostels')">🏢 My Hostels</div>
-            <div class="nav-item" onclick="switchTab('add-hostel')">➕ Add Listing</div>
-            <div class="nav-item" onclick="switchTab('enquiries')">✉️ Enquiries</div>
-            <div class="nav-item" onclick="switchTab('profile')">👤 My Profile</div>
+        <aside class="sidebar" style="--sidebar-accent:var(--accent)">
+            <div class="sidebar-header">
+                <div class="sidebar-avatar" id="sidebarAvatar" style="background:linear-gradient(135deg,var(--accent),#DC2626)">O</div>
+                <div>
+                    <div class="sidebar-user-name" id="sidebarName">Owner</div>
+                    <div class="sidebar-user-role">Owner Account</div>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section-label">Management</div>
+                <button class="sidebar-item active" id="nav-dashboard" onclick="switchTab('dashboard')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    Dashboard
+                </button>
+                <button class="sidebar-item" id="nav-my-hostels" onclick="switchTab('my-hostels')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    My Hostels
+                </button>
+                <button class="sidebar-item" id="nav-add-hostel" onclick="switchTab('add-hostel')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    Add Listing
+                </button>
+                <button class="sidebar-item" id="nav-enquiries" onclick="switchTab('enquiries')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    Enquiries
+                </button>
+                <button class="sidebar-item" id="nav-profile" onclick="switchTab('profile')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    My Profile
+                </button>
+                <div class="sidebar-section-label" style="margin-top:1rem">Resources</div>
+                <a href="guide.html" class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>How It Works</a>
+                <a href="safety.html" class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Safety Guide</a>
+                <button class="sidebar-item sidebar-logout" onclick="logout()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Logout
+                </button>
+            </nav>
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content">
-            
+        <main class="main-content" style="padding-top:5.5rem">
+
             <!-- Dashboard Tab -->
             <div id="dashboard" class="tab-content active">
-                <div class="section-header">
-                    <h2>Overview</h2>
-                    <p class="text-muted">Quick stats about your properties.</p>
-                </div>
-                <!-- Mini Stats (Simulated via js) -->
-                <div class="hostels-grid">
-                    <div class="glass-panel card-3d" style="padding:2rem;">
-                        <h3 style="color:var(--text-muted)">Total Hostels Listed</h3>
-                        <h1 style="font-size: 3rem; color: var(--primary)" id="stat-hostels">0</h1>
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">Overview</div>
+                        <div class="dash-sub">Quick stats about your properties and activity.</div>
                     </div>
-                    <div class="glass-panel card-3d" style="padding:2rem;">
-                        <h3 style="color:var(--text-muted)">Total Enquiries</h3>
-                        <h1 style="font-size: 3rem; color: var(--secondary)" id="stat-enquiries">0</h1>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem">
+                    <div class="stat-card-owner">
+                        <h3>Total Hostels Listed</h3>
+                        <h1 style="color:var(--accent)" id="stat-hostels">0</h1>
+                    </div>
+                    <div class="stat-card-owner">
+                        <h3>Total Enquiries</h3>
+                        <h1 style="color:var(--primary)" id="stat-enquiries">0</h1>
                     </div>
                 </div>
             </div>
 
             <!-- My Hostels Tab -->
             <div id="my-hostels" class="tab-content">
-                <div class="section-header">
-                    <h2>My Properties</h2>
-                    <p class="text-muted">Manage your listed hostels and PGs.</p>
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">My Properties</div>
+                        <div class="dash-sub">Manage your listed hostels and PGs.</div>
+                    </div>
+                    <button class="btn btn-accent btn-sm" onclick="switchTab('add-hostel')">+ Add New Listing</button>
                 </div>
                 <div class="hostels-grid" id="myHostelsContainer">
-                    <p>Loading your properties...</p>
+                    <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted)"><div class="spinner"></div></div>
                 </div>
             </div>
 
             <!-- Add Hostel Tab -->
             <div id="add-hostel" class="tab-content">
-                <div class="section-header">
-                    <h2>Add New Listing</h2>
-                    <p class="text-muted">Detailed descriptions and crisp images attract more students.</p>
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">Add New Listing</div>
+                        <div class="dash-sub">Detailed descriptions and crisp images attract more students.</div>
+                    </div>
                 </div>
-                
-                <div class="glass-panel card-3d" style="padding: 2rem; max-width: 800px;">
+
+                <div class="panel" style="max-width:820px">
                     <form id="hostelForm">
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Hostel / PG Name</label>
-                                <input type="text" id="hName" class="form-input" required>
+                                <input type="text" id="hName" class="form-input" required placeholder="e.g. Sunrise Boys PG">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Monthly Price (₹)</label>
-                                <input type="number" id="hPrice" class="form-input" required>
+                                <input type="number" id="hPrice" class="form-input" required placeholder="e.g. 4500">
                             </div>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Daily Price (Optional) (₹)</label>
-                                <input type="number" id="hDaily" class="form-input">
+                                <input type="number" id="hDaily" class="form-input" placeholder="e.g. 200">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Security Deposit (₹)</label>
-                                <input type="number" id="hDeposit" class="form-input" required>
+                                <input type="number" id="hDeposit" class="form-input" required placeholder="e.g. 5000">
                             </div>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label">Description</label>
-                            <textarea id="hDesc" class="form-textarea" rows="4" required></textarea>
+                            <textarea id="hDesc" class="form-textarea" rows="4" required placeholder="Describe your property, facilities, nearby landmarks..."></textarea>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Address line</label>
+                                <label class="form-label">Address Line</label>
                                 <input type="text" id="hAddress" class="form-input" required>
                             </div>
                             <div class="form-group">
@@ -252,8 +231,8 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Food Details (e.g. 3 meals/day veg)</label>
-                                <input type="text" id="hFoodDetails" class="form-input">
+                                <label class="form-label">Food Details</label>
+                                <input type="text" id="hFoodDetails" class="form-input" placeholder="e.g. 3 meals/day veg">
                             </div>
                         </div>
 
@@ -261,10 +240,11 @@
                             <label class="form-label">Hostel Rules</label>
                             <textarea id="hRules" class="form-textarea" rows="2" placeholder="e.g. No smoking, Gate closes at 10PM..."></textarea>
                         </div>
+
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Google Maps Link</label>
-                                <input type="url" id="hGoogleMapLink" class="form-input" placeholder="e.g. https://maps.app.goo.gl/...">
+                                <input type="url" id="hGoogleMapLink" class="form-input" placeholder="https://maps.app.goo.gl/...">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Keywords / Tags</label>
@@ -272,44 +252,54 @@
                             </div>
                         </div>
 
-                        <div class="image-upload-section" style="margin-top: 2rem;">
-                            <h3 style="margin-bottom: 1rem; color: var(--primary);">Categorized Image Uploads</h3>
-                            <p class="text-muted" style="margin-bottom: 1.5rem; font-size: 0.9rem;">Adding photos to specific categories helps students understand your property better. Hold Ctrl/Cmd to select multiple images.</p>
+                        <!-- Image Uploads -->
+                        <div style="margin-top:1.75rem">
+                            <div style="font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                Categorized Image Uploads
+                            </div>
+                            <p style="color:var(--text-muted);font-size:.88rem;margin-bottom:1.25rem">Photos help students understand your property. Hold Ctrl/Cmd to select multiple.</p>
 
                             <div class="form-row">
-                                <div class="form-group" style="padding: 1.5rem; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(15, 23, 42, 0.3);">
-                                    <label class="form-label" style="font-weight: 700; color: white;">🏢 Building & Surroundings</label>
-                                    <input type="file" id="hBuildingImages" class="form-input" multiple accept="image/*" style="border: none; padding: 0.5rem 0;">
-                                    <div id="previewBuilding" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;"></div>
+                                <div class="form-group">
+                                    <div class="img-upload-box">
+                                        <label>🏢 Building &amp; Surroundings</label>
+                                        <input type="file" id="hBuildingImages" class="form-input" multiple accept="image/*" style="border:none;padding:.4rem 0;background:transparent">
+                                        <div id="previewBuilding" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem"></div>
+                                    </div>
                                 </div>
-                                
-                                <div class="form-group" style="padding: 1.5rem; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(15, 23, 42, 0.3);">
-                                    <label class="form-label" style="font-weight: 700; color: white;">🛏️ Room Interiors</label>
-                                    <input type="file" id="hRoomImages" class="form-input" multiple accept="image/*" style="border: none; padding: 0.5rem 0;">
-                                    <div id="previewRooms" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;"></div>
+                                <div class="form-group">
+                                    <div class="img-upload-box">
+                                        <label>🛏️ Room Interiors</label>
+                                        <input type="file" id="hRoomImages" class="form-input" multiple accept="image/*" style="border:none;padding:.4rem 0;background:transparent">
+                                        <div id="previewRooms" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem"></div>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="form-row">
-                                <div class="form-group" style="padding: 1.5rem; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(15, 23, 42, 0.3);">
-                                    <label class="form-label" style="font-weight: 700; color: white;">🍽️ Mess & Dining Area</label>
-                                    <input type="file" id="hMessImages" class="form-input" multiple accept="image/*" style="border: none; padding: 0.5rem 0;">
-                                    <div id="previewMess" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;"></div>
+                                <div class="form-group">
+                                    <div class="img-upload-box">
+                                        <label>🍽️ Mess &amp; Dining Area</label>
+                                        <input type="file" id="hMessImages" class="form-input" multiple accept="image/*" style="border:none;padding:.4rem 0;background:transparent">
+                                        <div id="previewMess" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem"></div>
+                                    </div>
                                 </div>
-                                
-                                <div class="form-group" style="padding: 1.5rem; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(15, 23, 42, 0.3);">
-                                    <label class="form-label" style="font-weight: 700; color: white;">🚿 Washrooms</label>
-                                    <input type="file" id="hBathroomImages" class="form-input" multiple accept="image/*" style="border: none; padding: 0.5rem 0;">
-                                    <div id="previewBathrooms" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;"></div>
+                                <div class="form-group">
+                                    <div class="img-upload-box">
+                                        <label>🚿 Washrooms</label>
+                                        <input type="file" id="hBathroomImages" class="form-input" multiple accept="image/*" style="border:none;padding:.4rem 0;background:transparent">
+                                        <div id="previewBathrooms" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div id="addHostelMsg" style="margin-bottom: 1rem; margin-top: 1rem; color: var(--secondary);"></div>
+                        <div id="addHostelMsg" style="margin-top:1rem;font-size:.9rem;color:var(--success)"></div>
 
-                        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                            <button type="submit" id="submitHostelBtn" class="btn btn-primary" style="flex: 1;">Create Listing</button>
-                            <button type="button" id="cancelEditBtn" class="btn btn-outline" style="flex: 1; display: none;" onclick="cancelHostelEdit()">Cancel Edit</button>
+                        <div style="display:flex;gap:1rem;margin-top:1.25rem">
+                            <button type="submit" id="submitHostelBtn" class="btn btn-accent w-full">Create Listing</button>
+                            <button type="button" id="cancelEditBtn" class="btn btn-outline w-full" style="display:none" onclick="cancelHostelEdit()">Cancel Edit</button>
                         </div>
                     </form>
                 </div>
@@ -317,32 +307,37 @@
 
             <!-- Enquiries Tab -->
             <div id="enquiries" class="tab-content">
-                <div class="section-header">
-                    <h2>Student Enquiries</h2>
-                    <p class="text-muted">Respond to interested students quickly.</p>
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">Student Enquiries</div>
+                        <div class="dash-sub">Respond to interested students quickly to close more leads.</div>
+                    </div>
                 </div>
-                <div id="ownerEnquiriesContainer" class="glass-panel" style="padding: 2rem;">
-                    Loading enquiries...
+                <div id="ownerEnquiriesContainer" class="panel">
+                    <div style="text-align:center;padding:2rem;color:var(--text-muted)"><div class="spinner"></div></div>
                 </div>
             </div>
 
             <!-- Profile Tab -->
             <div id="profile" class="tab-content">
-                <div class="section-header">
-                    <h2>My Profile</h2>
-                    <p class="text-muted">Manage your business details and profile picture.</p>
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">My Profile</div>
+                        <div class="dash-sub">Manage your business details and verification status.</div>
+                    </div>
                 </div>
-                <div class="glass-panel card-3d" style="padding: 2rem; max-width: 600px;">
+                <div class="panel" style="max-width:620px">
                     <form id="ownerProfileForm">
-                        
-                        <!-- Profile Image Upload Section -->
-                        <div class="profile-upload-wrapper" style="text-align: center; margin-bottom: 2rem;">
-                            <div class="profile-image-container" style="position: relative; display: inline-block;">
-                                <img id="ownerProfilePreview" src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png" alt="Profile Picture" class="profile-preview-img" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--secondary); box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); transition: var(--transition);">
-                                <label for="ownerProfilePhotoInput" class="upload-btn" style="position: absolute; bottom: 0; right: 0; background: var(--secondary); color: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid var(--surface); box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: var(--transition);">
-                                    📷
-                                </label>
-                                <input type="file" id="ownerProfilePhotoInput" accept="image/*" style="display: none;">
+
+                        <!-- Profile Photo -->
+                        <div style="text-align:center;margin-bottom:2rem">
+                            <div style="position:relative;display:inline-block">
+                                <img id="ownerProfilePreview"
+                                    src="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"
+                                    alt="Profile"
+                                    style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);box-shadow:0 0 0 5px rgba(249,115,22,.12)">
+                                <label for="ownerProfilePhotoInput" style="position:absolute;bottom:0;right:0;background:var(--accent);color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid #fff;font-size:1rem">📷</label>
+                                <input type="file" id="ownerProfilePhotoInput" accept="image/*" style="display:none">
                             </div>
                         </div>
 
@@ -358,7 +353,7 @@
                         </div>
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Hostel/PG Name</label>
+                                <label class="form-label">Hostel / PG Name</label>
                                 <input type="text" id="opHostelName" class="form-input">
                             </div>
                             <div class="form-group">
@@ -380,51 +375,54 @@
                             <label class="form-label">Business Description</label>
                             <textarea id="opDescription" class="form-textarea" rows="3"></textarea>
                         </div>
-                        
-                        <div id="verificationStatusCard" style="margin-bottom: 2rem; padding: 1rem; border-radius: 8px; background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+
+                        <!-- Verification Status -->
+                        <div class="verif-status-card" id="verificationStatusCard">
                             <div>
-                                <h4 style="color: white; margin-bottom: 0.5rem;">Account Verification</h4>
-                                <p id="verificationStatusText" style="color: var(--text-muted); font-size: 0.9rem;">Status: Unverified</p>
+                                <div style="font-weight:700;color:var(--text);margin-bottom:.3rem">Account Verification</div>
+                                <p id="verificationStatusText" style="color:var(--text-muted);font-size:.9rem;margin:0">Status: Unverified</p>
                             </div>
-                            <button type="button" id="btnRequestVerification" class="btn btn-outline" style="padding: 0.5rem 1rem;" onclick="requestVerification()">Request Verification</button>
+                            <button type="button" id="btnRequestVerification" class="btn btn-primary btn-sm" onclick="requestVerification()">Request Verification</button>
                         </div>
 
-                        <div id="opMsg" style="margin-bottom: 1rem; color: var(--secondary);"></div>
-                        <button type="submit" class="btn btn-primary">Save Profile</button>
+                        <div id="opMsg" style="margin-bottom:.75rem;color:var(--success);font-size:.9rem"></div>
+                        <button type="submit" class="btn btn-accent">Save Profile</button>
                     </form>
 
-                    <!-- Notifications Section -->
-                    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--glass-border);">
-                        <h3 style="color: var(--primary); margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between;">
-                            <span style="display: flex; align-items: center; gap: 0.8rem;">
-                                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                                Admin Notifications
-                            </span>
-                            <button id="clearNotifBtn" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; border-color: rgba(244, 63, 94, 0.5); color: var(--accent); display: none;" onclick="clearNotifications()">Clear All</button>
-                        </h3>
-                        <div id="notificationsContainer" style="display: flex; flex-direction: column; gap: 1rem;">
-                            <p class="text-muted">No notifications yet.</p>
+                    <!-- Admin Notifications -->
+                    <div style="margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border)">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+                            <div style="font-weight:700;color:var(--text);font-size:1.05rem;display:flex;align-items:center;gap:.5rem">
+                                🔔 Admin Notifications
+                            </div>
+                            <button id="clearNotifBtn" class="btn btn-sm" style="background:var(--danger-light);color:var(--danger);display:none" onclick="clearNotifications()">Clear All</button>
+                        </div>
+                        <div id="notificationsContainer" style="display:flex;flex-direction:column;gap:.75rem">
+                            <p style="color:var(--text-muted);font-size:.9rem">No notifications yet.</p>
                         </div>
                     </div>
 
                     <!-- Danger Zone -->
-                    <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(244, 63, 94, 0.2);">
-                        <h3 style="color: var(--accent); margin-bottom: 1rem;">Danger Zone</h3>
-                        <p class="text-muted" style="font-size: 0.9rem; margin-bottom: 1.5rem;">Request account deactivation if you no longer wish to list your properties. This action requires admin approval.</p>
-                        <button class="btn btn-outline" style="border-color: var(--accent); color: var(--accent);" onclick="openDeactivateModal()">Deactivate Account</button>
+                    <div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid var(--danger-light)">
+                        <h3 style="color:var(--danger);margin-bottom:.5rem;font-size:1rem">⚠️ Danger Zone</h3>
+                        <p style="color:var(--text-muted);font-size:.88rem;margin-bottom:1.25rem">Request account deactivation if you no longer wish to list your properties. Requires admin approval.</p>
+                        <button class="btn" style="background:var(--danger-light);color:var(--danger)" onclick="openDeactivateModal()">Deactivate Account</button>
                     </div>
                 </div>
             </div>
 
             <!-- Deactivation Modal -->
-            <div id="deactivateModal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1001; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
-                <div class="glass-panel" style="max-width: 400px; width: 90%; padding: 2rem; border: 1px solid var(--accent);">
-                    <h2 style="color: var(--accent); margin-bottom: 0.5rem;">Deactivate Account</h2>
-                    <p class="text-muted" style="margin-bottom: 1.5rem;">Please provide a reason for deactivation.</p>
-                    <textarea id="deactivateReason" class="form-textarea" rows="3" placeholder="I'm closing my hostel business..." style="margin-bottom: 1.5rem;"></textarea>
-                    <div style="display: flex; gap: 1rem;">
-                        <button class="btn btn-outline" style="flex: 1;" onclick="closeDeactivateModal()">Cancel</button>
-                        <button class="btn btn-primary" style="flex: 1; background: var(--accent); border-color: var(--accent);" onclick="submitDeactivationRequest()">Confirm</button>
+            <div id="deactivateModal" class="modal-overlay" style="display:none">
+                <div class="modal" style="border-top:3px solid var(--danger)">
+                    <div class="modal-header">
+                        <h2 class="modal-title" style="color:var(--danger)">⚠️ Deactivate Account</h2>
+                        <button class="modal-close" onclick="closeDeactivateModal()">✕</button>
+                    </div>
+                    <p style="color:var(--text-muted);margin-bottom:1.25rem;font-size:.92rem">Please provide a reason. An admin will review your request.</p>
+                    <textarea id="deactivateReason" class="form-textarea" rows="3" placeholder="I'm closing my hostel business..."></textarea>
+                    <div style="display:flex;gap:1rem;margin-top:1.5rem">
+                        <button class="btn btn-outline w-full" onclick="closeDeactivateModal()">Cancel</button>
+                        <button class="btn w-full" style="background:var(--danger);color:#fff" onclick="submitDeactivationRequest()">Confirm</button>
                     </div>
                 </div>
             </div>
@@ -432,47 +430,70 @@
             <!-- Premium Footer -->
             <footer class="premium-footer">
                 <div class="footer-grid">
-                    <!-- Brand & About -->
                     <div class="footer-brand">
-                        <a href="index.html" class="logo" style="text-decoration: none;">HostelBuddy</a>
-                        <p class="footer-about">
-                            HostelBuddy revolutionizes how students and professionals find their perfect stay. We provide a transparent, premium discovery platform that bridges the gap between verified hostel/PG owners and accommodation seekers. Experience seamless booking, direct inquiries, and a premium interface designed for you.
-                        </p>
+                        <a href="index.html" class="logo" style="text-decoration:none;display:inline-block;margin-bottom:1rem">HostelBuddy</a>
+                        <p class="footer-about">HostelBuddy connects hostel owners with verified student seekers. List, manage, and grow your property business with ease.</p>
                         <div class="footer-socials">
-                            <a href="#" class="social-icon" title="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path></svg></a>
-                            <a href="#" class="social-icon" title="Twitter"><svg viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path></svg></a>
-                            <a href="#" class="social-icon" title="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
-                            <a href="#" class="social-icon" title="LinkedIn"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"></path><circle cx="4" cy="4" r="2"></circle></svg></a>
+                            <a href="#" class="social-icon"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+                            <a href="#" class="social-icon"><svg viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg></a>
+                            <a href="#" class="social-icon"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/></svg></a>
+                            <a href="#" class="social-icon"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg></a>
                         </div>
                     </div>
-                    <!-- Quick Links -->
                     <div>
                         <h4 class="footer-title">Quick Links</h4>
                         <ul class="footer-links">
-                            <li><a href="#" onclick="switchTab('dashboard')">Dashboard Insights</a></li>
-                            <li><a href="#" onclick="switchTab('my-hostels')">My Properties</a></li>
-                            <li><a href="#" onclick="switchTab('enquiries')">Student Enquiries</a></li>
-                            <li><a href="#" onclick="switchTab('profile')">Business Profile</a></li>
+                            <li><a href="javascript:switchTab('dashboard')">Dashboard</a></li>
+                            <li><a href="javascript:switchTab('my-hostels')">My Properties</a></li>
+                            <li><a href="javascript:switchTab('enquiries')">Enquiries</a></li>
                             <li><a href="guide.html">How It Works</a></li>
                             <li><a href="safety.html">Safety Guidelines</a></li>
-                            <li><a href="about.html">About HostelBuddy</a></li>
                             <li><a href="privacy.html">Privacy Policy</a></li>
-                            <li><a href="terms.html">Terms of Service</a></li>
                         </ul>
                     </div>
                 </div>
                 <div class="footer-bottom">
-                    <p>&copy; 2026 HostelBuddy. All rights reserved.</p>
-                    <div style="display: flex; gap: 1.5rem;">
-                        <a href="privacy.html" style="color: var(--text-muted); text-decoration: none;">Privacy Policy</a>
-                        <a href="terms.html" style="color: var(--text-muted); text-decoration: none;">Terms of Service</a>
-                    </div>
+                    <p>© 2026 HostelBuddy. All rights reserved.</p>
+                    <div class="footer-bottom-links"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></div>
                 </div>
             </footer>
         </main>
     </div>
 
-    <script src="js/main.js"></script>
-    <script src="js/owner.js"></script>
+    <script src="js/main.js?v=3"></script>
+    <script src="js/owner.js?v=3"></script>
+    <script>
+        // Sidebar active state
+        function updateSidebarActive(tab) {
+            document.querySelectorAll('.sidebar-item[id^="nav-"]').forEach(el => el.classList.remove('active'));
+            const el = document.getElementById('nav-' + tab);
+            if (el) el.classList.add('active');
+        }
+        // Ripple
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const r = document.createElement('span'); r.classList.add('ripple-effect');
+                const rect = this.getBoundingClientRect(), size = Math.max(rect.width, rect.height);
+                r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+                this.appendChild(r); setTimeout(() => r.remove(), 700);
+            });
+        });
+        // User info
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const u = JSON.parse(localStorage.getItem('user') || '{}');
+                if (u.name) {
+                    const n = document.getElementById('sidebarName'); if(n) n.textContent = u.name;
+                    const nd = document.getElementById('userNameDisplay'); if(nd) nd.textContent = 'Hello, ' + u.name;
+                    const av = document.getElementById('sidebarAvatar'); if(av) av.textContent = u.name.charAt(0).toUpperCase();
+                }
+            } catch(e) {}
+        });
+        // Mobile toggle
+        if (window.innerWidth <= 768) {
+            const t = document.getElementById('sidebarToggle');
+            if (t) t.style.display = 'flex';
+        }
+    </script>
 </body>
 </html>

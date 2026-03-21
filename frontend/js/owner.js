@@ -504,12 +504,12 @@ async function loadNotifications() {
         }
 
         container.innerHTML = notifications.map(n => `
-            <div class="glass-panel" style="padding: 1rem; border-left: 4px solid ${n.type === 'warning' ? 'var(--accent)' : (n.type === 'success' ? '#10b981' : 'var(--primary)')}; background: rgba(255,255,255,0.02); margin-bottom: 0.8rem; border-radius: 8px;">
+            <div class="glass-panel" style="padding: 1rem; border-left: 4px solid ${n.type === 'warning' ? 'var(--accent)' : (n.type === 'success' ? '#10b981' : 'var(--primary)')}; background: var(--surface); margin-bottom: 0.8rem; border-radius: 8px; border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                    <span style="font-size: 0.75rem; color: var(--text-muted);">${new Date(n.createdAt).toLocaleString()}</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">${new Date(n.createdAt).toLocaleString()}</span>
                     ${!n.isRead ? '<span style="background: var(--primary); width: 8px; height: 8px; border-radius: 50%;"></span>' : ''}
                 </div>
-                <p style="font-size: 0.95rem; color: var(--white);">${n.message}</p>
+                <p style="font-size: 0.95rem; color: var(--text-2); font-weight: 500;">${n.message}</p>
             </div>
         `).join('');
 

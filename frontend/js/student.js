@@ -12,15 +12,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Tab Navigation Logic
 function switchTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.classList.remove('active');
-    });
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.sidebar-item[id^="nav-"]').forEach(item => item.classList.remove('active'));
 
     document.getElementById(tabId).classList.add('active');
-    event.currentTarget.classList.add('active');
+    const sidebarBtn = document.getElementById('nav-' + tabId);
+    if (sidebarBtn) sidebarBtn.classList.add('active');
 
     // Load data based on tab
     if (tabId === 'discover') searchHostels();
@@ -100,7 +97,6 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
 });
 
 // ---- HOSTEL DISCOVERY LOGIC ----
-// Search and filter hostels (with debounce for better UX)
 let searchTimeout;
 async function searchHostels() {
     clearTimeout(searchTimeout);
@@ -123,7 +119,7 @@ async function searchHostels() {
 
         document.getElementById('hostelsContainer').innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted);">
-                <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid var(--primary); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <div class="spinner"></div>
                 <p style="margin-top: 1rem;">Searching...</p>
             </div>
         `;
@@ -133,8 +129,8 @@ async function searchHostels() {
             renderHostels(res.data);
             if(res.data.length === 0) {
                 document.getElementById('hostelsContainer').innerHTML = `
-                    <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted); background: rgba(15, 23, 42, 0.5); border-radius: 12px; border: 1px solid var(--glass-border);">
-                        <h3 style="margin-bottom: 0.5rem; color: white;">No properties found</h3>
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted); background: var(--surface-3); border-radius: var(--radius-lg); border: 1px dashed var(--border-strong);">
+                        <h3 style="margin-bottom: 0.5rem; color: var(--text);">No properties found</h3>
                         <p>Try adjusting your search filters.</p>
                         <button class="btn btn-outline" style="margin-top: 1rem;" onclick="resetFilters()">Clear Filters</button>
                     </div>
@@ -144,7 +140,7 @@ async function searchHostels() {
             console.error(err);
             showToast("Failed to fetch hostels", "error");
         }
-    }, 300); // 300ms debounce
+    }, 300);
 }
 
 window.resetFilters = function() {
@@ -157,7 +153,6 @@ window.resetFilters = function() {
     searchHostels();
 };
 
-// Helper function to render hostels
 function renderHostels(hostels) {
     const container = document.getElementById('hostelsContainer');
 
@@ -165,26 +160,29 @@ function renderHostels(hostels) {
 
     try {
         container.innerHTML = hostels.map(h => `
-            <div class="hostel-card glass-panel card-3d">
+            <div class="hostel-card">
                 <img src="${h.buildingPhotos && h.buildingPhotos.length > 0 ? getOptimizedUrl(h.buildingPhotos[0], 600) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'}" class="hostel-img" alt="Hostel Room" loading="lazy">
-                <div>
-                    <h3 class="hostel-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="padding: 1.25rem;">
+                    <h3 class="hostel-title" style="display: flex; justify-content: space-between; align-items: flex-start; gap:.5rem;">
                         ${h.name} 
-                        ${h.isVerified ? '<span class="verified-badge" title="Verified Property"><svg class="verified-icon-svg" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg> Verified</span>' : ''}
+                        ${h.isVerified ? '<span style="color:var(--success);font-size:.8rem;display:flex;align-items:center;gap:.25rem;background:rgba(16,185,129,.1);padding:.2rem .5rem;border-radius:12px;font-weight:700;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg> Verified</span>' : ''}
                     </h3>
-                    <p style="color:var(--text-muted); font-size: 0.9rem;">📍 ${h.city}, ${h.address}</p>
-                </div>
-                <div>
-                    <span class="badge">🍽️ Food: ${h.foodAvailability ? 'Yes' : 'No'}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
-                    <span class="hostel-price">₹${h.monthlyPrice}<span style="font-size: 0.9rem; color:var(--text-muted)">/mo</span></span>
-                    <button class="btn btn-outline" style="padding: 0.5rem 1rem;" onclick="openHostelDetails('${h._id}')">View Details</button>
+                    <p style="color:var(--text-muted); font-size: 0.9rem; margin-top:.4rem; line-height:1.4;">📍 ${h.city}, ${h.address}</p>
+                    
+                    <div style="margin-top: 1rem;">
+                        <span style="font-size: .78rem; font-weight: 700; color: var(--text-2); background: var(--surface-3); padding: .25rem .75rem; border-radius: 20px;">
+                            🍽️ Food: ${h.foodAvailability ? 'Yes' : 'No'}
+                        </span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; border-top: 1px solid var(--border-light); padding-top: 1rem;">
+                        <span class="hostel-price">₹${h.monthlyPrice}<span style="font-size: 0.9rem; color:var(--text-muted); font-weight:500;">/mo</span></span>
+                        <button class="btn btn-outline btn-sm" onclick="openHostelDetails('${h._id}')">Details &rarr;</button>
+                    </div>
                 </div>
             </div>
         `).join('');
 
-        // Trigger GSAP animation for new elements
         gsap.from(".hostel-card", {
             y: 30,
             opacity: 0,
@@ -194,87 +192,122 @@ function renderHostels(hostels) {
         });
 
     } catch (error) {
-        container.innerHTML = `<p style="color:red">Error loading hostels: ${error.message}</p>`;
+        container.innerHTML = `<p style="color:var(--danger)">Error loading hostels: ${error.message}</p>`;
     }
 }
 
 // ---- DETAILED VIEW LOGIC ----
 window.openHostelDetails = async function(id) {
     const modal = document.getElementById('hostelDetailModal');
-    // Basic loading state
-    document.getElementById('modalHeader').innerHTML = "<h2>Loading details...</h2>";
-    ['galleryBuilding', 'galleryRooms', 'galleryMess', 'galleryBathrooms'].forEach(grid => document.getElementById(grid).innerHTML = '');
-    
-    modal.style.display = 'block';
+    if(!modal) {
+        // Create modal if it doesn't exist yet (we removed the hardcoded one from HTML in rewrite)
+        document.body.insertAdjacentHTML('beforeend', `
+            <div id="hostelDetailModal" class="modal-overlay" style="display:none">
+                <div class="modal" style="width: 95%; max-width: 1000px; max-height: 90vh; overflow-y: auto;">
+                    <div class="modal-header">
+                        <div id="modalHeader"><h2>Loading details...</h2></div>
+                        <button class="modal-close" onclick="closeDetailsModal()">✕</button>
+                    </div>
+                    <div id="modalBody">
+                        <div style="margin-top: 2rem;">
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text);">🏢 Building & Surroundings</h3>
+                            <div id="galleryBuilding" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;"></div>
+
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text);">🛏️ Rooms</h3>
+                            <div id="galleryRooms" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;"></div>
+
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text);">🍽️ Dinning / Mess</h3>
+                            <div id="galleryMess" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;"></div>
+
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text);">🚿 Washrooms</h3>
+                            <div id="galleryBathrooms" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `);
+    }
+
+    document.getElementById('hostelDetailModal').style.display = 'flex';
 
     try {
         const res = await fetchAPI(`/hostels/${id}`);
         const h = res.data;
 
-        // Populate Header
         document.getElementById('modalHeader').innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                    <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; padding-right: 2rem;">
+                <div style="flex: 1; min-width: 300px;">
+                    <h1 style="font-size: 2rem; font-weight: 900; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text);">
                         ${h.name} 
-                        ${h.isVerified ? '<span class="verified-badge" title="Verified Property" style="font-size: 1rem;"><svg class="verified-icon-svg" style="width:16px;height:16px;" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg> Verified</span>' : ''}
+                        ${h.isVerified ? '<span style="color:var(--success);font-size:.9rem;display:flex;align-items:center;gap:.25rem;background:rgba(16,185,129,.1);padding:.2rem .6rem;border-radius:20px;font-weight:700;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg> Verified</span>' : ''}
                     </h1>
-                    <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 1rem;">📍 ${h.address}, ${h.city}, ${h.state} - ${h.pincode}</p>
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                        <span class="badge">🍽️ Food: ${h.foodAvailability ? 'Available' : 'Not Available'}</span>
-                        <span class="badge" style="display:flex; align-items:center; gap:0.4rem;">
-                            📞 Owner: ${h.ownerId ? h.ownerId.phone : 'N/A'}
-                            ${h.ownerId && h.ownerId.isVerified ? '<span class="verified-badge" title="Verified Owner" style="font-size:0.75rem; padding:0.1rem 0.4rem; display:flex; align-items:center; gap:0.2rem;"><svg class="verified-icon-svg" style="width:10px;height:10px;" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg> Verified</span>' : ''}
-                        </span>
-                        ${h.googleMapLink ? `<a href="${h.googleMapLink}" target="_blank" class="badge" style="background:var(--secondary); color:#fff; text-decoration:none; display:flex; align-items:center; gap:0.3rem;"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.242-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg> Go There</a>` : ''}
+                    <p style="color: var(--text-2); font-size: 1.05rem; margin-bottom: 1.25rem;">📍 ${h.address}, ${h.city}, ${h.state} - ${h.pincode}</p>
+                    
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <span style="font-size:.85rem; font-weight:600; background:var(--surface-3); padding:.4rem .8rem; border-radius:8px;">🍽️ Food: ${h.foodAvailability ? 'Available' : 'Not Available'}</span>
+                        <span style="font-size:.85rem; font-weight:600; background:var(--surface-3); padding:.4rem .8rem; border-radius:8px;">📞 Owner: ${h.ownerId ? h.ownerId.phone : 'N/A'}</span>
+                        ${h.googleMapLink ? `<a href="${h.googleMapLink}" target="_blank" style="font-size:.85rem; font-weight:600; background:var(--primary); color:#fff; padding:.4rem .8rem; border-radius:8px; text-decoration:none;">📍 Open in Maps</a>` : ''}
                     </div>
                 </div>
-                <div style="text-align: right; background: rgba(99, 102, 241, 0.1); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(99, 102, 241, 0.3);">
-                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">₹${h.monthlyPrice}<span style="font-size: 1rem; color: var(--text-muted); font-weight: 500;">/month</span></div>
-                    
-                    <!-- Inline Enquiry Form -->
-                    <div style="margin-top: 1.5rem; text-align: left; background: rgba(15, 23, 42, 0.5); padding: 1rem; border-radius: 12px; border: 1px solid var(--glass-border);">
-                        <label style="display: block; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">Send Enquiry</label>
-                        <textarea id="enquiryMsg_${h._id}" class="form-textarea" rows="2" placeholder="Hi, I am interested..." style="margin-bottom: 0.8rem;"></textarea>
-                        <button class="btn btn-primary" style="width: 100%;" onclick="sendEnquiry('${h._id}')">Submit Enquiry</button>
-                    </div>
+                
+                <div style="background: var(--surface-3); padding: 1.5rem 2rem; border-radius: var(--radius-lg); border: 1px solid var(--border); text-align: center; min-width: 220px;">
+                    <div style="font-size: 2.2rem; font-weight: 900; color: var(--primary); line-height: 1;">₹${h.monthlyPrice}</div>
+                    <div style="font-size: .88rem; color: var(--text-muted); font-weight: 600; margin-top: .25rem; text-transform:uppercase;">per month</div>
+                    <button class="btn btn-primary" style="width:100%; margin-top:1.25rem;" onclick="openBookingModal('${h._id}', '${h.name.replace(/'/g, "\\'")}')">Send Enquiry</button>
                 </div>
             </div>
-            <p style="margin-top: 1.5rem; font-size: 1.1rem; line-height: 1.8; color: var(--text-main);">${h.description}</p>
+            <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed var(--border-strong);">
+                <h3 style="font-size:1.1rem; color:var(--text); margin-bottom:.5rem;">About this Property</h3>
+                <p style="font-size: .95rem; line-height: 1.8; color: var(--text-2); white-space: pre-line;">${h.description}</p>
+            </div>
         `;
 
-        // Helper to render grids
         const renderGrid = (containerId, imagesArr, emptyMsg) => {
             const container = document.getElementById(containerId);
             if (!imagesArr || imagesArr.length === 0) {
-                container.innerHTML = `<p style="color: var(--text-muted); font-style: italic;">${emptyMsg}</p>`;
+                container.innerHTML = `<p style="color: var(--text-muted); font-style: italic; font-size:.9rem; grid-column:1/-1;">${emptyMsg}</p>`;
                 return;
             }
             container.innerHTML = imagesArr.map(imgSrc => `
-                <div style="border-radius: 12px; overflow: hidden; border: 1px solid var(--glass-border); aspect-ratio: 4/3;">
-                    <img src="${getOptimizedUrl(imgSrc, 800)}" style="width: 100%; height: 100%; object-fit: cover; transition: var(--transition);" class="gallery-img-hover" loading="lazy">
+                <div style="border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); aspect-ratio: 4/3;">
+                    <img src="${getOptimizedUrl(imgSrc, 800)}" style="width: 100%; height: 100%; object-fit: cover; transition: var(--transition);" loading="lazy">
                 </div>
             `).join('');
         };
 
         renderGrid('galleryBuilding', h.buildingPhotos, "No building photos uploaded.");
         renderGrid('galleryRooms', h.roomPhotos, "No room photos uploaded.");
-        renderGrid('galleryMess', h.messPhotos, "No mess area photos uploaded.");
+        renderGrid('galleryMess', h.messPhotos, "No dining area photos uploaded.");
         renderGrid('galleryBathrooms', h.washroomPhotos, "No washroom photos uploaded.");
 
     } catch (err) {
-        document.getElementById('modalHeader').innerHTML = `<p style="color:red">Failed to load details: ${err.message}</p>`;
+        document.getElementById('modalHeader').innerHTML = `<p style="color:var(--danger)">Failed to load details: ${err.message}</p>`;
     }
 }
 
 window.closeDetailsModal = function() {
-    document.getElementById('hostelDetailModal').style.display = 'none';
+    const m = document.getElementById('hostelDetailModal');
+    if(m) m.style.display = 'none';
+}
+
+window.openBookingModal = function(id, name) {
+    document.getElementById('bookingHostelName').textContent = name;
+    document.getElementById('bookingMessage').dataset.hostelId = id;
+    const modal = document.getElementById('bookingModal');
+    modal.style.display = 'flex';
+    modal.style.zIndex = '1005';
+}
+
+window.closeBookingModal = function() {
+    document.getElementById('bookingModal').style.display = 'none';
+    document.getElementById('bookingMessage').value = '';
 }
 
 // ---- ENQUIRY LOGIC ----
-window.sendEnquiry = async function(hostelId) {
-    const msgInput = document.getElementById(`enquiryMsg_${hostelId}`);
-    const msg = msgInput ? msgInput.value.trim() : '';
+window.submitEnquiry = async function() {
+    const msgInput = document.getElementById('bookingMessage');
+    const hostelId = msgInput.dataset.hostelId;
+    const msg = msgInput.value.trim();
     
     if (!msg) {
         showToast("Please enter a message for your enquiry.", "error");
@@ -284,7 +317,9 @@ window.sendEnquiry = async function(hostelId) {
     try {
         await fetchAPI('/enquiries', 'POST', { hostelId, message: msg });
         showToast("Enquiry sent successfully! Track it in the 'My Enquiries' tab.", "success");
-        if(msgInput) msgInput.value = ''; // clear input
+        closeBookingModal();
+        // Switch to enquiries tab to show the new enquiry
+        switchTab('enquiries');
     } catch(err) {
         showToast("Failed to send enquiry: " + err.message, "error");
     }
@@ -292,48 +327,56 @@ window.sendEnquiry = async function(hostelId) {
 
 async function loadEnquiries() {
     const container = document.getElementById('enquiriesContainer');
-    container.innerHTML = "Loading...";
+    container.innerHTML = `<div style="text-align:center;padding:2rem;"><div class="spinner"></div></div>`;
 
     try {
         const res = await fetchAPI('/enquiries/student');
         const enquiries = res.data;
 
         if(enquiries.length === 0) {
-            container.innerHTML = "You haven't sent any enquiries yet.";
+            container.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--text-muted);"><p>You haven't sent any enquiries yet.</p></div>`;
             return;
         }
 
         container.innerHTML = enquiries.map(eq => {
-            const statusColor = eq.status === 'Pending' ? 'orange' : (eq.status === 'Responded' ? 'green' : 'gray');
+            let statusColor = 'var(--text-muted)';
+            let statusBg = 'var(--surface-3)';
+            if (eq.status === 'Pending') { statusColor = '#F59E0B'; statusBg = 'rgba(245,158,11,0.1)'; }
+            else if (eq.status === 'Responded') { statusColor = 'var(--success)'; statusBg = 'rgba(16,185,129,0.1)'; }
+            
             return `
-            <div style="border-bottom: 1px solid var(--glass-border); padding: 1.5rem 0;">
-                <h4 style="font-size: 1.1rem; color: var(--primary); margin-bottom: 0.5rem;">${eq.hostelId ? eq.hostelId.name : 'Unknown Hostel'}</h4>
-                <div style="background: rgba(15, 23, 42, 0.4); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--primary); margin-bottom: 0.8rem;">
-                    <p style="font-style: italic; font-size: 0.95rem;">"${eq.message}"</p>
+            <div class="enquiry-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; flex-wrap:wrap; gap:.5rem;">
+                    <div>
+                        <h4 style="font-size: 1.15rem; color: var(--text); font-weight: 700; margin-bottom: 0.2rem;">${eq.hostelId ? eq.hostelId.name : 'Unknown Property'}</h4>
+                        <small style="color: var(--text-muted); font-weight: 500;">📞 Owner Contact: ${eq.ownerId ? eq.ownerId.phone : 'N/A'}</small>
+                    </div>
+                    <span style="color: ${statusColor}; background: ${statusBg}; padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700; letter-spacing: .5px;">
+                        ${eq.status}
+                    </span>
                 </div>
+                
+                <div style="background: var(--surface-3); padding: 1rem; border-radius: var(--radius); border-left: 3px solid var(--border-strong); margin-bottom: 1rem;">
+                    <p style="font-size: 0.95rem; color: var(--text-2);">${eq.message}</p>
+                </div>
+                
                 ${eq.adminResponse ? `
-                    <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 8px; border-left: 3px solid var(--secondary); margin-bottom: 0.8rem;">
-                        <p style="font-size: 0.85rem; color: var(--secondary); font-weight: 600; margin-bottom: 0.2rem;">Official Platform Response:</p>
-                        <p style="font-size: 0.95rem;">${eq.adminResponse}</p>
+                    <div style="background: rgba(16, 185, 129, 0.05); padding: 1rem; border-radius: var(--radius); border-left: 3px solid var(--success); margin-bottom: 1rem;">
+                        <p style="font-size: 0.8rem; color: var(--success); font-weight: 700; margin-bottom: 0.4rem; text-transform:uppercase; letter-spacing:.5px;">Official Response</p>
+                        <p style="font-size: 0.95rem; color: var(--text-2);">${eq.adminResponse}</p>
                     </div>
                 ` : ''}
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
-                    <small style="color: var(--text-muted);">Owner Contact: ${eq.ownerId ? eq.ownerId.phone : 'N/A'}</small>
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <span style="color: ${statusColor}; font-weight: bold; background: rgba(255,255,255,0.05); padding: 0.3rem 0.8rem; border-radius: 12px; font-size: 0.85rem;">
-                            ${eq.status}
-                        </span>
-                        <button class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-color: rgba(244, 63, 94, 0.5); color: var(--accent);" onclick="deleteEnquiry('${eq._id}')" title="Clear Enquiry">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        </button>
-                    </div>
+                
+                <div style="display: flex; justify-content: flex-end;">
+                    <button class="btn btn-sm" style="background:var(--danger-light); color:var(--danger);" onclick="deleteEnquiry('${eq._id}')">
+                        Remove Enquiry
+                    </button>
                 </div>
             </div>
-
             `;
         }).join('');
     } catch(err) {
-        container.innerHTML = "Failed to load enquiries.";
+        container.innerHTML = `<p style="color:var(--danger);padding:1rem;">Failed to load enquiries: ${err.message}</p>`;
     }
 }
 
@@ -373,4 +416,3 @@ window.deleteEnquiry = async function(id) {
         showToast(err.message, "error");
     }
 }
-

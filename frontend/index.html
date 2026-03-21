@@ -1,115 +1,366 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Hostel Buddy | Premium Accommodation Discovery</title>
-    <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css">
-    <!-- GSAP for advanced animations -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HostelBuddy — Find Your Perfect Stay</title>
+  <meta name="description" content="Discover premium hostels and PG accommodations near your college. Verified listings, direct owner contact, transparent pricing.">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" defer></script>
 </head>
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar glass-panel">
-        <div class="logo">HostelBuddy</div>
-        <div class="nav-links">
-            <a href="index.html">Home</a>
-            <a href="#discover">Discover</a>
-            <a href="login.html" class="btn btn-outline">Log In</a>
-            <a href="signup.html" class="btn btn-primary">Sign Up</a>
+  <!-- ========== NAVBAR ========== -->
+  <nav class="navbar" id="navbar">
+    <a href="index.html" class="logo">HostelBuddy</a>
+    <ul class="nav-links">
+      <li><a href="#discover">Discover</a></li>
+      <li><a href="#how-it-works">How It Works</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="guide.html">Guide</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="login.html" class="btn btn-ghost btn-sm">Log In</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">Get Started →</a>
+    
+            <button class="theme-toggle" aria-label="Toggle Dark Mode" style="margin-left: 1rem;">
+              <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+              <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- Mobile Nav -->
+  <div class="mobile-nav" id="mobileNav">
+    <a href="index.html" onclick="closeMobileNav()">Home</a>
+    <a href="#discover" onclick="closeMobileNav()">Discover</a>
+    <a href="about.html" onclick="closeMobileNav()">About</a>
+    <a href="guide.html" onclick="closeMobileNav()">Guide</a>
+    <a href="login.html" class="btn btn-outline" style="border-radius:var(--radius-full)">Log In</a>
+    <a href="signup.html" class="btn btn-primary">Get Started →</a>
+  </div>
+
+  <!-- ========== HERO ========== -->
+  <section class="hero" id="home">
+    <div class="hero-blob hero-blob-1"></div>
+    <div class="hero-blob hero-blob-2"></div>
+    <div class="hero-blob hero-blob-3"></div>
+
+    <div class="hero-content" id="heroContent">
+      <div class="hero-eyebrow">
+        <span>🏠</span> #1 Student Accommodation Platform in India
+      </div>
+      <h1 class="hero-title">
+        Find Your<br>
+        Perfect <span class="highlight">Stay.</span>
+      </h1>
+      <p class="hero-subtitle">
+        Discover verified hostels &amp; PG accommodations near your college. Transparent pricing, direct owner contact, no middlemen.
+      </p>
+
+      <div class="search-container" id="searchBar">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="2" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" class="search-input" id="heroSearch" placeholder="Search by city, college, or locality...">
+        <button class="btn btn-primary" onclick="performSearch()">Search Hubs</button>
+      </div>
+
+      <div class="hero-stats" id="heroStats">
+        <div class="stat-chip">
+          <span style="font-size:1.3rem">🏨</span>
+          <div>
+            <div class="stat-chip-value">2,400+</div>
+            <div class="stat-chip-label">Verified Listings</div>
+          </div>
         </div>
-    </nav>
-
-    <!-- Hero Section -->
-    <section class="hero">
-        <h1 class="hero-title">Find Your Perfect <br> <span>Stay Today</span>.</h1>
-        <p class="hero-subtitle">Discover premium hostels and PG accommodations tailored for students with detailed insights, transparent pricing, and direct owner contact.</p>
-        
-        <div class="search-container glass-panel card-3d">
-            <input type="text" class="search-input" placeholder="Search by city, college, or location..." id="heroSearch">
-            <button class="btn btn-primary" onclick="performSearch()">Search Hubs</button>
+        <div class="stat-chip">
+          <span style="font-size:1.3rem">🎓</span>
+          <div>
+            <div class="stat-chip-value">18,000+</div>
+            <div class="stat-chip-label">Happy Students</div>
+          </div>
         </div>
-    </section>
-
-    <!-- JS -->
-    <script src="js/main.js"></script>
-    <script>
-        // Hero entry animation
-        gsap.from(".hero-title", { y: 50, opacity: 0, duration: 1, delay: 0.2, ease: "power3.out" });
-        gsap.from(".hero-subtitle", { y: 30, opacity: 0, duration: 1, delay: 0.4, ease: "power3.out" });
-        gsap.from(".search-container", { scale: 0.9, opacity: 0, duration: 1, delay: 0.6, ease: "back.out(1.7)" });
-        gsap.from(".navbar", { y: -50, opacity: 0, duration: 1, ease: "power3.out" });
-    </script>
-    <!-- Premium Footer -->
-    <footer class="premium-footer">
-        <div class="footer-grid">
-            <!-- Brand & About -->
-            <div class="footer-brand">
-                <a href="about.html" class="logo" style="text-decoration: none;">HostelBuddy</a>
-                <p class="footer-about">
-                    HostelBuddy revolutionizes how students and professionals find their perfect stay. We provide a transparent, premium discovery platform that bridges the gap between verified hostel/PG owners and accommodation seekers. Experience seamless booking, direct inquiries, and a premium interface designed for you. <a href="about.html" style="color: var(--primary); text-decoration: none;">(Read More)</a>
-                </p>
-                <div class="footer-socials">
-                    <a href="#" class="social-icon" title="Facebook">
-                        <svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path></svg>
-                    </a>
-                    <a href="#" class="social-icon" title="Twitter">
-                        <svg viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path></svg>
-                    </a>
-                    <a href="#" class="social-icon" title="Instagram">
-                        <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
-                    </a>
-                    <a href="#" class="social-icon" title="LinkedIn">
-                        <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"></path><circle cx="4" cy="4" r="2"></circle></svg>
-                    </a>
-                </div>
-            </div>
-
-            <!-- Quick Links -->
-            <div>
-                <h4 class="footer-title">Quick Links</h4>
-                <ul class="footer-links">
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="index.html#discover">Discover Hostels</a></li>
-                    <li><a href="login.html">Login</a></li>
-                    <li><a href="signup.html">Create Account</a></li>
-                    <li><a href="privacy.html">Privacy Policy</a></li>
-                </ul>
-            </div>
-
-            <!-- For Students -->
-            <div>
-                <h4 class="footer-title">For Students</h4>
-                <ul class="footer-links">
-                    <li><a href="signup.html">Find a Hostel</a></li>
-                    <li><a href="#">Student Resources</a></li>
-                    <li><a href="safety.html">Safety Guidelines</a></li>
-                    <li><a href="guide.html">How It Works</a></li>
-                </ul>
-            </div>
-
-            <!-- For Owners -->
-            <div>
-                <h4 class="footer-title">For Owners</h4>
-                <ul class="footer-links">
-                    <li><a href="signup.html">List Your Property</a></li>
-                    <li><a href="#">Owner Dashboard</a></li>
-                    <li><a href="#">Verification Process</a></li>
-                    <li><a href="#">Support Hub</a></li>
-                </ul>
-            </div>
+        <div class="stat-chip">
+          <span style="font-size:1.3rem">🏙️</span>
+          <div>
+            <div class="stat-chip-value">40+</div>
+            <div class="stat-chip-label">Cities</div>
+          </div>
         </div>
+      </div>
+    </div>
+  </section>
 
-        <div class="footer-bottom">
-            <p>&copy; 2026 HostelBuddy. All rights reserved.</p>
-            <div style="display: flex; gap: 1.5rem;">
-                <a href="privacy.html" style="color: var(--text-muted); text-decoration: none;">Privacy Policy</a>
-                <a href="terms.html" style="color: var(--text-muted); text-decoration: none;">Terms of Service</a>
-            </div>
+  <!-- ========== FEATURES ========== -->
+  <section class="section" id="discover">
+    <div class="container text-center">
+      <div class="section-tag">✦ Why HostelBuddy</div>
+      <h2 class="section-title reveal">Everything You Need, <span class="text-gradient">in One Place</span></h2>
+      <p class="section-sub reveal reveal-delay-1">From discovering verified listings to sending enquiries directly — we make finding your next home effortless.</p>
+
+      <div class="features-grid">
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon" style="background:rgba(14,165,233,0.1);color:var(--primary)">🔍</div>
+          <h3>Smart Discovery</h3>
+          <p>Filter by location, price, amenities, gender preference and proximity to your college — all in seconds.</p>
         </div>
-    </footer>
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon" style="background:rgba(16,185,129,0.1);color:var(--success)">✅</div>
+          <h3>Verified Listings</h3>
+          <p>Every hostel and PG is admin-verified. Real photos, real prices — no surprises when you arrive.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon" style="background:rgba(139,92,246,0.1);color:var(--violet)">💬</div>
+          <h3>Direct Enquiry</h3>
+          <p>Connect directly with owners. No middlemen, no brokerage. Send an enquiry and get a response fast.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-1">
+          <div class="feature-icon" style="background:rgba(249,115,22,0.1);color:var(--accent)">📸</div>
+          <h3>Rich Photo Galleries</h3>
+          <p>Browse organized photos of rooms, bathrooms, mess areas and building — so you know exactly what you're getting.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-2">
+          <div class="feature-icon" style="background:rgba(245,158,11,0.1);color:var(--warning)">⭐</div>
+          <h3>Ratings &amp; Reviews</h3>
+          <p>Make decisions backed by real student experiences. See what others are saying before you commit.</p>
+        </div>
+        <div class="feature-card reveal reveal-delay-3">
+          <div class="feature-icon" style="background:rgba(239,68,68,0.1);color:var(--danger)">🛡️</div>
+          <h3>Safety Guidelines</h3>
+          <p>We provide safety resources and tips to ensure every student finds accommodation with confidence and peace of mind.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== STATS ========== -->
+  <section class="stats-section">
+    <div class="stats-grid">
+      <div class="reveal">
+        <div class="stat-item-value" data-target="2400">0</div>
+        <div class="stat-item-label">Verified Listings</div>
+      </div>
+      <div class="reveal reveal-delay-1">
+        <div class="stat-item-value" data-target="18000">0</div>
+        <div class="stat-item-label">Students Helped</div>
+      </div>
+      <div class="reveal reveal-delay-2">
+        <div class="stat-item-value" data-target="40">0</div>
+        <div class="stat-item-label">Cities Covered</div>
+      </div>
+      <div class="reveal reveal-delay-3">
+        <div class="stat-item-value" data-target="98">0</div>
+        <div class="stat-item-label">% Satisfaction Rate</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== HOW IT WORKS ========== -->
+  <section class="section" id="how-it-works">
+    <div class="container text-center">
+      <div class="section-tag">✦ Process</div>
+      <h2 class="section-title reveal">How It <span class="text-gradient">Works</span></h2>
+      <p class="section-sub reveal reveal-delay-1">Get settled into your perfect accommodation in 3 simple steps.</p>
+
+      <div class="steps-grid">
+        <div class="step-card reveal reveal-delay-1">
+          <div class="step-number">1</div>
+          <h3>Create Your Account</h3>
+          <p>Sign up as a student in under 30 seconds. No credit card, no hassle.</p>
+        </div>
+        <div class="step-card reveal reveal-delay-2">
+          <div class="step-number">2</div>
+          <h3>Browse &amp; Filter</h3>
+          <p>Explore thousands of verified listings. Filter by price, location, amenities and more.</p>
+        </div>
+        <div class="step-card reveal reveal-delay-3">
+          <div class="step-number">3</div>
+          <h3>Send Enquiry</h3>
+          <p>Found the one? Contact the owner directly and move in on your own terms.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FOR OWNERS ========== -->
+  <section class="section" style="background:var(--surface-2)">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;">
+        <div class="reveal">
+          <div class="section-tag">✦ For Owners</div>
+          <h2 class="section-title" style="margin-bottom:1rem">List Your Property.<br><span class="text-gradient-warm">Reach More Students.</span></h2>
+          <p style="color:var(--text-muted);line-height:1.8;margin-bottom:2rem">
+            Join thousands of verified hostel and PG owners who trust HostelBuddy to fill their rooms with quality tenants. List in minutes, manage enquiries effortlessly.
+          </p>
+          <a href="signup.html" class="btn btn-accent btn-lg">List Your Hostel →</a>
+        </div>
+        <div class="reveal reveal-delay-2">
+          <div style="display:flex;flex-direction:column;gap:1rem;">
+            <div class="feature-card" style="display:flex;align-items:center;gap:1rem;padding:1.25rem">
+              <div class="feature-icon" style="background:rgba(249,115,22,0.1);color:var(--accent);margin:0;width:44px;height:44px;font-size:1.2rem;flex-shrink:0">📋</div>
+              <div><h4 style="margin-bottom:4px">Easy Listing Management</h4><p style="color:var(--text-muted);font-size:0.88rem">Add photos, set prices, update availability anytime.</p></div>
+            </div>
+            <div class="feature-card" style="display:flex;align-items:center;gap:1rem;padding:1.25rem">
+              <div class="feature-icon" style="background:rgba(14,165,233,0.1);color:var(--primary);margin:0;width:44px;height:44px;font-size:1.2rem;flex-shrink:0">📩</div>
+              <div><h4 style="margin-bottom:4px">Instant Enquiry Alerts</h4><p style="color:var(--text-muted);font-size:0.88rem">Get notified instantly when a student enquires.</p></div>
+            </div>
+            <div class="feature-card" style="display:flex;align-items:center;gap:1rem;padding:1.25rem">
+              <div class="feature-icon" style="background:rgba(16,185,129,0.1);color:var(--success);margin:0;width:44px;height:44px;font-size:1.2rem;flex-shrink:0">🏅</div>
+              <div><h4 style="margin-bottom:4px">Verified Badge</h4><p style="color:var(--text-muted);font-size:0.88rem">Build trust with students through admin verification.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== CTA BANNER ========== -->
+  <section class="section" style="background:linear-gradient(135deg,var(--primary-dark) 0%,#0F52A0 50%,var(--violet) 100%);text-align:center;position:relative;overflow:hidden;">
+    <div style="position:absolute;inset:0;opacity:0.04;background-image:radial-gradient(#fff 1px,transparent 1px);background-size:30px 30px"></div>
+    <div class="container reveal" style="position:relative;z-index:1">
+      <h2 style="font-family:var(--font-head);font-size:clamp(2rem,5vw,3.5rem);font-weight:900;color:#fff;margin-bottom:1rem;letter-spacing:-1px">
+        Ready to Find Your<br><span style="font-family:var(--font-accent);font-style:italic">Perfect Home Away?</span>
+      </h2>
+      <p style="color:rgba(255,255,255,0.7);font-size:1.1rem;margin-bottom:2.5rem;max-width:500px;margin-left:auto;margin-right:auto">
+        Join 18,000+ students who found their ideal hostel through HostelBuddy.
+      </p>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+        <a href="signup.html" class="btn btn-white btn-lg">Start Exploring Free →</a>
+        <a href="guide.html" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:var(--radius-full);padding:1rem 2rem">How It Works</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FOOTER ========== -->
+  <footer class="premium-footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="about.html" class="logo" style="text-decoration:none;display:inline-block;margin-bottom:1rem">HostelBuddy</a>
+        <p class="footer-about">HostelBuddy revolutionizes how students find their perfect stay. Premium discovery platform connecting verified hostel owners with accommodation seekers. <a href="about.html" style="color:var(--primary-light);text-decoration:none">Read more →</a></p>
+        <div class="footer-socials">
+          <a href="#" class="social-icon" title="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+          <a href="#" class="social-icon" title="Twitter"><svg viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg></a>
+          <a href="#" class="social-icon" title="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+          <a href="#" class="social-icon" title="LinkedIn"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg></a>
+        </div>
+      </div>
+      <div>
+        <h4 class="footer-title">Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="#discover">Discover Hostels</a></li>
+          <li><a href="login.html">Login</a></li>
+          <li><a href="signup.html">Create Account</a></li>
+          <li><a href="privacy.html">Privacy Policy</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="footer-title">For Students</h4>
+        <ul class="footer-links">
+          <li><a href="signup.html">Find a Hostel</a></li>
+          <li><a href="#">Student Resources</a></li>
+          <li><a href="safety.html">Safety Guidelines</a></li>
+          <li><a href="guide.html">How It Works</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="footer-title">For Owners</h4>
+        <ul class="footer-links">
+          <li><a href="signup.html">List Your Property</a></li>
+          <li><a href="#">Owner Dashboard</a></li>
+          <li><a href="#">Verification Process</a></li>
+          <li><a href="#">Support Hub</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 HostelBuddy. All rights reserved.</p>
+      <div class="footer-bottom-links">
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    // Navbar scroll
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // Hamburger
+    const hamburger = document.getElementById('hamburger');
+    const mobileNav = document.getElementById('mobileNav');
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('open');
+      mobileNav.classList.toggle('open');
+      document.body.style.overflow = mobileNav.classList.contains('open') ? 'hidden' : '';
+    });
+    function closeMobileNav() {
+      hamburger.classList.remove('open');
+      mobileNav.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    // Ripple effect on buttons
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        const ripple = document.createElement('span');
+        ripple.classList.add('ripple-effect');
+        const rect = this.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+        this.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 700);
+      });
+    });
+
+    // Scroll reveal
+    const revealEls = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+    }, { threshold: 0.12 });
+    revealEls.forEach(el => revealObserver.observe(el));
+
+    // Animated counter
+    const counters = document.querySelectorAll('.stat-item-value[data-target]');
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const el = entry.target;
+        const target = +el.dataset.target;
+        const duration = 1600;
+        const step = target / (duration / 16);
+        let current = 0;
+        const timer = setInterval(() => {
+          current = Math.min(current + step, target);
+          el.textContent = Math.floor(current).toLocaleString() + (el.dataset.suffix || '');
+          if (current >= target) clearInterval(timer);
+        }, 16);
+        counterObserver.unobserve(el);
+      });
+    }, { threshold: 0.5 });
+    counters.forEach(c => counterObserver.observe(c));
+
+    // GSAP hero
+    window.addEventListener('load', () => {
+      if (typeof gsap !== 'undefined') {
+        gsap.from('#heroContent > *', { y: 40, opacity: 0, duration: 0.8, stagger: 0.15, ease: 'power3.out', delay: 0.1 });
+      }
+    });
+
+    // Search
+    function performSearch() {
+      const query = document.getElementById('heroSearch').value.trim();
+      if (query) window.location.href = `student-dashboard.html?search=${encodeURIComponent(query)}`;
+      else window.location.href = 'student-dashboard.html';
+    }
+    document.getElementById('heroSearch').addEventListener('keydown', e => { if (e.key === 'Enter') performSearch(); });
+  </script>
 </body>
 </html>

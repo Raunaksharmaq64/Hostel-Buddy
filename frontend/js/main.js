@@ -115,18 +115,21 @@ window.customConfirm = function(message) {
         overlay.style.zIndex = '9999';
         
         const modal = document.createElement('div');
-        modal.className = 'glass-panel card-3d';
+        modal.className = 'card-3d';
         modal.style.padding = '2rem';
         modal.style.maxWidth = '400px';
         modal.style.textAlign = 'center';
-        modal.style.background = 'rgba(15, 23, 42, 0.95)';
+        modal.style.background = 'var(--surface)';
+        modal.style.borderRadius = 'var(--radius-lg)';
+        modal.style.border = '1px solid var(--border)';
+        modal.style.boxShadow = 'var(--shadow-lg)';
         
         modal.innerHTML = `
-            <h3 style="margin-bottom: 1rem; color: white;">Confirm Action</h3>
-            <p style="color: var(--text-muted); margin-bottom: 2rem;">${message}</p>
+            <h3 style="margin-bottom: 1rem; color: var(--text); font-size: 1.5rem; font-weight: 800;">Confirm Action</h3>
+            <p style="color: var(--text-2); margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.5;">${message}</p>
             <div style="display: flex; gap: 1rem; justify-content: center;">
                 <button class="btn btn-outline" id="confirmCancelBtn" style="flex: 1;">Cancel</button>
-                <button class="btn btn-primary" id="confirmOkBtn" style="flex: 1; background: var(--accent);">Confirm</button>
+                <button class="btn btn-primary" id="confirmOkBtn" style="flex: 1;">Confirm</button>
             </div>
         `;
         
@@ -154,3 +157,31 @@ window.customConfirm = function(message) {
         });
     });
 }
+
+// ---- DARK MODE LOGIC ----
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+}
+
+function setupThemeToggle() {
+    const toggles = document.querySelectorAll('.theme-toggle');
+    toggles.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+    });
+}
+
+// Initialize theme immediately to prevent flash
+initTheme();
+document.addEventListener('DOMContentLoaded', setupThemeToggle);

@@ -1,242 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - Your Hostel Buddy</title>
-    <link rel="stylesheet" href="css/style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <style>
-        .auth-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .auth-box {
-            width: 100%;
-            max-width: 550px;
-            padding: 3rem;
-            border-radius: 24px;
-            text-align: center;
-            z-index: 10;
-        }
-
-        .form-group {
-            margin-bottom: 1.25rem;
-            text-align: left;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 1rem;
-        }
-        
-        .form-row .form-group {
-            flex: 1;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        .form-input, .form-select {
-            width: 100%;
-            padding: 1rem;
-            border-radius: 12px;
-            border: 1px solid var(--glass-border);
-            background: rgba(15, 23, 42, 0.5);
-            color: white;
-            font-size: 1rem;
-            transition: var(--transition);
-        }
-
-        .form-select option {
-            background-color: var(--surface);
-            color: white;
-        }
-
-        .form-input:focus, .form-select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(79, 70, 229, 0.3);
-        }
-
-        .auth-btn {
-            width: 100%;
-            margin-top: 1rem;
-            padding: 1rem;
-            border-radius: 12px;
-            font-size: 1.1rem;
-        }
-
-        .error-message {
-            color: var(--accent);
-            margin-top: 1rem;
-            min-height: 24px;
-        }
-        
-        @media (max-width: 600px) {
-            .form-row { flex-direction: column; gap: 0; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up — HostelBuddy</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
 </head>
-<body>
+<body style="background:var(--bg)">
 
-    <div class="auth-container hero">
-        <div class="auth-box glass-panel card-3d">
-            <h2 style="font-size: 2.5rem; margin-bottom: 0.5rem;">Join <span class="logo">Hostel Buddy</span></h2>
-            <p style="color: var(--text-muted); margin-bottom: 2rem;">Create your account to get started</p>
-            
-            <form id="signupForm">
-                <div class="form-group">
-                    <label class="form-label">I want to...</label>
-                    <select class="form-select" id="role" required>
-                        <option value="Student">Find a Hostel (Student)</option>
-                        <option value="Owner">List a Hostel (Owner)</option>
-                    </select>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" class="form-input" id="name" required placeholder="John Doe">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Phone Number</label>
-                        <input type="tel" class="form-input" id="phone" required placeholder="e.g. 9876543210">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-input" id="email" required placeholder="Enter your email">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" class="form-input" id="password" required placeholder="Create a strong password">
-                </div>
-
-                <button type="submit" class="btn btn-primary auth-btn">Create Account</button>
-            </form>
-            <div id="errorMessage" class="error-message"></div>
-            
-            <p style="margin-top: 2rem; color: var(--text-muted);">
-                Already have an account? <a href="login.html" style="color: var(--primary); text-decoration: none; font-weight: 600;">Log in</a>
-            </p>
+<div class="auth-page">
+  <!-- Left: Visual Panel -->
+  <div class="auth-visual" style="background:linear-gradient(145deg, #F97316 0%, #DC2626 40%, #7C3AED 100%)">
+    <div class="auth-visual-content">
+      <div class="auth-visual-icon">🚀</div>
+      <h2>Start Your Journey</h2>
+      <p>Join thousands of students who found their perfect hostel through HostelBuddy — free, fast, and verified.</p>
+      <div class="auth-visual-dots">
+        <div class="auth-visual-dot"></div>
+        <div class="auth-visual-dot active"></div>
+        <div class="auth-visual-dot"></div>
+      </div>
+      <div style="margin-top:2.5rem;background:rgba(255,255,255,0.12);border-radius:var(--radius-lg);padding:1.5rem;border:1px solid rgba(255,255,255,0.2);text-align:left;max-width:320px">
+        <p style="color:rgba(255,255,255,0.65);font-size:0.82rem;font-style:italic;margin-bottom:1rem;">"Found my ideal PG in 10 minutes on HostelBuddy. Best platform for students by far!"</p>
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff">R</div>
+          <div><div style="color:#fff;font-weight:600;font-size:0.88rem">Riya Mehta</div><div style="color:rgba(255,255,255,0.6);font-size:0.78rem">Student, IIT Delhi</div></div>
         </div>
+      </div>
     </div>
+  </div>
 
-    <script src="js/main.js"></script>
-    <script>
-        gsap.from(".auth-box", { y: 50, opacity: 0, duration: 1, ease: "power3.out" });
+  <!-- Right: Form Panel -->
+  <div class="auth-form-panel">
+    <div class="auth-form-inner" id="authBox">
+      <div class="logo-wrap" style="display:flex; justify-content:space-between; align-items:center;">
+        <a href="index.html" class="logo">HostelBuddy</a>
 
-        document.getElementById('signupForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const role = document.getElementById('role').value;
-            const name = document.getElementById('name').value;
-            const phone = document.getElementById('phone').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            const errorDiv = document.getElementById('errorMessage');
-            errorDiv.textContent = '';
-            
-            const btn = document.querySelector('.auth-btn');
-            btn.innerHTML = 'Creating Account...';
-            btn.style.opacity = '0.7';
+            <button class="theme-toggle" aria-label="Toggle Dark Mode" style="margin-left: 1rem;">
+              <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+              <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+      </div>
 
-            try {
-                const data = await fetchAPI('/auth/register', 'POST', { name, email, password, role, phone });
+      <h1>Create Account</h1>
+      <p class="auth-subtitle">Join HostelBuddy — it's completely free</p>
 
-                // Save token and user info
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
-
-                // Success Animation then redirect
-                gsap.to(".auth-box", { scale: 1.05, opacity: 0, duration: 0.5, onComplete: () => {
-                    if (role === 'Student') window.location.href = 'student-dashboard.html';
-                    else if (role === 'Owner') window.location.href = 'owner-dashboard.html';
-                }});
-
-            } catch (error) {
-                errorDiv.textContent = error.message;
-                btn.innerHTML = 'Create Account';
-                btn.style.opacity = '1';
-                
-                // Shake animation on error
-                gsap.fromTo(".auth-box", 
-                    { x: -10 }, 
-                    { x: 10, duration: 0.1, yoyo: true, repeat: 5, onComplete: () => {
-                        gsap.set(".auth-box", { x: 0 })
-                    }}
-                );
-            }
-        });
-    </script>
-    <!-- Premium Footer -->
-    <footer class="premium-footer" style="margin-top: 0;">
-        <div class="footer-grid">
-            <!-- Brand & About -->
-            <div class="footer-brand">
-                <a href="about.html" class="logo" style="text-decoration: none;">HostelBuddy</a>
-                <p class="footer-about">
-                    HostelBuddy revolutionizes how students and professionals find their perfect stay. We provide a transparent, premium discovery platform that bridges the gap between verified hostel/PG owners and accommodation seekers. <a href="about.html" style="color: var(--primary); text-decoration: none;">Learn more</a>
-                </p>
-                <div class="footer-socials">
-                    <a href="#" class="social-icon" title="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"></path></svg></a>
-                    <a href="#" class="social-icon" title="Twitter"><svg viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"></path></svg></a>
-                    <a href="#" class="social-icon" title="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
-                    <a href="#" class="social-icon" title="LinkedIn"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"></path><circle cx="4" cy="4" r="2"></circle></svg></a>
-                </div>
-            </div>
-            <!-- Quick Links -->
-            <div>
-                <h4 class="footer-title">Quick Links</h4>
-                <ul class="footer-links">
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="index.html#discover">Discover Hostels</a></li>
-                    <li><a href="login.html">Login</a></li>
-                    <li><a href="privacy.html">Privacy Policy</a></li>
-                </ul>
-            </div>
-            <!-- For Students -->
-            <div>
-                <h4 class="footer-title">For Students</h4>
-                <ul class="footer-links">
-                    <li><a href="signup.html">Find a Hostel</a></li>
-                    <li><a href="#">Student Resources</a></li>
-                    <li><a href="safety.html">Safety Guidelines</a></li>
-                    <li><a href="guide.html">How It Works</a></li>
-                </ul>
-            </div>
-            <!-- For Owners -->
-            <div>
-                <h4 class="footer-title">For Owners</h4>
-                <ul class="footer-links">
-                    <li><a href="signup.html">List Your Property</a></li>
-                    <li><a href="#">Owner Dashboard</a></li>
-                    <li><a href="#">Verification Process</a></li>
-                    <li><a href="#">Support Hub</a></li>
-                </ul>
-            </div>
+      <!-- Role Cards -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.75rem">
+        <div class="role-card active" id="roleStudent" onclick="selectRole('Student')" style="border:2px solid var(--primary);background:rgba(14,165,233,0.06);padding:1rem;border-radius:var(--radius);cursor:pointer;text-align:center;transition:var(--transition)">
+          <div style="font-size:1.6rem;margin-bottom:0.4rem">🎓</div>
+          <div style="font-weight:700;font-size:0.9rem;color:var(--primary)">Student</div>
+          <div style="color:var(--text-muted);font-size:0.78rem">Find a hostel</div>
         </div>
-        <div class="footer-bottom">
-            <p>&copy; 2026 HostelBuddy. All rights reserved.</p>
-            <div style="display: flex; gap: 1.5rem;">
-                <a href="privacy.html" style="color: var(--text-muted); text-decoration: none;">Privacy Policy</a>
-                <a href="terms.html" style="color: var(--text-muted); text-decoration: none;">Terms of Service</a>
-            </div>
+        <div class="role-card" id="roleOwner" onclick="selectRole('Owner')" style="border:2px solid var(--border-strong);background:var(--surface);padding:1rem;border-radius:var(--radius);cursor:pointer;text-align:center;transition:var(--transition)">
+          <div style="font-size:1.6rem;margin-bottom:0.4rem">🏨</div>
+          <div style="font-weight:700;font-size:0.9rem;color:var(--text-muted)">Owner</div>
+          <div style="color:var(--text-muted);font-size:0.78rem">List a hostel</div>
         </div>
-    </footer>
+      </div>
+      <input type="hidden" id="role" value="Student">
+
+      <form id="signupForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <div class="input-icon-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <input type="text" class="form-input" id="name" required placeholder="Your full name">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <div class="input-icon-wrap">
+              <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8 19.79 19.79 0 0110 4.18 2 2 0 0112 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L16.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+              <input type="tel" class="form-input" id="phone" required placeholder="9876543210">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-icon-wrap">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input type="email" class="form-input" id="email" required placeholder="you@email.com">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="input-icon-wrap" style="position:relative">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <input type="password" class="form-input" id="password" required placeholder="Create a strong password" oninput="checkStrength(this.value)">
+            <button type="button" onclick="togglePwd(this)" style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <!-- Password strength -->
+          <div style="margin-top:6px;display:flex;gap:4px;height:3px" id="strengthBars">
+            <div style="flex:1;background:var(--border);border-radius:2px" id="sb1"></div>
+            <div style="flex:1;background:var(--border);border-radius:2px" id="sb2"></div>
+            <div style="flex:1;background:var(--border);border-radius:2px" id="sb3"></div>
+            <div style="flex:1;background:var(--border);border-radius:2px" id="sb4"></div>
+          </div>
+          <div style="font-size:0.76rem;color:var(--text-muted);margin-top:4px" id="strengthLabel"></div>
+        </div>
+
+        <!-- Privacy agree -->
+        <div style="display:flex;align-items:flex-start;gap:0.6rem;margin-bottom:1.2rem">
+          <input type="checkbox" id="agreeTerms" required style="margin-top:3px;accent-color:var(--primary);width:16px;height:16px;cursor:pointer">
+          <label for="agreeTerms" style="font-size:0.85rem;color:var(--text-muted);cursor:pointer;line-height:1.5">
+            I agree to the <a href="terms.html" style="color:var(--primary);font-weight:600;text-decoration:none">Terms of Service</a> and <a href="privacy.html" style="color:var(--primary);font-weight:600;text-decoration:none">Privacy Policy</a>
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-accent w-full btn-lg" id="signupBtn" style="border-radius:var(--radius)">
+          Create My Account →
+        </button>
+      </form>
+
+      <div id="errorMessage" style="color:var(--danger);margin-top:1rem;font-size:0.9rem;min-height:20px;text-align:center"></div>
+
+      <p style="margin-top:1.5rem;text-align:center;color:var(--text-muted);font-size:0.9rem">
+        Already have an account? <a href="login.html" style="color:var(--primary);font-weight:600;text-decoration:none">Sign in →</a>
+      </p>
+      <p style="margin-top:0.5rem;text-align:center"><a href="index.html" style="color:var(--text-light);font-size:0.85rem;text-decoration:none">← Back to Home</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="premium-footer" style="margin-top:0">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="about.html" class="logo" style="text-decoration:none;display:inline-block;margin-bottom:1rem">HostelBuddy</a>
+      <p class="footer-about">HostelBuddy — premium hostel and PG discovery for students across India. <a href="about.html" style="color:var(--primary-light);text-decoration:none">Learn more</a></p>
+      <div class="footer-socials">
+        <a href="#" class="social-icon" title="Facebook"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
+        <a href="#" class="social-icon" title="Twitter"><svg viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg></a>
+        <a href="#" class="social-icon" title="Instagram"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/></svg></a>
+        <a href="#" class="social-icon" title="LinkedIn"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg></a>
+      </div>
+    </div>
+    <div><h4 class="footer-title">Quick Links</h4><ul class="footer-links"><li><a href="index.html">Home</a></li><li><a href="index.html#discover">Discover Hostels</a></li><li><a href="login.html">Login</a></li><li><a href="privacy.html">Privacy Policy</a></li></ul></div>
+    <div><h4 class="footer-title">For Students</h4><ul class="footer-links"><li><a href="signup.html">Find a Hostel</a></li><li><a href="#">Student Resources</a></li><li><a href="safety.html">Safety Guidelines</a></li><li><a href="guide.html">How It Works</a></li></ul></div>
+    <div><h4 class="footer-title">For Owners</h4><ul class="footer-links"><li><a href="signup.html">List Your Property</a></li><li><a href="#">Owner Dashboard</a></li><li><a href="#">Verification Process</a></li><li><a href="#">Support Hub</a></li></ul></div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 HostelBuddy. All rights reserved.</p>
+    <div class="footer-bottom-links"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></div>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+  function selectRole(role) {
+    document.getElementById('role').value = role;
+    const s = document.getElementById('roleStudent');
+    const o = document.getElementById('roleOwner');
+    if (role === 'Student') {
+      s.style.cssText = 'border:2px solid var(--primary);background:rgba(14,165,233,0.06);padding:1rem;border-radius:var(--radius);cursor:pointer;text-align:center;transition:var(--transition)';
+      s.querySelector('div:nth-child(2)').style.color = 'var(--primary)';
+      o.style.cssText = 'border:2px solid var(--border-strong);background:var(--surface);padding:1rem;border-radius:var(--radius);cursor:pointer;text-align:center;transition:var(--transition)';
+      o.querySelector('div:nth-child(2)').style.color = 'var(--text-muted)';
+    } else {
+      o.style.cssText = 'border:2px solid var(--accent);background:rgba(249,115,22,0.06);padding:1rem;border-radius:var(--radius);cursor:pointer;text-align:center;transition:var(--transition)';
+      o.querySelector('div:nth-child(2)').style.color = 'var(--accent)';
+      s.style.cssText = 'border:2px solid var(--border-strong);background:var(--surface);padding:1rem;border-radius:var(--radius);cursor:pointer;text-align:center;transition:var(--transition)';
+      s.querySelector('div:nth-child(2)').style.color = 'var(--text-muted)';
+    }
+  }
+  function togglePwd(btn) {
+    const input = btn.previousElementSibling;
+    input.type = input.type === 'password' ? 'text' : 'password';
+  }
+  function checkStrength(val) {
+    const bars = [document.getElementById('sb1'),document.getElementById('sb2'),document.getElementById('sb3'),document.getElementById('sb4')];
+    const label = document.getElementById('strengthLabel');
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const colors = ['','#EF4444','#F97316','#F59E0B','#10B981'];
+    const labels = ['','Weak','Fair','Good','Strong'];
+    bars.forEach((b,i) => b.style.background = i < score ? colors[score] : 'var(--border)');
+    label.textContent = val.length > 0 ? labels[score] : '';
+    label.style.color = colors[score];
+  }
+
+  // Ripple
+  document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      const r = document.createElement('span'); r.classList.add('ripple-effect');
+      const rect = this.getBoundingClientRect(), size = Math.max(rect.width, rect.height);
+      r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+      this.appendChild(r); setTimeout(() => r.remove(), 700);
+    });
+  });
+
+  window.addEventListener('load', () => {
+    if (typeof gsap !== 'undefined') gsap.from('#authBox > *', { y: 30, opacity: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out' });
+  });
+
+  document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const role = document.getElementById('role').value;
+    const name = document.getElementById('name').value;
+    const phone = document.getElementById('phone').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('errorMessage');
+    errorDiv.textContent = '';
+    const btn = document.getElementById('signupBtn');
+    btn.innerHTML = '⏳ Creating Account...'; btn.style.opacity = '0.75';
+    try {
+      const data = await fetchAPI('/auth/register', 'POST', { name, email, password, role, phone });
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      if (typeof gsap !== 'undefined') {
+        gsap.to('#authBox', { scale: 1.03, opacity: 0, duration: 0.4, onComplete: () => {
+          if (role === 'Student') window.location.href = 'student-dashboard.html';
+          else window.location.href = 'owner-dashboard.html';
+        }});
+      } else {
+        if (role === 'Student') window.location.href = 'student-dashboard.html';
+        else window.location.href = 'owner-dashboard.html';
+      }
+    } catch (error) {
+      errorDiv.textContent = error.message;
+      btn.innerHTML = 'Create My Account →'; btn.style.opacity = '1';
+      if (typeof gsap !== 'undefined') gsap.fromTo('#authBox', { x: -8 }, { x: 8, duration: 0.08, yoyo: true, repeat: 6, onComplete: () => gsap.set('#authBox', { x: 0 }) });
+    }
+  });
+</script>
 </body>
 </html>
