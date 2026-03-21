@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Owner Dashboard — HostelBuddy</title>
     <link rel="stylesheet" href="css/style.css?v=5">
+    <link rel="stylesheet" href="css/tour.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
     <style>
         .dashboard-container { padding-top: 0; }
@@ -462,6 +463,7 @@
 
     <script src="js/main.js?v=5"></script>
     <script src="js/owner.js?v=5"></script>
+    <script src="js/tour.js"></script>
     <script>
         // Sidebar active state
         function updateSidebarActive(tab) {
@@ -488,6 +490,48 @@
                     const av = document.getElementById('sidebarAvatar'); if(av) av.textContent = u.name.charAt(0).toUpperCase();
                 }
             } catch(e) {}
+
+            // ── Launch Owner Onboarding Tour ────────────────
+            HostelTour.init({
+                key: 'tour_owner_done',
+                welcomeDesc: 'Congratulations on joining HostelBuddy! We will show you how to list your property and manage student enquiries in under a minute.',
+                steps: [
+                    {
+                        icon: '🧭',
+                        title: 'Owner Dashboard Sidebar',
+                        desc: 'This sidebar lets you navigate between your Dashboard overview, your Listings, Add a new Hostel, Enquiries, and your Profile.',
+                        selector: '.sidebar-nav'
+                    },
+                    {
+                        icon: '➕',
+                        title: 'Add Your First Listing',
+                        desc: 'Click here to create a new PG/hostel listing. Add detailed descriptions, pricing, amenities, house rules, and multiple image galleries.',
+                        selector: '#nav-add-hostel',
+                        clickBefore: '#nav-add-hostel'
+                    },
+                    {
+                        icon: '🏘',
+                        title: 'My Listings',
+                        desc: 'View all your uploaded properties here. You can see the approval status, edit details, or remove a listing any time.',
+                        selector: '#nav-my-hostels',
+                        clickBefore: '#nav-my-hostels'
+                    },
+                    {
+                        icon: '💬',
+                        title: 'Student Enquiries',
+                        desc: 'When students are interested in your property, their messages land here. You can read their message and send a direct reply — all in a clean chat view.',
+                        selector: '#nav-enquiries',
+                        clickBefore: '#nav-enquiries'
+                    },
+                    {
+                        icon: '✅',
+                        title: 'Get Verified',
+                        desc: 'Head to your Profile and request Verification. A verified badge on your listings builds student trust and increases enquiries significantly!',
+                        selector: '#nav-profile',
+                        clickBefore: '#nav-profile'
+                    }
+                ]
+            });
         });
         // Mobile toggle
         if (window.innerWidth <= 768) {

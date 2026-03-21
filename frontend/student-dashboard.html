@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard — HostelBuddy</title>
-    <link rel="stylesheet" href="css/style.css?v=4">
+    <link rel="stylesheet" href="css/style.css?v=5">
+    <link rel="stylesheet" href="css/tour.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
     <style>
         .dashboard-container { padding-top: 0; }
@@ -355,6 +356,7 @@
 
     <script src="js/main.js?v=5"></script>
     <script src="js/student.js?v=5"></script>
+    <script src="js/tour.js"></script>
     <script>
         function updateSidebarActive(tab) {
             document.querySelectorAll('.sidebar-item[id^="nav-"]').forEach(el => el.classList.remove('active'));
@@ -378,6 +380,53 @@
                     const av = document.getElementById('sidebarAvatar'); if(av) av.textContent = u.name.charAt(0).toUpperCase();
                 }
             } catch(e) {}
+
+            // ── Launch Student Onboarding Tour ──────────────
+            HostelTour.init({
+                key: 'tour_student_done',
+                welcomeDesc: 'You are just a few clicks away from finding your perfect PG or hostel. Let us walk you through your Dashboard in under a minute!',
+                steps: [
+                    {
+                        icon: '🧭',
+                        title: 'Your Navigation Sidebar',
+                        desc: 'This sidebar is your command center. Switch between Discover Hostels, My Enquiries, and your Profile from here.',
+                        selector: '.sidebar-nav'
+                    },
+                    {
+                        icon: '🏠',
+                        title: 'Discover Hostels',
+                        desc: 'Browse all approved PGs and hostels available near you. Use filters to narrow by price, gender, and location.',
+                        selector: '#nav-discover',
+                        clickBefore: '#nav-discover'
+                    },
+                    {
+                        icon: '🔍',
+                        title: 'Hostel Cards',
+                        desc: 'Each card shows photos, price, amenities, and overall star rating from real students. Click any card to see full details, rules, and gallery.',
+                        selector: '.hostels-grid'
+                    },
+                    {
+                        icon: '📩',
+                        title: 'Send an Enquiry',
+                        desc: 'Found the right place? Hit "Send Enquiry" on the hostel detail view to start a conversation directly with the owner.',
+                        selector: '#nav-discover'
+                    },
+                    {
+                        icon: '💬',
+                        title: 'My Enquiries Tab',
+                        desc: 'Track every message you have sent here. Once the owner replies, you will see a chat-style conversation view with their response.',
+                        selector: '#nav-enquiries',
+                        clickBefore: '#nav-enquiries'
+                    },
+                    {
+                        icon: '👤',
+                        title: 'Your Profile',
+                        desc: 'Keep your contact info and college details updated. Owners see this when reviewing your enquiry — a complete profile builds trust!',
+                        selector: '#nav-profile',
+                        clickBefore: '#nav-profile'
+                    }
+                ]
+            });
         });
         if (window.innerWidth <= 768) {
             const t = document.getElementById('sidebarToggle');

@@ -1,0 +1,295 @@
+/* ============================================
+   HOSTELBUDDY — PREMIUM ONBOARDING TOUR ENGINE
+   ============================================ */
+
+/* ── Overlay ─────────────────────────────── */
+#tourOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+#tourOverlay.active { pointer-events: auto; }
+
+/* Four dark panels that surround the spotlight */
+.tour-panel {
+  position: fixed;
+  background: rgba(2, 6, 23, 0.82);
+  backdrop-filter: blur(2px);
+  transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 9001;
+}
+
+/* ── Spotlight ring pulse ─────────────────── */
+#tourSpotlight {
+  position: fixed;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 4px rgba(14, 165, 233, 0.55),
+    0 0 0 8px rgba(14, 165, 233, 0.2),
+    0 0 40px 8px rgba(14, 165, 233, 0.15);
+  z-index: 9002;
+  pointer-events: none;
+  transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: tourPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes tourPulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(14,165,233,.55), 0 0 0 8px rgba(14,165,233,.18), 0 0 40px 8px rgba(14,165,233,.12); }
+  50%       { box-shadow: 0 0 0 5px rgba(14,165,233,.7),  0 0 0 12px rgba(14,165,233,.1), 0 0 60px 12px rgba(14,165,233,.18); }
+}
+
+/* ── Tooltip Card ────────────────────────── */
+#tourTooltip {
+  position: fixed;
+  z-index: 9010;
+  width: 340px;
+  max-width: calc(100vw - 2rem);
+  background: linear-gradient(145deg, rgba(15,23,42,0.97) 0%, rgba(23,34,56,0.97) 100%);
+  border: 1px solid rgba(14,165,233,0.35);
+  border-radius: 20px;
+  padding: 1.6rem 1.75rem 1.4rem;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.04) inset,
+    0 20px 60px rgba(0,0,0,0.5),
+    0 0 40px rgba(14,165,233,0.1);
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4,0,0.2,1), left 0.45s cubic-bezier(0.4,0,0.2,1), top 0.45s cubic-bezier(0.4,0,0.2,1);
+  backdrop-filter: blur(12px);
+}
+
+#tourTooltip.entering {
+  opacity: 0;
+  transform: scale(0.92) translateY(10px);
+}
+
+/* Arrow pointer */
+#tourTooltip::before {
+  content: '';
+  position: absolute;
+  width: 12px; height: 12px;
+  background: rgba(23,34,56,0.97);
+  border: 1px solid rgba(14,165,233,0.35);
+  transform: rotate(45deg);
+  transition: all 0.45s cubic-bezier(0.4,0,0.2,1);
+}
+
+#tourTooltip[data-arrow="top"]::before    { top: -7px; left: 28px; border-right: none; border-bottom: none; }
+#tourTooltip[data-arrow="bottom"]::before { bottom: -7px; left: 28px; border-left: none; border-top: none; }
+#tourTooltip[data-arrow="left"]::before   { left: -7px; top: 28px; border-right: none; border-top: none; }
+#tourTooltip[data-arrow="right"]::before  { right: -7px; top: 28px; border-left: none; border-bottom: none; }
+#tourTooltip[data-arrow="center"]::before { display: none; }
+
+/* ── Tooltip internals ───────────────────── */
+#tourBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #38bdf8;
+  background: rgba(14,165,233,0.12);
+  border: 1px solid rgba(14,165,233,0.2);
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  margin-bottom: 0.9rem;
+}
+
+#tourIcon {
+  font-size: 1.5rem;
+  margin-right: 0.3rem;
+}
+
+#tourTitle {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+#tourDesc {
+  font-size: 0.875rem;
+  color: rgba(148,163,184,0.9);
+  line-height: 1.65;
+  margin-bottom: 1.25rem;
+}
+
+/* Progress dots */
+#tourDots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 1.1rem;
+}
+
+.tour-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(148,163,184,0.3);
+  transition: all 0.3s ease;
+}
+.tour-dot.active {
+  width: 20px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #0ea5e9, #6366f1);
+}
+
+/* Buttons row */
+#tourButtons {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.tour-btn-skip {
+  flex: 1;
+  background: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(148,163,184,0.7);
+  border-radius: 10px;
+  padding: 0.55rem 0;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+.tour-btn-skip:hover {
+  border-color: rgba(239,68,68,0.4);
+  color: #f87171;
+}
+
+.tour-btn-back {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #94a3b8;
+  border-radius: 10px;
+  padding: 0.55rem 1rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 600;
+}
+.tour-btn-back:hover {
+  background: rgba(255,255,255,0.1);
+  color: #f1f5f9;
+}
+
+.tour-btn-next {
+  flex: 2;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  border: none;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(14,165,233,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+.tour-btn-next:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(14,165,233,0.45);
+}
+.tour-btn-next:active { transform: translateY(0); }
+
+/* Step counter */
+#tourCounter {
+  font-size: 0.72rem;
+  color: rgba(148,163,184,0.5);
+  text-align: right;
+  margin-top: 0.75rem;
+  letter-spacing: 0.5px;
+}
+
+/* ── Replay Button (shown after tour) ────── */
+#tourReplayBtn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 8999;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow: 0 4px 18px rgba(14,165,233,0.4);
+  transition: all 0.25s;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+}
+#tourReplayBtn.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+#tourReplayBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(14,165,233,0.5);
+}
+
+/* ── Welcome Modal (first step) ─────────── */
+#tourWelcome {
+  position: fixed;
+  inset: 0;
+  z-index: 9020;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2,6,23,0.88);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+#tourWelcome.show { opacity: 1; }
+
+#tourWelcomeCard {
+  background: linear-gradient(145deg, rgba(15,23,42,0.99) 0%, rgba(23,34,56,0.99) 100%);
+  border: 1px solid rgba(14,165,233,0.3);
+  border-radius: 24px;
+  padding: 2.5rem 2.75rem;
+  max-width: 440px;
+  width: calc(100% - 2rem);
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(14,165,233,0.1);
+  transform: scale(0.9);
+  transition: transform 0.4s cubic-bezier(0.18,0.89,0.32,1.28);
+}
+#tourWelcome.show #tourWelcomeCard { transform: scale(1); }
+
+#tourWelcomeEmoji { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
+#tourWelcomeTitle { font-size: 1.7rem; font-weight: 900; color: #f1f5f9; margin-bottom: 0.5rem; }
+#tourWelcomeTitle span { background: linear-gradient(135deg,#38bdf8,#818cf8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+#tourWelcomeDesc { font-size: 0.92rem; color: rgba(148,163,184,0.85); line-height: 1.7; margin-bottom: 2rem; }
+
+.tour-welcome-btns { display: flex; flex-direction: column; gap: 0.75rem; }
+.tour-welcome-start {
+  background: linear-gradient(135deg,#0ea5e9,#6366f1);
+  border: none; color: #fff; border-radius: 14px;
+  padding: 0.85rem; font-size: 1rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(14,165,233,0.4);
+}
+.tour-welcome-start:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(14,165,233,0.5); }
+.tour-welcome-skip {
+  background: none; border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(148,163,184,0.7); border-radius: 14px;
+  padding: 0.75rem; font-size: 0.88rem; cursor: pointer;
+  transition: all 0.2s;
+}
+.tour-welcome-skip:hover { border-color: rgba(239,68,68,0.4); color: #f87171; }
