@@ -106,32 +106,140 @@
           <div style="font-size:0.76rem;color:var(--text-muted);margin-top:4px" id="strengthLabel"></div>
         </div>
 
-        <!-- Premium Privacy agree -->
+        <!-- Premium Legal Agreement Box -->
         <style>
+          /* Checkbox hidden */
           .custom-checkbox { display: none; }
-          .custom-checkbox-label { display: flex; align-items: center; cursor: pointer; }
-          .checkbox-box { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border-strong); display: flex; align-items: center; justify-content: center; transition: var(--transition); background: var(--surface); flex-shrink: 0; }
-          .custom-checkbox:checked + .custom-checkbox-label .checkbox-box { background: var(--primary); border-color: var(--primary); box-shadow: 0 0 8px rgba(14,165,233,.3); }
-          .checkbox-box svg { width: 14px; height: 14px; fill: none; stroke: white; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transform: scale(.5); transition: var(--transition); }
-          .custom-checkbox:checked + .custom-checkbox-label .checkbox-box svg { opacity: 1; transform: scale(1); }
-          .agreement-box { margin-bottom: 1.5rem; background: var(--surface-2); border: 2px solid var(--border-strong); border-radius: var(--radius); padding: 1.25rem; transition: var(--transition); cursor: pointer; }
-          .agreement-box:hover { border-color: var(--border); box-shadow: var(--shadow-sm); }
-          .agreement-box.checked { border-color: var(--primary); background: rgba(14, 165, 233, 0.03); }
+
+          /* Agreement box */
+          .agreement-box {
+            margin-bottom: 1.5rem;
+            background: var(--surface-2);
+            border: 2px solid var(--border-strong);
+            border-radius: 16px;
+            padding: 1.4rem 1.5rem;
+            cursor: pointer;
+            transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+            user-select: none;
+          }
+          .agreement-box:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(14,165,233,0.08);
+          }
+          .agreement-box.checked {
+            border-color: var(--primary);
+            background: rgba(14, 165, 233, 0.05);
+            box-shadow: 0 0 0 4px rgba(14,165,233,0.12);
+          }
+          .agreement-box.shake {
+            animation: agreementShake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+            border-color: var(--danger) !important;
+            box-shadow: 0 0 0 4px rgba(239,68,68,0.15) !important;
+            background: rgba(239,68,68,0.04) !important;
+          }
+          @keyframes agreementShake {
+            10%, 90% { transform: translateX(-3px); }
+            20%, 80% { transform: translateX(5px); }
+            30%, 50%, 70% { transform: translateX(-6px); }
+            40%, 60% { transform: translateX(6px); }
+          }
+
+          /* Visual checkbox */
+          .checkbox-ring {
+            width: 26px; height: 26px; border-radius: 8px;
+            border: 2.5px solid var(--border-strong);
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.25s; background: var(--surface); flex-shrink: 0;
+          }
+          .custom-checkbox:checked ~ .agreement-inner .checkbox-ring {
+            background: var(--primary); border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(14,165,233,.4);
+          }
+          .checkbox-ring svg {
+            width: 15px; height: 15px;
+            fill: none; stroke: white; stroke-width: 3;
+            stroke-linecap: round; stroke-linejoin: round;
+            opacity: 0; transform: scale(.4);
+            transition: all 0.25s cubic-bezier(.18,.89,.32,1.28);
+          }
+          .custom-checkbox:checked ~ .agreement-inner .checkbox-ring svg {
+            opacity: 1; transform: scale(1);
+          }
+
+          /* Toast notification */
+          .agreement-toast {
+            display: none;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 0.8rem;
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.35);
+            color: var(--danger);
+            font-size: 0.88rem;
+            font-weight: 600;
+            animation: toastIn 0.3s ease;
+          }
+          .agreement-toast.show { display: flex; }
+          @keyframes toastIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
         </style>
-        
-        <label for="agreeTerms" class="agreement-box" id="agreementBoxLabel">
-          <div style="display: flex; gap: 1rem; align-items: flex-start;">
-            <div style="position: relative; top: 2px;">
-              <input type="checkbox" id="agreeTerms" class="custom-checkbox" required onchange="document.getElementById('agreementBoxLabel').classList.toggle('checked', this.checked)">
-              <div class="custom-checkbox-label" style="padding: 0;">
-                <div class="checkbox-box"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg></div>
+
+        <!-- Toast warning -->
+        <div class="agreement-toast" id="agreementToast">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Please agree to our Terms of Service and Privacy Policy to continue.
+        </div>
+
+        <!-- Agreement Box (label wraps hidden checkbox) -->
+        <label class="agreement-box" id="agreementBoxLabel" for="agreeTerms">
+          <input type="checkbox" id="agreeTerms" class="custom-checkbox"
+            onchange="
+              document.getElementById('agreementBoxLabel').classList.toggle('checked', this.checked);
+              if(this.checked) {
+                document.getElementById('agreementToast').classList.remove('show');
+                document.getElementById('agreementBoxLabel').classList.remove('shake');
+              }
+            ">
+
+          <div class="agreement-inner" style="display:flex; gap:1.1rem; align-items:flex-start; pointer-events:none;">
+            <div style="margin-top:2px;">
+              <div class="checkbox-ring">
+                <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
               </div>
             </div>
             <div>
-              <p style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--text);">Legal Agreement</p>
-              <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
-                I have read and agree to the <a href="terms.html" style="color: var(--primary); font-weight: 600; text-decoration: none;" onclick="event.stopPropagation()">Terms of Service</a> and <a href="privacy.html" style="color: var(--primary); font-weight: 600; text-decoration: none;" onclick="event.stopPropagation()">Privacy Policy</a>.
+              <p style="font-size:1rem; font-weight:700; margin-bottom:0.35rem; color:var(--text); display:flex; align-items:center; gap:0.4rem;">
+                🔐 Legal Agreement Required
               </p>
+              <p style="font-size:0.87rem; color:var(--text-muted); line-height:1.65;">
+                By checking this box, I confirm that I am 18 years or older and I have read and agree to the
+                <a href="terms.html" style="color:var(--primary);font-weight:600;text-decoration:none;" onclick="event.stopPropagation()">Terms of Service</a>
+                and
+                <a href="privacy.html" style="color:var(--primary);font-weight:600;text-decoration:none;" onclick="event.stopPropagation()">Privacy Policy</a>
+                of HostelBuddy. I understand how my data will be used.
+              </p>
+              <div style="display:flex; gap:1rem; margin-top:0.9rem; flex-wrap:wrap;">
+                <a href="terms.html" onclick="event.stopPropagation()" style="
+                  display:inline-flex; align-items:center; gap:0.35rem;
+                  font-size:0.78rem; color:var(--text-muted); text-decoration:none;
+                  border:1px solid var(--border); border-radius:6px;
+                  padding:0.3rem 0.75rem; transition:all 0.2s;
+                " onmouseenter="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+                  📄 Terms of Service
+                </a>
+                <a href="privacy.html" onclick="event.stopPropagation()" style="
+                  display:inline-flex; align-items:center; gap:0.35rem;
+                  font-size:0.78rem; color:var(--text-muted); text-decoration:none;
+                  border:1px solid var(--border); border-radius:6px;
+                  padding:0.3rem 0.75rem; transition:all 0.2s;
+                " onmouseenter="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'" onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+                  🔒 Privacy Policy
+                </a>
+              </div>
             </div>
           </div>
         </label>
@@ -227,6 +335,28 @@
 
   document.getElementById('signupForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    // ---- Agreement Validation ----
+    const agreeCheckbox = document.getElementById('agreeTerms');
+    if (!agreeCheckbox.checked) {
+      const box   = document.getElementById('agreementBoxLabel');
+      const toast = document.getElementById('agreementToast');
+
+      // Show red toast warning
+      toast.classList.add('show');
+
+      // Shake the agreement box
+      box.classList.remove('shake');
+      // Force reflow to restart animation
+      void box.offsetWidth;
+      box.classList.add('shake');
+      setTimeout(() => box.classList.remove('shake'), 600);
+
+      // Scroll to agreement box smoothly
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
     const role = document.getElementById('role').value;
     const name = document.getElementById('name').value;
     const phone = document.getElementById('phone').value;
