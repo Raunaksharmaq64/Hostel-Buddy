@@ -73,7 +73,7 @@
           <span style="font-size:1.3rem">🏨</span>
           <div>
             <div class="stat-chip-value">2,400+</div>
-            <div class="stat-chip-label">Verified Listings</div>
+            <div class="stat-chip-label">Verified Hostels</div>
           </div>
         </div>
         <div class="stat-chip">
@@ -141,7 +141,7 @@
     <div class="stats-grid">
       <div class="reveal">
         <div class="stat-item-value" data-target="2400">0</div>
-        <div class="stat-item-label">Verified Listings</div>
+        <div class="stat-item-label">Verified Hostels</div>
       </div>
       <div class="reveal reveal-delay-1">
         <div class="stat-item-value" data-target="18000">0</div>
@@ -327,25 +327,72 @@
     }, { threshold: 0.12 });
     revealEls.forEach(el => revealObserver.observe(el));
 
-    // Animated counter
-    const counters = document.querySelectorAll('.stat-item-value[data-target]');
-    const counterObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        const el = entry.target;
-        const target = +el.dataset.target;
-        const duration = 1600;
-        const step = target / (duration / 16);
-        let current = 0;
-        const timer = setInterval(() => {
-          current = Math.min(current + step, target);
-          el.textContent = Math.floor(current).toLocaleString() + (el.dataset.suffix || '');
-          if (current >= target) clearInterval(timer);
-        }, 16);
-        counterObserver.unobserve(el);
-      });
-    }, { threshold: 0.5 });
-    counters.forEach(c => counterObserver.observe(c));
+    // Animated counter functionality
+    function initCounters() {
+      const counters = document.querySelectorAll('.stat-item-value[data-target]');
+      const counterObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const el = entry.target;
+          const target = +el.dataset.target;
+          const duration = 1600;
+          // Prevent division by zero if target is 0
+          const step = target > 0 ? target / (duration / 16) : 1;
+          let current = 0;
+          const timer = setInterval(() => {
+            current = Math.min(current + step, target);
+            el.textContent = Math.floor(current).toLocaleString() + (el.dataset.suffix || '');
+            if (current >= target) {
+              el.textContent = target.toLocaleString() + (el.dataset.suffix || '');
+              clearInterval(timer);
+            }
+          }, 16);
+          counterObserver.unobserve(el);
+        });
+      }, { threshold: 0.5 });
+      counters.forEach(c => counterObserver.observe(c));
+    }
+
+    // Fetch dynamic stats
+    async function loadPlatformStats() {
+      try {
+        const response = await fetchAPI('/hostels/stats', 'GET');
+        if (response.success) {
+          const { verifiedListings, studentsHelped, citiesCovered, satisfactionRate } = response.data;
+          
+          // Update intersection observer targets
+          const targets = document.querySelectorAll('.stat-item-value[data-target]');
+          if (targets.length >= 4) {
+            targets[0].dataset.target = verifiedListings || 0;
+            targets[1].dataset.target = studentsHelped || 0;
+            targets[2].dataset.target = citiesCovered || 0;
+            targets[3].dataset.target = satisfactionRate || 0;
+            // The HTML doesn't explicitly have data-suffix for 98%, so let's set it
+            targets[3].dataset.suffix = '%';
+          }
+          
+          // Update hero stats chips (direct text replacement)
+          const chipValues = document.querySelectorAll('.stat-chip-value');
+          if (chipValues.length >= 3) {
+             chipValues[0].textContent = (verifiedListings || 0).toLocaleString() + '+';
+             chipValues[1].textContent = (studentsHelped || 0).toLocaleString() + '+';
+             chipValues[2].textContent = (citiesCovered || 0).toLocaleString() + '+';
+          }
+          
+          // Also update the CTA banner text at the bottom
+          const ctaBannerText = document.querySelector('section[style*="background:linear-gradient"] p');
+          if (ctaBannerText && studentsHelped) {
+            ctaBannerText.textContent = `Join ${studentsHelped.toLocaleString()}+ students who found their ideal hostel through HostelBuddy.`;
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load platform stats', error);
+      } finally {
+        initCounters();
+      }
+    }
+    
+    document.addEventListener('DOMContentLoaded', loadPlatformStats);
 
     // GSAP hero
     window.addEventListener('load', () => {

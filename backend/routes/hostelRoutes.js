@@ -5,7 +5,8 @@ const {
   createHostel,
   updateHostel,
   deleteHostel,
-  getOwnerHostels
+  getOwnerHostels,
+  getPlatformStats
 } = require('../controllers/hostelController');
 const { protect, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -14,6 +15,7 @@ const router = express.Router();
 
 // Public routes for fetching
 router.get('/', getHostels);
+router.get('/stats', getPlatformStats); // Must be before /:id to prevent "stats" being parsed as an id
 router.get('/:id', getHostel);
 
 // Owner specific route

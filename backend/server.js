@@ -30,6 +30,7 @@ const hostelRoutes = require('./routes/hostelRoutes');
 const enquiryRoutes = require('./routes/enquiryRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const feedbackRoutes = require('./routes/feedbackRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/profiles', profileRoutes);
@@ -37,6 +38,7 @@ app.use('/api/hostels', hostelRoutes);
 app.use('/api/enquiries', enquiryRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

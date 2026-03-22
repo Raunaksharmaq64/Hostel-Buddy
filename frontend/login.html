@@ -24,7 +24,7 @@
       <div style="margin-top:3rem;display:flex;flex-direction:column;gap:1rem;max-width:320px;text-align:left">
         <div style="display:flex;align-items:center;gap:0.75rem;background:rgba(255,255,255,0.1);padding:0.9rem 1.2rem;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.15)">
           <span style="font-size:1.3rem">✅</span>
-          <span style="color:rgba(255,255,255,0.85);font-size:0.9rem">2,400+ verified listings across 40 cities</span>
+          <span id="loginStatListings" style="color:rgba(255,255,255,0.85);font-size:0.9rem">2,400+ verified hostels across 40 cities</span>
         </div>
         <div style="display:flex;align-items:center;gap:0.75rem;background:rgba(255,255,255,0.1);padding:0.9rem 1.2rem;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.15)">
           <span style="font-size:1.3rem">⚡</span>
@@ -32,7 +32,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:0.75rem;background:rgba(255,255,255,0.1);padding:0.9rem 1.2rem;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.15)">
           <span style="font-size:1.3rem">🎓</span>
-          <span style="color:rgba(255,255,255,0.85);font-size:0.9rem">18,000+ students trust HostelBuddy</span>
+          <span id="loginStatStudents" style="color:rgba(255,255,255,0.85);font-size:0.9rem">18,000+ students trust HostelBuddy</span>
         </div>
       </div>
     </div>
@@ -143,6 +143,27 @@
 
   window.addEventListener('load', () => {
     if (typeof gsap !== 'undefined') gsap.from('#authBox > *', { y: 30, opacity: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out' });
+    
+    // Fetch dynamic stats
+    if (typeof fetchAPI === 'function') {
+      fetchAPI('/hostels/stats', 'GET')
+        .then(response => {
+          if (response.success) {
+            const { verifiedListings, studentsHelped, citiesCovered } = response.data;
+            
+            const listingsEl = document.getElementById('loginStatListings');
+            if (listingsEl && verifiedListings !== undefined && citiesCovered !== undefined) {
+               listingsEl.textContent = `${(verifiedListings || 0).toLocaleString()}+ verified hostels across ${citiesCovered || 0} cities`;
+            }
+            
+            const studentsEl = document.getElementById('loginStatStudents');
+            if (studentsEl && studentsHelped !== undefined) {
+               studentsEl.textContent = `${(studentsHelped || 0).toLocaleString()}+ students trust HostelBuddy`;
+            }
+          }
+        })
+        .catch(err => console.error('Failed to load platform stats', err));
+    }
   });
 
   document.getElementById('loginForm').addEventListener('submit', async (e) => {

@@ -116,6 +116,10 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     My Profile
                 </button>
+                <button class="sidebar-item" id="nav-feedback" onclick="switchTab('feedback')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    Platform Feedback
+                </button>
                 <div class="sidebar-section-label" style="margin-top:1rem">Resources</div>
                 <a href="guide.html" class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>How It Works</a>
                 <a href="safety.html" class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Safety Guide</a>
@@ -424,6 +428,48 @@
                     <div style="display:flex;gap:1rem;margin-top:1.5rem">
                         <button class="btn btn-outline w-full" onclick="closeDeactivateModal()">Cancel</button>
                         <button class="btn w-full" style="background:var(--danger);color:#fff" onclick="submitDeactivationRequest()">Confirm</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Platform Feedback Tab -->
+            <div id="feedback" class="tab-content">
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">Platform Feedback</div>
+                        <div class="dash-sub">Help us improve HostelBuddy by sharing your experience, and see what others are saying.</div>
+                    </div>
+                </div>
+                
+                <div style="display:grid;grid-template-columns:minmax(300px, 1fr) 2fr;gap:2rem;align-items:start">
+                    <!-- Leave Feedback Form -->
+                    <div class="panel">
+                        <h3 style="margin-bottom:1rem;font-size:1.1rem;color:var(--accent);">Leave Your Feedback</h3>
+                        <form id="feedbackForm">
+                            <div class="form-group" style="margin-bottom:1rem">
+                                <label class="form-label">Rate your experience</label>
+                                <select id="feedbackRating" class="form-select" required>
+                                    <option value="5">⭐⭐⭐⭐⭐ Outstanding</option>
+                                    <option value="4">⭐⭐⭐⭐ Great</option>
+                                    <option value="3">⭐⭐⭐ Good</option>
+                                    <option value="2">⭐⭐ Fair</option>
+                                    <option value="1">⭐ Poor</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Your comments</label>
+                                <textarea id="feedbackComment" class="form-textarea" rows="4" placeholder="How has HostelBuddy helped your business?" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-accent w-full" style="margin-top:1rem">Submit Feedback</button>
+                        </form>
+                    </div>
+
+                    <!-- Community Feedbacks -->
+                    <div>
+                        <h3 style="margin-bottom:1rem;font-size:1.1rem;color:var(--text);">Community Reviews</h3>
+                        <div id="communityFeedbacksContainer" style="display:flex;flex-direction:column;gap:1rem;">
+                            <div style="text-align:center;padding:2rem;color:var(--text-muted)"><div class="spinner"></div></div>
+                        </div>
                     </div>
                 </div>
             </div>

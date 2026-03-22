@@ -1,5 +1,6 @@
 const Hostel = require('../models/Hostel');
-
+const User = require('../models/User');
+const Review = require('../models/Review');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 
@@ -148,6 +149,11 @@ exports.createHostel = async (req, res) => {
         req.body.locationCoordinates = JSON.parse(req.body.locationCoordinates);
     }
 
+    // Bugfix: Inherit owner's verified status for the new hostel
+    if (req.user && req.user.isVerified) {
+        req.body.isVerified = true;
+    }
+
     const hostel = await Hostel.create(req.body);
 
     res.status(201).json({ success: true, data: hostel });
@@ -251,4 +257,36 @@ exports.getOwnerHostels = async (req, res) => {
     } catch(error) {
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
+};
+
+// @desc    Get platform stats
+// @route   GET /api/hostels/stats
+// @access  Public
+exports.getPlatformStats = async (req, res) => {
+  try {
+    const verifiedListings = await Hostel.countDocuments({ isVerified: true });
+    const studentsHelped = await User.countDocuments({ role: 'Student' });
+    const citiesCovered = await Hostel.distinct('city').then(cities => cities.length);
+    
+    const reviews = await Review.aggregate([
+      { $group: { _id: null, avgRating: { $avg: '$rating' } } }
+    ]);
+    
+    let satisfactionRate = 98; // Fallback default
+    if (reviews.length > 0 && reviews[0].avgRating) {
+      satisfactionRate = Math.round((reviews[0].avgRating / 5) * 100);
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        verifiedListings,
+        studentsHelped,
+        citiesCovered,
+        satisfactionRate
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
 };

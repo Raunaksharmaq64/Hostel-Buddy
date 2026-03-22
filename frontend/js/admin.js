@@ -23,6 +23,7 @@ function switchTab (tabId) {
   if (tabId === 'enquiries') loadEnquiries()
   if (tabId === 'reviews') loadReviews()
   if (tabId === 'system-requests') loadDeactivations()
+  if (tabId === 'platform-feedback') loadPlatformFeedbacks()
 }
 
 // Spinner helper
@@ -426,6 +427,80 @@ window.handleDeactivation = async function (id, action) {
     loadDeactivations()
   } catch (err) {
     showToast(err.message, 'error')
+  }
+}
+
+// ---- PLATFORM FEEDBACK MANAGEMENT ----
+async function loadPlatformFeedbacks() {
+  const container = document.getElementById('platformFeedbacksContainer');
+  if (!container) return;
+  container.innerHTML = spinner;
+
+  try {
+    const res = await fetchAPI('/feedback/admin');
+    const feedbacks = res.data;
+
+    if (feedbacks.length === 0) {
+      container.innerHTML = '<div class="panel" style="text-align:center;color:var(--text-muted);padding:2.5rem">No platform feedbacks submitted yet.</div>';
+      return;
+    }
+
+    container.innerHTML = feedbacks.map(f => `
+      <div class="list-item" style="flex-direction:column;align-items:stretch;border-left-color:${f.isApproved ? 'var(--success)' : '#F59E0B'}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+              <div>
+                  <h4>From: <span style="color:var(--primary)">${f.userId ? f.userId.name : 'Unknown User'}</span> <span class="badge-info" style="font-size:0.7rem">${f.role}</span></h4>
+                  <div style="color: #F59E0B; font-size: 1.1rem; margin-top: 0.3rem;">
+                      ${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)} <span style="color:var(--text-muted);font-size:.85rem;margin-left:.25rem">${f.rating}/5</span>
+                  </div>
+              </div>
+              ${f.isApproved
+                  ? '<span class="badge-approved">✅ Approved Publicly</span>'
+                  : '<span class="badge-pending">⏳ Pending Review</span>'
+              }
+          </div>
+
+          <div class="msg-bubble" style="margin-top:.75rem">"${f.comment}"</div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.75rem">
+              <div style="font-size:.75rem;color:var(--text-light)">
+                  Submitted: ${new Date(f.createdAt).toLocaleDateString()}
+              </div>
+              <div style="display:flex;gap:.6rem;">
+                  ${f.isApproved
+                      ? `<button class="btn btn-sm" style="background:rgba(245,158,11,.1);color:#B45309" onclick="togglePlatformFeedbackStatus('${f._id}', false)">Hide/Revoke</button>`
+                      : `<button class="btn btn-sm" style="background:rgba(16,185,129,.1);color:#059669" onclick="togglePlatformFeedbackStatus('${f._id}', true)">Approve Publicly</button>`
+                  }
+                  <button class="btn btn-sm" style="background:var(--danger-light);color:var(--danger)" onclick="deletePlatformFeedback('${f._id}')">Delete</button>
+              </div>
+          </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('loadPlatformFeedbacks Error:', err);
+    container.innerHTML = '<p style="color:var(--danger)">Failed to load platform feedbacks.</p>';
+  }
+}
+
+window.togglePlatformFeedbackStatus = async function (id, isApproved) {
+  try {
+    await fetchAPI(`/feedback/admin/${id}`, 'PUT', { isApproved });
+    showToast(`Feedback ${isApproved ? 'approved for public display' : 'hidden from public'}.`, 'success');
+    loadPlatformFeedbacks();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+window.deletePlatformFeedback = async function (id) {
+  const isConfirmed = await customConfirm('Are you sure you want to delete this feedback forever?');
+  if (!isConfirmed) return;
+  try {
+    await fetchAPI(`/feedback/admin/${id}`, 'DELETE');
+    showToast('Feedback deleted successfully.', 'success');
+    loadPlatformFeedbacks();
+  } catch (err) {
+    showToast(err.message, 'error');
   }
 }
 

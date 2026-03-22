@@ -21,11 +21,10 @@
         <div class="auth-visual-dot active"></div>
         <div class="auth-visual-dot"></div>
       </div>
-      <div style="margin-top:2.5rem;background:rgba(255,255,255,0.12);border-radius:var(--radius-lg);padding:1.5rem;border:1px solid rgba(255,255,255,0.2);text-align:left;max-width:320px">
-        <p style="color:rgba(255,255,255,0.65);font-size:0.82rem;font-style:italic;margin-bottom:1rem;">"Found my ideal PG in 10 minutes on HostelBuddy. Best platform for students by far!"</p>
-        <div style="display:flex;align-items:center;gap:0.75rem">
-          <div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff">R</div>
-          <div><div style="color:#fff;font-weight:600;font-size:0.88rem">Riya Mehta</div><div style="color:rgba(255,255,255,0.6);font-size:0.78rem">Student, IIT Delhi</div></div>
+      <div id="dynamicFeedbackContainer" style="margin-top:2.5rem;background:rgba(255,255,255,0.12);border-radius:var(--radius-lg);padding:1.5rem;border:1px solid rgba(255,255,255,0.2);text-align:left;max-width:320px;min-height:130px;display:flex;flex-direction:column;justify-content:center;transition:opacity 0.4s ease;">
+        <div style="color:rgba(255,255,255,0.65);font-size:0.82rem;text-align:center;">
+          <div class="spinner" style="width:20px;height:20px;border-width:2px;border-color:rgba(255,255,255,0.8);border-top-color:transparent;margin-bottom:.5rem;"></div>
+          <br>Loading community reviews...
         </div>
       </div>
     </div>
@@ -205,7 +204,7 @@
               }
             ">
 
-          <div class="agreement-inner" style="display:flex; gap:1.1rem; align-items:flex-start; pointer-events:none;">
+          <div class="agreement-inner" style="display:flex; gap:1.1rem; align-items:flex-start;">
             <div style="margin-top:2px;">
               <div class="checkbox-ring">
                 <svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
@@ -385,6 +384,84 @@
       if (typeof gsap !== 'undefined') gsap.fromTo('#authBox', { x: -8 }, { x: 8, duration: 0.08, yoyo: true, repeat: 6, onComplete: () => gsap.set('#authBox', { x: 0 }) });
     }
   });
+
+  // ---- Fetch & Display Dynamic Platform Feedback ----
+  async function loadSignupFeedback() {
+    try {
+      // Use full URL to bypass proxy issues on signup assuming no main.js fetchAPI logic is available directly without base
+      const apiUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://localhost:5000/api/feedback/public'
+        : '/api/feedback/public'; // Fallback to relative in prod
+        
+      const res = await fetch(apiUrl);
+      if (!res.ok) throw new Error('Network response was not ok');
+      const data = await res.json();
+      const container = document.getElementById('dynamicFeedbackContainer');
+
+      if (data.success && data.data.length > 0) {
+        // Rotate through the top 3 feedbacks
+        const topFeedbacks = data.data.slice(0, 3);
+        let currentIndex = 0;
+        
+        const renderFeedback = (f) => {
+          container.style.opacity = '0';
+          setTimeout(() => {
+            const initial = f.userId?.name ? f.userId.name.charAt(0).toUpperCase() : 'U';
+            container.innerHTML = `
+              <div style="color:#FCD34D;font-size:0.85rem;margin-bottom:0.4rem;text-shadow:0 0 4px rgba(0,0,0,0.3);">
+                ${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}
+              </div>
+              <p style="color:rgba(255,255,255,0.9);font-size:0.84rem;font-style:italic;margin-bottom:1rem;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;">"${f.comment}"</p>
+              <div style="display:flex;align-items:center;gap:0.75rem;">
+                ${f.userId?.profilePhoto 
+                  ? '<img src="' + f.userId.profilePhoto + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.4);">' 
+                  : '<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff">' + initial + '</div>'
+                }
+                <div>
+                  <div style="color:#fff;font-weight:600;font-size:0.88rem;letter-spacing:0.2px;">${f.userId?.name || 'User'}</div>
+                  <div style="color:rgba(255,255,255,0.7);font-size:0.75rem;font-weight:500;">${f.role}</div>
+                </div>
+              </div>
+            `;
+            container.style.opacity = '1';
+          }, 400); // Wait for fade out
+        };
+        
+        renderFeedback(topFeedbacks[0]);
+        
+        if (topFeedbacks.length > 1) {
+          setInterval(() => {
+            currentIndex = (currentIndex + 1) % topFeedbacks.length;
+            renderFeedback(topFeedbacks[currentIndex]);
+          }, 6000);
+        }
+      } else {
+        throw new Error('No feedbacks returned'); // Jump to fallback
+      }
+    } catch (err) {
+      // Fallback
+      const container = document.getElementById('dynamicFeedbackContainer');
+      if (container) {
+        container.style.opacity = '0';
+        setTimeout(() => {
+          container.innerHTML = `
+            <div style="color:#FCD34D;font-size:0.85rem;margin-bottom:0.4rem;text-shadow:0 0 4px rgba(0,0,0,0.3);">★★★★★</div>
+            <p style="color:rgba(255,255,255,0.9);font-size:0.84rem;font-style:italic;margin-bottom:1rem;line-height:1.5;">"Found my ideal PG in 10 minutes on HostelBuddy. Best platform for students by far!"</p>
+            <div style="display:flex;align-items:center;gap:0.75rem">
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff">R</div>
+              <div>
+                <div style="color:#fff;font-weight:600;font-size:0.88rem;letter-spacing:0.2px;">Riya Mehta</div>
+                <div style="color:rgba(255,255,255,0.7);font-size:0.75rem;font-weight:500;">Student, IIT Delhi</div>
+              </div>
+            </div>
+          `;
+          container.style.opacity = '1';
+        }, 400);
+      }
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', loadSignupFeedback);
 </script>
 </body>
 </html>

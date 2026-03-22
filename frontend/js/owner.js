@@ -30,6 +30,7 @@ function switchTab (tabId) {
   if (tabId === 'my-hostels') loadMyHostels()
   if (tabId === 'enquiries') loadOwnerEnquiries()
   if (tabId === 'profile') loadOwnerProfile()
+  if (tabId === 'feedback') loadCommunityFeedbacks()
 }
 
 // ---- DASHBOARD STATS LOGIC ----
@@ -696,5 +697,65 @@ window.submitDeactivationRequest = async function () {
     closeDeactivateModal()
   } catch (err) {
     showToast(err.message, 'error')
+  }
+}
+
+// ---- PLATFORM FEEDBACK LOGIC ----
+document.getElementById('feedbackForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  btn.textContent = 'Submitting...';
+  
+  const rating = document.getElementById('feedbackRating').value;
+  const comment = document.getElementById('feedbackComment').value.trim();
+  
+  try {
+    await fetchAPI('/feedback/submit', 'POST', { rating: Number(rating), comment });
+    showToast('Thank you! Your feedback has been submitted for review.', 'success');
+    document.getElementById('feedbackComment').value = '';
+    document.getElementById('feedbackRating').value = '5';
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    btn.textContent = 'Submit Feedback';
+  }
+});
+
+async function loadCommunityFeedbacks() {
+  const container = document.getElementById('communityFeedbacksContainer');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="spinner"></div></div>';
+  
+  try {
+    const res = await fetchAPI('/feedback/public');
+    const feedbacks = res.data;
+    
+    if (feedbacks.length === 0) {
+      container.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted);background:var(--surface-2);border-radius:var(--radius);border:1px dashed var(--border);">No community reviews yet. Be the first to share your experience!</div>';
+      return;
+    }
+    
+    container.innerHTML = feedbacks.map(f => `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;display:flex;flex-direction:column;gap:0.75rem;box-shadow:var(--shadow-sm);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div style="display:flex;align-items:center;gap:0.75rem;">
+            <img src="${f.userId?.profilePhoto || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);">
+            <div>
+              <div style="font-weight:600;font-size:0.95rem;color:var(--text);">${f.userId?.name || 'User'}</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);">${f.role}</div>
+            </div>
+          </div>
+          <div style="color:#F59E0B;font-size:1rem;">
+            ${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}
+          </div>
+        </div>
+        <p style="font-size:0.95rem;line-height:1.6;color:var(--text-2);font-style:italic;">"${f.comment}"</p>
+        <div style="font-size:0.75rem;color:var(--text-light);text-align:right;">
+          ${new Date(f.createdAt).toLocaleDateString()}
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    container.innerHTML = `<p style="color:var(--danger)">Failed to load feedbacks.</p>`;
   }
 }

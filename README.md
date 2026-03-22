@@ -27,6 +27,7 @@ The application is structured around three primary roles, each with a unique das
    - Accesses platform analytics (most searched hostels, active users, response rates, etc.).
 
 ## Key Design Features
+- **Platform Feedback System**: A transparent, robust feedback engine where students and owners can review the platform itself. Admins have full moderation control (approve/reject/delete), and approved feedbacks are dynamically displayed on user dashboards and the signup page to build trust.
 - **Premium Glassmorphism UI**: High-end user interface utilizing GSAP animations, 3D card tilt effects, dynamic tooltips, and responsive glass panels.
 - **Guided Onboarding Tour**: A premium, spotlight-driven interactive tour for new users to quickly learn the platform's features (powered by `tour.js`).
 - **Global Footer Navigation**: A premium, responsive footer loaded with quick links and informative "About" details integrated across all views, including dashboards.

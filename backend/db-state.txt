@@ -1,0 +1,4 @@
+Verified Owners Count: 1
+First verified owner ID: 69b98def94a1876e8da98965
+All Hostels Count: 1
+Hostel: Mahesh boys Hostel, isVerified: false, ownerId: 69b98def94a1876e8da98965
