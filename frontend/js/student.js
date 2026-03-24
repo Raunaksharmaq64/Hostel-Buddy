@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const user = JSON.parse(localStorage.getItem('user'))
   document.getElementById('userNameDisplay').textContent = `Hello, ${user.name}`
+  updateSidebarAvatar(user)
 
   // 2. Load Initial Data
   loadProfileDetails()
@@ -88,14 +89,37 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
   }
 
   try {
-    await fetchAPI('/profiles/student', 'PUT', formData, true)
+    const res = await fetchAPI('/profiles/student', 'PUT', formData, true)
     showToast('Profile updated successfully!', 'success')
+    
+    // Update local storage so avatar persists
+    if (res.data) {
+      const existingUser = JSON.parse(localStorage.getItem('user'))
+      const updatedUser = { ...existingUser, ...res.data }
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+      updateSidebarAvatar(updatedUser)
+    }
   } catch (err) {
     showToast(err.message, 'error')
   } finally {
     btn.textContent = 'Save Profile'
   }
 })
+
+function updateSidebarAvatar(user) {
+  const avatarEl = document.getElementById('sidebarAvatar')
+  if (avatarEl) {
+    if (user.profilePhoto) {
+      avatarEl.style.backgroundImage = `url('${user.profilePhoto}')`
+      avatarEl.style.backgroundSize = 'cover'
+      avatarEl.style.backgroundPosition = 'center'
+      avatarEl.textContent = '' // Clear letter
+    } else {
+      avatarEl.style.backgroundImage = 'none'
+      avatarEl.textContent = user.name ? user.name.charAt(0).toUpperCase() : 'S'
+    }
+  }
+}
 
 // ---- HOSTEL DISCOVERY LOGIC ----
 let searchTimeout
@@ -119,9 +143,9 @@ async function searchHostels () {
     if (facilities.length > 0) params.append('facilities', facilities.join(','))
 
     document.getElementById('hostelsContainer').innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted);">
-                <div class="spinner"></div>
-                <p style="margin-top: 1rem;">Searching...</p>
+            <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; color: var(--text-muted);">
+                <div class="spinner-v2"></div>
+                <p style="margin-top: 1.25rem; font-weight: 600;">Searching properties...</p>
             </div>
         `
 
@@ -162,21 +186,23 @@ function renderHostels (hostels) {
   try {
     container.innerHTML = hostels.map(h => `
             <div class="hostel-card">
-                <img src="${h.buildingPhotos && h.buildingPhotos.length > 0 ? getOptimizedUrl(h.buildingPhotos[0], 600) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'}" class="hostel-img" alt="Hostel Room" loading="lazy">
+                <div class="hostel-card-img">
+                    <img src="${h.thumbnailImage ? getOptimizedUrl(h.thumbnailImage, 600) : (h.buildingPhotos && h.buildingPhotos.length > 0 ? getOptimizedUrl(h.buildingPhotos[0], 600) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')}" alt="Hostel Room" loading="lazy">
+                </div>
                 <div style="padding: 1.25rem;">
                     <h3 class="hostel-title" style="display: flex; justify-content: space-between; align-items: flex-start; gap:.5rem;">
                         ${h.name} 
-                        ${h.isVerified ? '<span style="color:var(--success);font-size:.8rem;display:flex;align-items:center;gap:.25rem;background:rgba(16,185,129,.1);padding:.2rem .5rem;border-radius:12px;font-weight:700;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg> Verified</span>' : ''}
+                        ${h.isVerified ? '<span class="badge-v2 badge-approved" style="font-size:.7rem;padding:.2rem .5rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg> Verified</span>' : ''}
                     </h3>
                     <p style="color:var(--text-muted); font-size: 0.9rem; margin-top:.4rem; line-height:1.4;">📍 ${h.city}, ${h.address}</p>
                     
                     <div style="margin-top: 1rem;">
-                        <span style="font-size: .78rem; font-weight: 700; color: var(--text-2); background: var(--surface-3); padding: .25rem .75rem; border-radius: 20px;">
+                        <span class="badge-v2 badge-info" style="font-size:.75rem">
                             🍽️ Food: ${h.foodAvailability ? 'Yes' : 'No'}
                         </span>
                     </div>
                     
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; border-top: 1px solid var(--border-light); padding-top: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
                         <span class="hostel-price">₹${h.monthlyPrice}<span style="font-size: 0.9rem; color:var(--text-muted); font-weight:500;">/mo</span></span>
                         <button class="btn btn-outline btn-sm" onclick="openHostelDetails('${h._id}')">Details &rarr;</button>
                     </div>
@@ -198,37 +224,25 @@ function renderHostels (hostels) {
 
 // ---- DETAILED VIEW LOGIC ----
 window.openHostelDetails = async function (id) {
-  const modal = document.getElementById('hostelDetailModal')
+  let modal = document.getElementById('hostelDetailModal')
   if (!modal) {
-    // Create modal if it doesn't exist yet (we removed the hardcoded one from HTML in rewrite)
     document.body.insertAdjacentHTML('beforeend', `
-            <div id="hostelDetailModal" class="modal-overlay" style="display:none">
-                <div class="modal" style="width: 95%; max-width: 1000px; max-height: 90vh; overflow-y: auto;">
+            <div id="hostelDetailModal" class="modal-overlay">
+                <div class="modal">
                     <div class="modal-header">
                         <div id="modalHeader"><h2>Loading details...</h2></div>
                         <button class="modal-close" onclick="closeDetailsModal()">✕</button>
                     </div>
-                    <div id="modalBody">
-                        <div style="margin-top: 2rem;">
-                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text);">🏢 Building & Surroundings</h3>
-                            <div id="galleryBuilding" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;"></div>
-
-                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text);">🛏️ Rooms</h3>
-                            <div id="galleryRooms" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;"></div>
-
-                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text);">🍽️ Dinning / Mess</h3>
-                            <div id="galleryMess" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;"></div>
-
-                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: var(--text);">🚿 Washrooms</h3>
-                            <div id="galleryBathrooms" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem;"></div>
-                        </div>
+                    <div id="modalBody" class="modal-body">
+                        <!-- Content will be injected here -->
                     </div>
                 </div>
             </div>
         `)
+    modal = document.getElementById('hostelDetailModal')
   }
 
-  document.getElementById('hostelDetailModal').style.display = 'flex'
+  modal.classList.add('active')
 
   try {
     const [hostelRes, reviewsRes] = await Promise.all([
@@ -239,94 +253,118 @@ window.openHostelDetails = async function (id) {
     const reviews = reviewsRes.data
 
     document.getElementById('modalHeader').innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; padding-right: 2rem;">
-                <div style="flex: 1; min-width: 300px;">
-                    <h1 style="font-size: 2rem; font-weight: 900; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; width:100%; padding-right:1rem">
+                <div style="flex: 1; min-width: 280px;">
+                    <h1 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text);">
                         ${h.name} 
-                        ${h.isVerified ? '<span style="color:var(--success);font-size:.9rem;display:flex;align-items:center;gap:.25rem;background:rgba(16,185,129,.1);padding:.2rem .6rem;border-radius:20px;font-weight:700;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg> Verified</span>' : ''}
+                        ${h.isVerified ? '<span class="badge-v2 badge-approved" style="font-size:0.75rem;">Verified</span>' : ''}
                     </h1>
-                    <p style="color: var(--text-2); font-size: 1.05rem; margin-bottom: 1.25rem;">📍 ${h.address}, ${h.city}, ${h.state} - ${h.pincode}</p>
+                    <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 1rem;">📍 ${h.address}, ${h.city}</p>
                     
-                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                        <span style="font-size:.85rem; font-weight:600; background:var(--surface-3); padding:.4rem .8rem; border-radius:8px;">🍽️ Food: ${h.foodAvailability ? 'Available' : 'Not Available'}</span>
-                        <span style="font-size:.85rem; font-weight:600; background:var(--surface-3); padding:.4rem .8rem; border-radius:8px;">📞 Owner: ${h.ownerId ? h.ownerId.phone : 'N/A'}</span>
-                        ${h.googleMapLink ? `<a href="${h.googleMapLink}" target="_blank" style="font-size:.85rem; font-weight:600; background:var(--primary); color:#fff; padding:.4rem .8rem; border-radius:8px; text-decoration:none;">📍 Open in Maps</a>` : ''}
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <span class="badge-v2 badge-info" style="text-transform:none">🍽️ Food: ${h.foodAvailability ? 'Available' : 'N/A'}</span>
+                        <span class="badge-v2 badge-info" style="text-transform:none">📞 Owner: ${h.ownerId ? h.ownerId.phone : 'N/A'}</span>
                     </div>
                 </div>
                 
-                <div style="background: var(--surface-3); padding: 1.5rem 2rem; border-radius: var(--radius-lg); border: 1px solid var(--border); text-align: center; min-width: 220px;">
-                    <div style="font-size: 2.2rem; font-weight: 900; color: var(--primary); line-height: 1;">₹${h.monthlyPrice}</div>
-                    <div style="font-size: .88rem; color: var(--text-muted); font-weight: 600; margin-top: .25rem; text-transform:uppercase;">per month</div>
-                    <button class="btn btn-primary" style="width:100%; margin-top:1.25rem;" onclick="openBookingModal('${h._id}', '${h.name.replace(/'/g, "\\'")}')">Send Enquiry</button>
+                <div style="background: var(--surface-2); padding: 1.25rem; border-radius: var(--radius); border: 1px solid var(--border); text-align: center; min-width: 200px;">
+                    <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">₹${h.monthlyPrice}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-light); font-weight: 700; text-transform:uppercase;">per month</div>
+                    <button class="btn btn-primary" style="width:100%; margin-top:1rem;" onclick="openBookingModal('${h._id}', '${h.name.replace(/'/g, "\\'")}')">Send Enquiry</button>
                 </div>
             </div>
-            <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed var(--border-strong);">
-                <h3 style="font-size:1.1rem; color:var(--text); margin-bottom:.5rem;">About this Property</h3>
-                <p style="font-size: .95rem; line-height: 1.8; color: var(--text-2); white-space: pre-line;">${h.description}</p>
-            </div>
-            ${h.rules
-? `
-            <div style="margin-top: 1.5rem; padding: 1.5rem; background: rgba(249, 115, 22, 0.05); border-radius: var(--radius-lg); border: 1px solid rgba(249, 115, 22, 0.2);">
-                <h3 style="font-size:1.1rem; color:var(--accent); margin-bottom:.5rem;">Hostel Rules & Regulations</h3>
-                <p style="font-size: .95rem; line-height: 1.8; color: var(--text-2); white-space: pre-line;">${h.rules}</p>
-            </div>
-            `
-: ''}
         `
 
-    const renderGrid = (containerId, imagesArr, emptyMsg) => {
-      const container = document.getElementById(containerId)
-      if (!imagesArr || imagesArr.length === 0) {
-        container.innerHTML = `<p style="color: var(--text-muted); font-style: italic; font-size:.9rem; grid-column:1/-1;">${emptyMsg}</p>`
-        return
-      }
-      container.innerHTML = imagesArr.map(imgSrc => `
-                <div style="border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); aspect-ratio: 4/3;">
-                    <img src="${getOptimizedUrl(imgSrc, 800)}" style="width: 100%; height: 100%; object-fit: cover; transition: var(--transition);" loading="lazy">
+    document.getElementById('modalBody').innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:2.5rem;">
+            <!-- About Section -->
+            <section>
+                <h3 style="font-size:1.2rem; color:var(--text); margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+                    <span style="width:4px; height:18px; background:var(--primary); border-radius:4px;"></span> Description
+                </h3>
+                <p style="font-size: 1rem; line-height: 1.7; color: var(--text-2); white-space: pre-line; background:var(--surface-2); padding:1.25rem; border-radius:var(--radius); border:1px solid var(--border);">${h.description}</p>
+            </section>
+
+            ${h.rules ? `
+            <section>
+                <h3 style="font-size:1.2rem; color:var(--accent); margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+                    <span style="width:4px; height:18px; background:var(--accent); border-radius:4px;"></span> Rules & Policies
+                </h3>
+                <div class="msg-bubble-warn" style="font-style:normal; border-radius:var(--radius); border:1px solid rgba(249,115,22,0.2); line-height:1.7;">
+                    ${h.rules}
                 </div>
-            `).join('')
-    }
+            </section>
+            ` : ''}
 
-    renderGrid('galleryBuilding', h.buildingPhotos, 'No building photos uploaded.')
-    renderGrid('galleryRooms', h.roomPhotos, 'No room photos uploaded.')
-    renderGrid('galleryMess', h.messPhotos, 'No dining area photos uploaded.')
-    renderGrid('galleryBathrooms', h.washroomPhotos, 'No washroom photos uploaded.')
+            <!-- Image Galleries -->
+            <section>
+                <h3 style="font-size:1.2rem; color:var(--text); margin-bottom:1rem;">🏢 Exterior & Surroundings</h3>
+                <div id="galleryBuilding" class="gallery-grid"></div>
 
-    // Append Reviews Section to modalbody
-    const modalBody = document.getElementById('modalBody')
-    modalBody.insertAdjacentHTML('beforeend', `
-            <div style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px dashed var(--border-strong);">
+                <h3 style="font-size:1.2rem; color:var(--text); margin-bottom:1rem;">🛏️ Rooms & Interiors</h3>
+                <div id="galleryRooms" class="gallery-grid"></div>
+
+                <h3 style="font-size:1.2rem; color:var(--text); margin-bottom:1rem;">🍽️ Dining Area</h3>
+                <div id="galleryMess" class="gallery-grid"></div>
+
+                <h3 style="font-size:1.2rem; color:var(--text); margin-bottom:1rem;">🚿 Washrooms</h3>
+                <div id="galleryBathrooms" class="gallery-grid"></div>
+            </section>
+
+            <!-- Reviews Section -->
+            <section style="border-top: 1px solid var(--border); padding-top:2.5rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap:wrap; gap:1rem;">
                     <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text);">⭐ Student Reviews (${reviews.length})</h3>
                     <button class="btn btn-outline btn-sm" onclick="openReviewModal('${h._id}')">Write a Review</button>
                 </div>
-                ${reviews.length > 0
-? `
+                ${reviews.length > 0 ? `
                     <div style="display: grid; gap: 1rem;">
                         ${reviews.map(r => `
-                            <div style="background: var(--surface-3); padding: 1.25rem; border-radius: var(--radius); border: 1px solid var(--border);">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; flex-wrap:wrap; gap:.5rem">
-                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--border-strong); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--text-2);">
+                            <div class="list-item" style="gap:1rem">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; width:100%; flex-wrap:wrap; gap:.5rem">
+                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                        <div class="chat-avatar" style="width:40px;height:40px;font-size:1rem">
                                             ${r.studentId ? r.studentId.name.charAt(0).toUpperCase() : 'S'}
                                         </div>
                                         <div>
-                                            <div style="font-weight: 600; font-size: 0.95rem; color: var(--text);">${r.studentId ? r.studentId.name : 'Student'}</div>
-                                            <div style="font-size: 0.75rem; color: var(--text-muted);">${new Date(r.createdAt).toLocaleDateString()}</div>
+                                            <div style="font-weight: 700; font-size: 1rem; color: var(--text);">${r.studentId ? r.studentId.name : 'Student'}</div>
+                                            <div style="font-size: 0.75rem; color: var(--text-light);">${new Date(r.createdAt).toLocaleDateString()}</div>
                                         </div>
                                     </div>
-                                    <div style="color: #F59E0B; font-size: 1rem;">
+                                    <div style="color: #F59E0B; font-size: 1.1rem; border:1px solid var(--border); padding:.2rem .5rem; border-radius:12px; background:var(--surface)">
                                         ${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}
                                     </div>
                                 </div>
-                                <p style="font-size: 0.95rem; color: var(--text-2); line-height: 1.5; margin-top: 0.75rem;">${r.comment}</p>
+                                <p class="msg-bubble" style="width:100%; border-radius:var(--radius); background:var(--surface-2); font-style:normal; margin-top:0.5rem">"${r.comment}"</p>
                             </div>
                         `).join('')}
                     </div>
-                `
-: '<p style="color: var(--text-muted); font-style: italic; font-size: .95rem;">No reviews yet. Be the first to add one!</p>'}
-            </div>
-        `)
+                ` : '<p style="color: var(--text-muted); font-style: italic; background:var(--surface-3); padding:2rem; text-align:center; border-radius:var(--radius); border:1px dashed var(--border);">No reviews yet. Be the first to share your experience!</p>'}
+            </section>
+        </div>
+    `
+
+    const renderGrid = (containerId, imagesArr, emptyMsg) => {
+      const container = document.getElementById(containerId)
+      if (!imagesArr || imagesArr.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-light); font-style: italic; font-size:.9rem; grid-column:1/-1;">${emptyMsg}</p>`
+        return
+      }
+      container.innerHTML = imagesArr.map(imgSrc => `
+                <div class="gallery-img-wrap">
+                    <img src="${getOptimizedUrl(imgSrc, 800)}" loading="lazy">
+                </div>
+            `).join('')
+    }
+
+    const allBuildingPhotos = h.thumbnailImage && (!h.buildingPhotos || !h.buildingPhotos.includes(h.thumbnailImage)) 
+      ? [h.thumbnailImage, ...(h.buildingPhotos || [])] 
+      : h.buildingPhotos;
+
+    renderGrid('galleryBuilding', allBuildingPhotos, 'No building photos available.')
+    renderGrid('galleryRooms', h.roomPhotos, 'No room photos available.')
+    renderGrid('galleryMess', h.messPhotos, 'No dining area photos available.')
+    renderGrid('galleryBathrooms', h.washroomPhotos, 'No washroom photos available.')
   } catch (err) {
     document.getElementById('modalHeader').innerHTML = `<p style="color:var(--danger)">Failed to load details: ${err.message}</p>`
   }
@@ -334,19 +372,18 @@ window.openHostelDetails = async function (id) {
 
 window.closeDetailsModal = function () {
   const m = document.getElementById('hostelDetailModal')
-  if (m) m.style.display = 'none'
+  if (m) m.classList.remove('active')
 }
 
 window.openBookingModal = function (id, name) {
   document.getElementById('bookingHostelName').textContent = name
   document.getElementById('bookingMessage').dataset.hostelId = id
   const modal = document.getElementById('bookingModal')
-  modal.style.display = 'flex'
-  modal.style.zIndex = '1005'
+  modal.classList.add('active')
 }
 
 window.closeBookingModal = function () {
-  document.getElementById('bookingModal').style.display = 'none'
+  document.getElementById('bookingModal').classList.remove('active')
   document.getElementById('bookingMessage').value = ''
 }
 
@@ -355,28 +392,30 @@ window.openReviewModal = function (hostelId) {
   let reviewModal = document.getElementById('reviewModal')
   if (!reviewModal) {
     document.body.insertAdjacentHTML('beforeend', `
-            <div id="reviewModal" class="modal-overlay" style="display:none; z-index: 2000;">
+            <div id="reviewModal" class="modal-overlay">
                 <div class="modal" style="max-width: 500px;">
                     <div class="modal-header">
                         <h2 class="modal-title">Write a Review</h2>
                         <button class="modal-close" onclick="closeReviewModal()">✕</button>
                     </div>
-                    <input type="hidden" id="reviewHostelId">
-                    <div class="form-group" style="margin-top: 1rem;">
-                        <label class="form-label">Rating (1-5)</label>
-                        <select id="reviewRating" class="form-input" style="cursor: pointer;">
-                            <option value="5">⭐⭐⭐⭐⭐ Excellent (5)</option>
-                            <option value="4">⭐⭐⭐⭐ Very Good (4)</option>
-                            <option value="3">⭐⭐⭐ Good (3)</option>
-                            <option value="2">⭐⭐ Fair (2)</option>
-                            <option value="1">⭐ Poor (1)</option>
-                        </select>
+                    <div class="modal-body">
+                        <input type="hidden" id="reviewHostelId">
+                        <div class="form-group">
+                            <label class="form-label">Rating Experience</label>
+                            <select id="reviewRating" class="form-input" style="cursor: pointer;">
+                                <option value="5">⭐⭐⭐⭐⭐ Excellent (5)</option>
+                                <option value="4">⭐⭐⭐⭐ Very Good (4)</option>
+                                <option value="3">⭐⭐⭐ Average (3)</option>
+                                <option value="2">⭐⭐ Fair (2)</option>
+                                <option value="1">⭐ Poor (1)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-top:1.5rem">
+                            <label class="form-label">Your Comment</label>
+                            <textarea id="reviewComment" class="form-input" rows="4" placeholder="How was your stay?"></textarea>
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%; margin-top: 2rem;" onclick="submitReview()">Submit Review</button>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Comment</label>
-                        <textarea id="reviewComment" class="form-textarea" rows="4" placeholder="Share your experience..."></textarea>
-                    </div>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" onclick="submitReview()">Submit Review</button>
                 </div>
             </div>
         `)
@@ -385,12 +424,12 @@ window.openReviewModal = function (hostelId) {
   document.getElementById('reviewHostelId').value = hostelId
   document.getElementById('reviewComment').value = ''
   document.getElementById('reviewRating').value = '5'
-  reviewModal.style.display = 'flex'
+  reviewModal.classList.add('active')
 }
 
 window.closeReviewModal = function () {
   const rm = document.getElementById('reviewModal')
-  if (rm) rm.style.display = 'none'
+  if (rm) rm.classList.remove('active')
 }
 
 window.submitReview = async function () {
@@ -436,7 +475,7 @@ window.submitEnquiry = async function () {
 
 async function loadEnquiries () {
   const container = document.getElementById('enquiriesContainer')
-  container.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="spinner"></div></div>'
+  container.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="spinner-v2"></div></div>'
 
   try {
     const res = await fetchAPI('/enquiries/student')
@@ -453,105 +492,52 @@ async function loadEnquiries () {
     }
 
     container.innerHTML = enquiries.map(eq => {
-      let statusColor = 'var(--text-muted)'
-      let statusBg = 'var(--surface-3)'
-      let statusDot = '#94a3b8'
-      if (eq.status === 'Pending') { statusColor = '#F59E0B'; statusBg = 'rgba(245,158,11,0.12)'; statusDot = '#F59E0B' }
-      if (eq.status === 'Responded') { statusColor = 'var(--success)'; statusBg = 'rgba(16,185,129,0.12)'; statusDot = '#10b981' }
+      let statusClass = 'badge-pending'
+      if (eq.status === 'Responded') { statusClass = 'badge-approved' }
 
       const sentDate = new Date(eq.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 
       return `
-            <div style="
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: var(--radius-lg);
-                overflow: hidden;
-                box-shadow: var(--shadow-sm);
-                transition: box-shadow 0.2s;
-                margin-bottom: 0.25rem;
-            " onmouseenter="this.style.boxShadow='var(--shadow-md)'" onmouseleave="this.style.boxShadow='var(--shadow-sm)'">
-
+            <div class="chat-card" style="margin-bottom:1.25rem">
                 <!-- Card Header -->
-                <div style="
-                    display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap; gap:.75rem;
-                    padding: 1rem 1.25rem;
-                    background: var(--surface-2);
-                    border-bottom: 1px solid var(--border);
-                ">
-                    <div style="display:flex;align-items:center;gap:0.75rem;">
-                        <div style="width:40px;height:40px;border-radius:var(--radius);background:linear-gradient(135deg,var(--primary),var(--violet));display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">🏠</div>
+                <div class="chat-header">
+                    <div style="display:flex;align-items:center;gap:1rem;">
+                        <div class="chat-avatar">🏠</div>
                         <div>
-                            <div style="font-weight:700;font-size:1rem;color:var(--text);">${eq.hostelId ? eq.hostelId.name : 'Unknown Property'}</div>
-                            <div style="font-size:0.78rem;color:var(--text-muted);">Sent on ${sentDate}</div>
+                            <div style="font-weight:700;font-size:1.05rem;color:var(--text);">${eq.hostelId ? eq.hostelId.name : 'Unknown Property'}</div>
+                            <div style="font-size:0.8rem;color:var(--text-muted);">Sent on ${sentDate}</div>
                         </div>
                     </div>
-                    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
-                        <span style="display:flex;align-items:center;gap:0.4rem;color:${statusColor};background:${statusBg};padding:0.3rem 0.8rem;border-radius:20px;font-size:0.78rem;font-weight:700;">
-                            <span style="width:6px;height:6px;border-radius:50%;background:${statusDot};display:inline-block;"></span>
-                            ${eq.status}
-                        </span>
-                        <button onclick="deleteEnquiry('${eq._id}')" style="
-                            background: none; border: 1px solid var(--danger); color: var(--danger);
-                            border-radius: var(--radius); padding: 0.3rem 0.7rem; cursor: pointer;
-                            font-size: 0.78rem; font-weight: 600; transition: all 0.2s;
-                            display:flex;align-items:center;gap:.3rem;"
-                            onmouseenter="this.style.background='var(--danger)';this.style.color='#fff'"
-                            onmouseleave="this.style.background='none';this.style.color='var(--danger)'">
-                            🗑 Clear Enquiry
+                    <div style="display:flex;align-items:center;gap:0.75rem;">
+                        <span class="badge-v2 ${statusClass}">${eq.status}</span>
+                        <button class="btn btn-outline btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="deleteEnquiry('${eq._id}')">
+                            Clear
                         </button>
                     </div>
                 </div>
 
                 <!-- Conversation Body -->
-                <div style="padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
-
-                    <!-- Student's Message (right side / outgoing) -->
+                <div class="chat-body">
+                    <!-- Student's Message -->
                     <div style="display:flex;flex-direction:column;align-items:flex-end;">
-                        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;display:flex;align-items:center;gap:0.3rem;">
-                            <span>You</span> <span>·</span> <span>${sentDate}</span>
+                        <div class="msg-meta">
+                            <span>You</span> &middot; <span>${sentDate}</span>
                         </div>
-                        <div style="
-                            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-                            color: #fff;
-                            padding: 0.9rem 1.1rem;
-                            border-radius: 16px 4px 16px 16px;
-                            max-width: 85%;
-                            font-size: 0.95rem;
-                            line-height: 1.6;
-                            box-shadow: 0 2px 8px rgba(14,165,233,0.25);
-                        ">"${eq.message}"</div>
+                        <div class="msg-bubble msg-owner">"${eq.message}"</div>
                     </div>
 
-                    <!-- Owner's Reply (left side / incoming) -->
+                    <!-- Owner's Reply -->
                     ${eq.ownerReply
 ? `
                         <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;display:flex;align-items:center;gap:0.3rem;">
-                                <span>🏠 Owner</span> <span>·</span> <span>Reply</span>
+                            <div class="msg-meta">
+                                <span>🏠 Owner Reply</span>
                             </div>
-                            <div style="
-                                background: var(--surface-3);
-                                border: 1px solid var(--border);
-                                padding: 0.9rem 1.1rem;
-                                border-radius: 4px 16px 16px 16px;
-                                max-width: 85%;
-                                font-size: 0.95rem;
-                                line-height: 1.6;
-                                color: var(--text-2);
-                            ">${eq.ownerReply}</div>
+                            <div class="msg-bubble msg-student">${eq.ownerReply}</div>
                         </div>
                     `
 : `
-                        <div style="
-                            text-align:center;
-                            padding: 1rem;
-                            border-radius: var(--radius);
-                            background: var(--surface-2);
-                            border: 1px dashed var(--border);
-                            color: var(--text-muted);
-                            font-size: 0.87rem;
-                        ">
+                        <div style="text-align:center;padding:1.25rem;border-radius:var(--radius);background:var(--surface-3);border:1px dashed var(--border);color:var(--text-muted);font-size:0.9rem;">
                             ⏳ Waiting for the owner to reply...
                         </div>
                     `}
@@ -560,28 +546,16 @@ async function loadEnquiries () {
                     ${eq.adminResponse
 ? `
                         <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">
-                                ✅ Official HostelBuddy Response
-                            </div>
-                            <div style="
-                                background: rgba(16,185,129,0.07);
-                                border: 1px solid rgba(16,185,129,0.3);
-                                padding: 0.9rem 1.1rem;
-                                border-radius: 4px 16px 16px 16px;
-                                max-width: 85%;
-                                font-size: 0.95rem;
-                                line-height: 1.6;
-                                color: var(--text-2);
-                            ">${eq.adminResponse}</div>
+                            <div class="msg-meta" style="color:var(--success);font-weight:700;text-transform:uppercase">✅ Platform Response</div>
+                            <div class="msg-bubble msg-admin">${eq.adminResponse}</div>
                         </div>
                     `
 : ''}
-
                 </div>
 
                 <!-- footer info -->
-                <div style="padding: 0.6rem 1.25rem; background: var(--surface-2); border-top: 1px solid var(--border); font-size: 0.78rem; color: var(--text-muted);">
-                    📞 Owner Contact: ${eq.ownerId ? eq.ownerId.phone : 'N/A'}
+                <div style="padding:0.75rem 1.25rem;background:var(--surface-2);border-top:1px solid var(--border);font-size:0.8rem;color:var(--text-muted);display:flex;justify-content:space-between;">
+                    <span>📞 Owner Contact: <strong>${eq.ownerId ? eq.ownerId.phone : 'N/A'}</strong></span>
                 </div>
             </div>
             `
@@ -593,11 +567,11 @@ async function loadEnquiries () {
 
 // ---- DEACTIVATION LOGIC ----
 window.openDeactivateModal = function () {
-  document.getElementById('deactivateModal').style.display = 'flex'
+  document.getElementById('deactivateModal').classList.add('active')
 }
 
 window.closeDeactivateModal = function () {
-  document.getElementById('deactivateModal').style.display = 'none'
+  document.getElementById('deactivateModal').classList.remove('active')
 }
 
 window.submitDeactivationRequest = async function () {
@@ -664,22 +638,23 @@ async function loadCommunityFeedbacks() {
     }
     
     container.innerHTML = feedbacks.map(f => `
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;display:flex;flex-direction:column;gap:0.75rem;box-shadow:var(--shadow-sm);">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-          <div style="display:flex;align-items:center;gap:0.75rem;">
-            <img src="${f.userId?.profilePhoto || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1px solid var(--border);">
+      <div class="list-item" style="flex-direction:column;align-items:stretch;gap:1.25rem">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <img src="${f.userId?.profilePhoto || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'}" 
+                 style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
             <div>
-              <div style="font-weight:600;font-size:0.95rem;color:var(--text);">${f.userId?.name || 'User'}</div>
-              <div style="font-size:0.75rem;color:var(--text-muted);">${f.role}</div>
+              <div style="font-weight:700;font-size:1.05rem;color:var(--text);">${f.userId?.name || 'User'}</div>
+              <div class="badge-v2 badge-info" style="font-size:0.75rem;margin-top:0.2rem">${f.role}</div>
             </div>
           </div>
-          <div style="color:#F59E0B;font-size:1rem;">
+          <div style="color:#F59E0B;font-size:1.1rem;display:flex;gap:2px;">
             ${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}
           </div>
         </div>
-        <p style="font-size:0.95rem;line-height:1.6;color:var(--text-2);font-style:italic;">"${f.comment}"</p>
-        <div style="font-size:0.75rem;color:var(--text-light);text-align:right;">
-          ${new Date(f.createdAt).toLocaleDateString()}
+        <p class="msg-bubble" style="font-style:italic;max-width:100%;background:var(--surface-2)">"${f.comment}"</p>
+        <div style="font-size:0.8rem;color:var(--text-light);text-align:right;">
+          Submitted: ${new Date(f.createdAt).toLocaleDateString()}
         </div>
       </div>
     `).join('');

@@ -127,12 +127,21 @@ exports.createHostel = async (req, res) => {
     // Add user to req.body
     req.body.ownerId = req.user.id;
     
-    // Handle files if uploaded via Cloudinary Stream
+    // Handle files if uploaded via Cloudinary Stream, optimizing with Promise.all
     if (req.files) {
-      req.body.buildingPhotos = await uploadMultipleFiles(req.files.buildingPhotos, "hostelbuddy_buildings");
-      req.body.roomPhotos = await uploadMultipleFiles(req.files.roomPhotos, "hostelbuddy_rooms");
-      req.body.messPhotos = await uploadMultipleFiles(req.files.messPhotos, "hostelbuddy_mess");
-      req.body.washroomPhotos = await uploadMultipleFiles(req.files.washroomPhotos, "hostelbuddy_washrooms");
+      const [thumbUrl, buildingPhotos, roomPhotos, messPhotos, washroomPhotos] = await Promise.all([
+        req.files.thumbnailImage ? uploadMultipleFiles(req.files.thumbnailImage, "hostelbuddy_thumbnails") : Promise.resolve(null),
+        req.files.buildingPhotos ? uploadMultipleFiles(req.files.buildingPhotos, "hostelbuddy_buildings") : Promise.resolve(null),
+        req.files.roomPhotos ? uploadMultipleFiles(req.files.roomPhotos, "hostelbuddy_rooms") : Promise.resolve(null),
+        req.files.messPhotos ? uploadMultipleFiles(req.files.messPhotos, "hostelbuddy_mess") : Promise.resolve(null),
+        req.files.washroomPhotos ? uploadMultipleFiles(req.files.washroomPhotos, "hostelbuddy_washrooms") : Promise.resolve(null)
+      ]);
+
+      if (thumbUrl && thumbUrl.length > 0) req.body.thumbnailImage = thumbUrl[0];
+      if (buildingPhotos) req.body.buildingPhotos = buildingPhotos;
+      if (roomPhotos) req.body.roomPhotos = roomPhotos;
+      if (messPhotos) req.body.messPhotos = messPhotos;
+      if (washroomPhotos) req.body.washroomPhotos = washroomPhotos;
     }
     
     // Parse JSON strings to arrays/booleans if coming from formData
@@ -178,24 +187,21 @@ exports.updateHostel = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized to update this hostel' });
     }
 
-    // Handle file updates if provided via form-data (append to existing)
+    // Handle file updates concurrent uploads via form-data (append to existing)
     if (req.files) {
-      if (req.files.buildingPhotos) {
-          const newBuildingPhotos = await uploadMultipleFiles(req.files.buildingPhotos, "hostelbuddy_buildings");
-          req.body.buildingPhotos = [...(hostel.buildingPhotos || []), ...newBuildingPhotos];
-      }
-      if (req.files.roomPhotos) {
-          const newRoomPhotos = await uploadMultipleFiles(req.files.roomPhotos, "hostelbuddy_rooms");
-          req.body.roomPhotos = [...(hostel.roomPhotos || []), ...newRoomPhotos];
-      }
-      if (req.files.messPhotos) {
-          const newMessPhotos = await uploadMultipleFiles(req.files.messPhotos, "hostelbuddy_mess");
-          req.body.messPhotos = [...(hostel.messPhotos || []), ...newMessPhotos];
-      }
-      if (req.files.washroomPhotos) {
-          const newWashroomPhotos = await uploadMultipleFiles(req.files.washroomPhotos, "hostelbuddy_washrooms");
-          req.body.washroomPhotos = [...(hostel.washroomPhotos || []), ...newWashroomPhotos];
-      }
+      const [thumbUrl, newBuildingPhotos, newRoomPhotos, newMessPhotos, newWashroomPhotos] = await Promise.all([
+        req.files.thumbnailImage ? uploadMultipleFiles(req.files.thumbnailImage, "hostelbuddy_thumbnails") : Promise.resolve(null),
+        req.files.buildingPhotos ? uploadMultipleFiles(req.files.buildingPhotos, "hostelbuddy_buildings") : Promise.resolve(null),
+        req.files.roomPhotos ? uploadMultipleFiles(req.files.roomPhotos, "hostelbuddy_rooms") : Promise.resolve(null),
+        req.files.messPhotos ? uploadMultipleFiles(req.files.messPhotos, "hostelbuddy_mess") : Promise.resolve(null),
+        req.files.washroomPhotos ? uploadMultipleFiles(req.files.washroomPhotos, "hostelbuddy_washrooms") : Promise.resolve(null)
+      ]);
+
+      if (thumbUrl && thumbUrl.length > 0) req.body.thumbnailImage = thumbUrl[0]; // Overwrite old thumbnail
+      if (newBuildingPhotos) req.body.buildingPhotos = [...(hostel.buildingPhotos || []), ...newBuildingPhotos];
+      if (newRoomPhotos) req.body.roomPhotos = [...(hostel.roomPhotos || []), ...newRoomPhotos];
+      if (newMessPhotos) req.body.messPhotos = [...(hostel.messPhotos || []), ...newMessPhotos];
+      if (newWashroomPhotos) req.body.washroomPhotos = [...(hostel.washroomPhotos || []), ...newWashroomPhotos];
     }
 
     // Parse JSON strings to arrays/booleans if coming from formData

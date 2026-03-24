@@ -4,10 +4,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const user = JSON.parse(localStorage.getItem('user'))
   document.getElementById('userNameDisplay').textContent = `Hello, ${user.name}`
+  updateSidebarAvatar(user)
 
   // 2. Load Initial Data
   loadDashboardStats()
 })
+
+function updateSidebarAvatar(user) {
+  const avatarEl = document.getElementById('sidebarAvatar')
+  if (avatarEl) {
+    if (user.profilePhoto) {
+      avatarEl.style.backgroundImage = `url('${user.profilePhoto}')`
+      avatarEl.style.backgroundSize = 'cover'
+      avatarEl.style.backgroundPosition = 'center'
+      avatarEl.textContent = '' // Clear letter
+    } else {
+      avatarEl.style.backgroundImage = 'none'
+      avatarEl.textContent = user.name ? user.name.charAt(0).toUpperCase() : 'O'
+    }
+  }
+}
 
 // Tab Navigation Logic
 function switchTab (tabId) {
@@ -99,6 +115,18 @@ async function loadOwnerProfile () {
   }
 }
 
+// Live preview for profile photo selection
+document.getElementById('ownerProfilePhotoInput').addEventListener('change', (e) => {
+  const file = e.target.files[0]
+  if (file) {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      document.getElementById('ownerProfilePreview').src = e.target.result
+    }
+    reader.readAsDataURL(file)
+  }
+})
+
 // Local image preview update
 document.getElementById('ownerProfilePhotoInput').addEventListener('change', function (e) {
   const file = e.target.files[0]
@@ -135,8 +163,17 @@ document.getElementById('ownerProfileForm').addEventListener('submit', async (e)
   }
 
   try {
-    await fetchAPI('/profiles/owner', 'PUT', formData, true)
+    const res = await fetchAPI('/profiles/owner', 'PUT', formData, true)
     showToast('Profile updated successfully!', 'success')
+    
+    // Update local storage so avatar persists
+    if (res.data) {
+      const existingUser = JSON.parse(localStorage.getItem('user'))
+      const updatedUser = { ...existingUser, ...res.data }
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+      updateSidebarAvatar(updatedUser)
+    }
+
     // Reload to update the UI including the verification button
     loadOwnerProfile()
   } catch (err) {
@@ -161,6 +198,7 @@ window.requestVerification = async function () {
 
 // In-memory store for selected images to allow multiple additions and deletions
 const selectedImages = {
+  thumbnailImage: [],
   buildingPhotos: [],
   roomPhotos: [],
   messPhotos: [],
@@ -180,31 +218,14 @@ function handleImagePreviews (inputId, previewContainerId, storeKey) {
           const reader = new FileReader()
           reader.onload = function (event) {
             const wrapper = document.createElement('div')
-            wrapper.style.position = 'relative'
-            wrapper.style.display = 'inline-block'
+            wrapper.className = 'preview-img-wrapper'
 
             const img = document.createElement('img')
             img.src = event.target.result
-            img.style.width = '60px'
-            img.style.height = '60px'
-            img.style.objectFit = 'cover'
-            img.style.borderRadius = '8px'
-            img.style.border = '2px solid var(--primary)'
 
             const removeBtn = document.createElement('button')
             removeBtn.innerHTML = '×'
-            removeBtn.style.position = 'absolute'
-            removeBtn.style.top = '-5px'
-            removeBtn.style.right = '-5px'
-            removeBtn.style.background = 'var(--accent)'
-            removeBtn.style.color = 'white'
-            removeBtn.style.border = 'none'
-            removeBtn.style.borderRadius = '50%'
-            removeBtn.style.width = '20px'
-            removeBtn.style.height = '20px'
-            removeBtn.style.cursor = 'pointer'
-            removeBtn.style.lineHeight = '20px'
-            removeBtn.style.padding = '0'
+            removeBtn.className = 'preview-remove-btn'
 
             removeBtn.onclick = (eventClick) => {
               eventClick.preventDefault()
@@ -226,6 +247,7 @@ function handleImagePreviews (inputId, previewContainerId, storeKey) {
 }
 
 // Attach preview listeners
+handleImagePreviews('hThumbnailImage', 'previewThumbnail', 'thumbnailImage')
 handleImagePreviews('hBuildingImages', 'previewBuilding', 'buildingPhotos')
 handleImagePreviews('hRoomImages', 'previewRooms', 'roomPhotos')
 handleImagePreviews('hMessImages', 'previewMess', 'messPhotos')
@@ -271,28 +293,69 @@ document.getElementById('hostelForm').addEventListener('submit', async (e) => {
     }
   }
 
+  appendFiles('thumbnailImage', 'thumbnailImage')
   appendFiles('buildingPhotos', 'buildingPhotos')
   appendFiles('roomPhotos', 'roomPhotos')
   appendFiles('messPhotos', 'messPhotos')
   appendFiles('washroomPhotos', 'washroomPhotos')
 
+  const progressContainer = document.getElementById('uploadProgressContainer')
+  const progressBar = document.getElementById('uploadProgressBar')
+  const progressText = document.getElementById('uploadProgressText')
+
+  const xhrWithProgress = (urlPath, method, formDataObj) => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open(method, `${API_URL}${urlPath}`, true)
+      
+      const token = localStorage.getItem('token')
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+      
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100)
+          progressBar.style.width = percent + '%'
+          progressText.textContent = percent + '%'
+        }
+      }
+      
+      xhr.onload = () => {
+        try {
+          const res = JSON.parse(xhr.responseText)
+          if (xhr.status >= 200 && xhr.status < 300) resolve(res)
+          else reject(new Error(res.message || 'Error occurred'))
+        } catch (err) {
+          reject(new Error('Failed to parse response'))
+        }
+      }
+      
+      xhr.onerror = () => reject(new Error('Network error'))
+      xhr.send(formDataObj)
+    })
+  }
+
   try {
+    if (progressContainer) progressContainer.style.display = 'block'
+    if (progressBar) progressBar.style.width = '0%'
+    if (progressText) progressText.textContent = '0%'
+
     if (editingHostelId) {
-      await fetchAPI(`/hostels/${editingHostelId}`, 'PUT', formData, true)
+      await xhrWithProgress(`/hostels/${editingHostelId}`, 'PUT', formData)
       showToast('Listing updated successfully!', 'success')
       cancelHostelEdit()
     } else {
-      await fetchAPI('/hostels', 'POST', formData, true)
+      await xhrWithProgress('/hostels', 'POST', formData)
       showToast('Listing created! Awaiting admin approval.', 'success')
       e.target.reset()
       Object.keys(selectedImages).forEach(key => selectedImages[key] = []);
-      ['previewBuilding', 'previewRooms', 'previewMess', 'previewBathrooms'].forEach(id => {
+      ['previewThumbnail', 'previewBuilding', 'previewRooms', 'previewMess', 'previewBathrooms'].forEach(id => {
         document.getElementById(id).innerHTML = ''
       })
     }
   } catch (err) {
     showToast('Failed to save listing: ' + err.message, 'error')
   } finally {
+    if (progressContainer) progressContainer.style.display = 'none'
     if (btn) btn.textContent = editingHostelId ? 'Update Listing' : 'Create Listing'
   }
 })
@@ -321,7 +384,7 @@ window.editHostel = async function (id) {
 
     // Reset previews
     Object.keys(selectedImages).forEach(key => selectedImages[key] = []);
-    ['previewBuilding', 'previewRooms', 'previewMess', 'previewBathrooms'].forEach(gridId => {
+    ['previewThumbnail', 'previewBuilding', 'previewRooms', 'previewMess', 'previewBathrooms'].forEach(gridId => {
       document.getElementById(gridId).innerHTML = ''
     })
 
@@ -346,7 +409,7 @@ window.cancelHostelEdit = function () {
   editingHostelId = null
   document.getElementById('hostelForm').reset()
   Object.keys(selectedImages).forEach(key => selectedImages[key] = []);
-  ['previewBuilding', 'previewRooms', 'previewMess', 'previewBathrooms'].forEach(gridId => {
+  ['previewThumbnail', 'previewBuilding', 'previewRooms', 'previewMess', 'previewBathrooms'].forEach(gridId => {
     document.getElementById(gridId).innerHTML = ''
   })
 
@@ -366,7 +429,7 @@ window.cancelHostelEdit = function () {
 // ---- MY HOSTELS LOGIC ----
 async function loadMyHostels () {
   const container = document.getElementById('myHostelsContainer')
-  container.innerHTML = 'Loading...'
+  container.innerHTML = '<div style="text-align:center;padding:2.5rem;"><div class="spinner-v2"></div></div>'
 
   try {
     const res = await fetchAPI('/hostels/owner/my-hostels')
@@ -378,16 +441,26 @@ async function loadMyHostels () {
     }
 
     container.innerHTML = hostels.map(h => `
-            <div class="glass-panel card-3d" style="padding: 1.5rem;">
-                <h3 style="margin-bottom: 0.5rem; font-size:1.5rem">${h.name}</h3>
-                <p style="color:var(--text-muted); font-size:0.9rem;">📍 ${h.address}, ${h.city}</p>
-                <div style="margin: 1rem 0; padding: 0.5rem; background: var(--surface); border-radius: 8px;">
-                    <p style="font-size: 0.9rem;">Status: <span style="color:${h.isApproved ? 'green' : 'orange'}; font-weight:bold">${h.isApproved ? 'Approved' : 'Pending Approval'}</span></p>
-                    <p style="font-size: 0.9rem;">Views: <strong>${h.views}</strong></p>
-                </div>
-                <div class="action-btns">
-                    <button class="btn btn-outline" style="padding: 0.5rem; flex:1; border-color:var(--primary); color:var(--primary)" onclick="editHostel('${h._id}')">Edit</button>
-                    <button class="btn btn-outline" style="padding: 0.5rem; flex:1" onclick="deleteHostel('${h._id}')">Delete</button>
+            <div class="hostel-manage-card">
+                <div class="hostel-manage-card-body">
+                    <h3 style="margin-bottom:0.5rem">${h.name}</h3>
+                    <p style="color:var(--text-muted);font-size:0.9rem">📍 ${h.address}, ${h.city}</p>
+                    <div class="info-box" style="margin:1.25rem 0">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:0.9rem;font-weight:600">Status:</span>
+                            <span class="badge-v2 ${h.isApproved ? 'badge-approved' : 'badge-pending'}" style="font-size:0.75rem">
+                                ${h.isApproved ? 'Approved' : 'Pending Approval'}
+                            </span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem">
+                            <span style="font-size:0.9rem;font-weight:600">Total Views:</span>
+                            <span style="font-weight:700;color:var(--primary)">👁️ ${h.views}</span>
+                        </div>
+                    </div>
+                    <div class="action-btns">
+                        <button class="btn btn-outline btn-sm" style="flex:1" onclick="editHostel('${h._id}')">Edit Listing</button>
+                        <button class="btn btn-outline btn-sm" style="flex:1;border-color:var(--danger);color:var(--danger)" onclick="deleteHostel('${h._id}')">Delete</button>
+                    </div>
                 </div>
             </div>
         `).join('')
@@ -413,7 +486,7 @@ window.deleteHostel = async function (id) {
 // ---- ENQUIRIES LOGIC ----
 async function loadOwnerEnquiries () {
   const container = document.getElementById('ownerEnquiriesContainer')
-  container.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="spinner"></div></div>'
+  container.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="spinner-v2"></div></div>'
 
   try {
     const res = await fetchAPI('/enquiries/owner')
@@ -432,136 +505,78 @@ async function loadOwnerEnquiries () {
     // Clear All button banner
     const clearAllBanner = `
             <div style="display:flex;justify-content:flex-end;margin-bottom:1.25rem;">
-                <button onclick="clearAllOwnerEnquiries()" style="
-                    background: none; border: 1.5px solid var(--danger); color: var(--danger);
-                    border-radius: var(--radius); padding: 0.5rem 1.1rem; cursor: pointer;
-                    font-size: 0.85rem; font-weight: 700; transition: all 0.2s;
-                    display:flex;align-items:center;gap:.4rem;"
-                    onmouseenter="this.style.background='var(--danger)';this.style.color='#fff'"
-                    onmouseleave="this.style.background='none';this.style.color='var(--danger)'">
+                <button onclick="clearAllOwnerEnquiries()" class="btn btn-outline btn-sm" style="border-color:var(--danger);color:var(--danger)">
                     🗑 Clear All Enquiries
                 </button>
             </div>`
 
     container.innerHTML = clearAllBanner + enquiries.map(eq => {
       const sentDate = new Date(eq.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-      let statusColor = '#94a3b8'
-      let statusBg = 'var(--surface-3)'
-      let statusDot = '#94a3b8'
-      if (eq.status === 'Pending') { statusColor = '#F59E0B'; statusBg = 'rgba(245,158,11,0.12)'; statusDot = '#F59E0B' }
-      if (eq.status === 'Responded') { statusColor = '#10b981'; statusBg = 'rgba(16,185,129,0.12)'; statusDot = '#10b981' }
+      let statusClass = 'badge-pending'
+      if (eq.status === 'Responded') { statusClass = 'badge-approved' }
 
       return `
-            <div style="
-                background: var(--surface);
-                border: 1px solid var(--border);
-                border-radius: var(--radius-lg);
-                overflow: hidden;
-                box-shadow: var(--shadow-sm);
-                transition: box-shadow 0.2s;
-                margin-bottom: 1.25rem;
-            " onmouseenter="this.style.boxShadow='var(--shadow-md)'" onmouseleave="this.style.boxShadow='var(--shadow-sm)'">
-
+            <div class="chat-card" style="margin-bottom:1.25rem">
                 <!-- Card Header -->
-                <div style="
-                    display: flex; justify-content: space-between; align-items: center;
-                    flex-wrap:wrap; gap:.75rem;
-                    padding: 1rem 1.25rem;
-                    background: var(--surface-2);
-                    border-bottom: 1px solid var(--border);
-                ">
-                    <div style="display:flex;align-items:center;gap:0.75rem;">
-                        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--primary));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;color:#fff;flex-shrink:0;">
+                <div class="chat-header">
+                    <div style="display:flex;align-items:center;gap:1rem;">
+                        <div class="chat-avatar">
                             ${eq.studentId ? eq.studentId.name.charAt(0).toUpperCase() : 'S'}
                         </div>
                         <div>
-                            <div style="font-weight:700;font-size:1rem;color:var(--text);">${eq.studentId ? eq.studentId.name : 'Unknown Student'}</div>
-                            <div style="font-size:0.78rem;color:var(--text-muted);">📞 ${eq.studentId ? eq.studentId.phone : 'N/A'} &nbsp;·&nbsp; 🏠 ${eq.hostelId ? eq.hostelId.name : 'N/A'}</div>
+                            <div style="font-weight:700;font-size:1.05rem;color:var(--text);">${eq.studentId ? eq.studentId.name : 'Unknown Student'}</div>
+                            <div style="font-size:0.8rem;color:var(--text-muted);display:flex;gap:0.75rem;align-items:center;">
+                                <span>📞 ${eq.studentId ? eq.studentId.phone : 'N/A'}</span>
+                                <span style="opacity:0.5">|</span>
+                                <span style="color:var(--primary);font-weight:600">🏠 ${eq.hostelId ? eq.hostelId.name : 'N/A'}</span>
+                            </div>
                         </div>
                     </div>
-                    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
-                        <span style="display:flex;align-items:center;gap:0.4rem;color:${statusColor};background:${statusBg};padding:0.3rem 0.8rem;border-radius:20px;font-size:0.78rem;font-weight:700;">
-                            <span style="width:6px;height:6px;border-radius:50%;background:${statusDot};display:inline-block;"></span>
-                            ${eq.status}
-                        </span>
-                        <button onclick="deleteOwnerEnquiry('${eq._id}')" style="
-                            background: none; border: 1px solid var(--danger); color: var(--danger);
-                            border-radius: var(--radius); padding: 0.3rem 0.7rem; cursor: pointer;
-                            font-size: 0.78rem; font-weight: 600; transition: all 0.2s;
-                            display:flex;align-items:center;gap:.3rem;"
-                            onmouseenter="this.style.background='var(--danger)';this.style.color='#fff'"
-                            onmouseleave="this.style.background='none';this.style.color='var(--danger)'">
-                            🗑 Clear
+                    <div style="display:flex;align-items:center;gap:0.75rem;">
+                        <span class="badge-v2 ${statusClass}">${eq.status}</span>
+                        <button class="btn btn-outline btn-sm" style="border-color:var(--danger);color:var(--danger)" onclick="deleteOwnerEnquiry('${eq._id}')">
+                            Clear
                         </button>
                     </div>
                 </div>
 
                 <!-- Conversation Body -->
-                <div style="padding: 1.25rem; display:flex; flex-direction: column; gap: 1rem;">
-
-                    <!-- Student's Message (incoming / left) -->
+                <div class="chat-body">
+                    <!-- Student's Message -->
                     <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;display:flex;align-items:center;gap:0.3rem;">
-                            <span>👤 ${eq.studentId ? eq.studentId.name : 'Student'}</span> <span>·</span> <span>${sentDate}</span>
+                        <div class="msg-meta">
+                            <span>👤 ${eq.studentId ? eq.studentId.name : 'Student'}</span> &middot; <span>${sentDate}</span>
                         </div>
-                        <div style="
-                            background: var(--surface-3);
-                            border: 1px solid var(--border);
-                            padding: 0.9rem 1.1rem;
-                            border-radius: 4px 16px 16px 16px;
-                            max-width: 85%;
-                            font-size: 0.95rem;
-                            line-height: 1.6;
-                            color: var(--text-2);
-                        ">"${eq.message}"</div>
+                        <div class="msg-bubble msg-student">"${eq.message}"</div>
                     </div>
 
                     <!-- Official Admin Response if any -->
                     ${eq.adminResponse
 ? `
                         <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">✅ Official HostelBuddy Response</div>
-                            <div style="
-                                background: rgba(16,185,129,0.07);
-                                border: 1px solid rgba(16,185,129,0.3);
-                                padding: 0.9rem 1.1rem;
-                                border-radius: 4px 16px 16px 16px;
-                                max-width: 85%;
-                                font-size: 0.95rem;
-                                line-height: 1.6;
-                                color: var(--text-2);
-                            ">${eq.adminResponse}</div>
+                            <div class="msg-meta" style="color:var(--success);font-weight:700;text-transform:uppercase">✅ Platform Response</div>
+                            <div class="msg-bubble msg-admin">${eq.adminResponse}</div>
                         </div>
                     `
 : ''}
 
-                    <!-- Owner's Reply (outgoing / right) OR Reply Form -->
+                    <!-- Owner's Reply OR Reply Form -->
                     ${eq.ownerReply
 ? `
                         <div style="display:flex;flex-direction:column;align-items:flex-end;">
-                            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Your Reply</div>
-                            <div style="
-                                background: linear-gradient(135deg, var(--primary-dark), var(--primary));
-                                color: #fff;
-                                padding: 0.9rem 1.1rem;
-                                border-radius: 16px 4px 16px 16px;
-                                max-width: 85%;
-                                font-size: 0.95rem;
-                                line-height: 1.6;
-                                box-shadow: 0 2px 8px rgba(14,165,233,0.25);
-                            ">${eq.ownerReply}</div>
+                            <div class="msg-meta">Your Reply</div>
+                            <div class="msg-bubble msg-owner">${eq.ownerReply}</div>
                         </div>
                     `
 : `
-                        <div style="border-top: 1px dashed var(--border); padding-top: 1rem; display:flex; flex-direction:column; gap: 0.6rem;">
-                            <div style="font-size:0.8rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Reply to Student</div>
-                            <textarea id="replyInput_${eq._id}" class="form-textarea" rows="2" placeholder="Write your reply to this student..." style="resize:vertical;"></textarea>
+                        <div style="border-top: 1px dashed var(--border); padding-top:1.25rem; display:flex; flex-direction:column; gap:0.75rem;">
+                            <p style="font-size:0.8rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Reply to Student</p>
+                            <textarea id="replyInput_${eq._id}" class="form-textarea" rows="2" placeholder="Write your reply..."></textarea>
                             <div style="display:flex;justify-content:flex-end;">
                                 <button class="btn btn-primary btn-sm" onclick="submitEnquiryReply('${eq._id}')">Send Reply ➤</button>
                             </div>
                         </div>
                     `}
-
                 </div>
             </div>
             `
@@ -638,12 +653,12 @@ async function loadNotifications () {
     }
 
     container.innerHTML = notifications.map(n => `
-            <div class="glass-panel" style="padding: 1rem; border-left: 4px solid ${n.type === 'warning' ? 'var(--accent)' : (n.type === 'success' ? '#10b981' : 'var(--primary)')}; background: var(--surface); margin-bottom: 0.8rem; border-radius: 8px; border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">${new Date(n.createdAt).toLocaleString()}</span>
-                    ${!n.isRead ? '<span style="background: var(--primary); width: 8px; height: 8px; border-radius: 50%;"></span>' : ''}
+            <div class="notif-item ${n.type}">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem;">
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">${new Date(n.createdAt).toLocaleString()}</span>
+                    ${!n.isRead ? '<span style="background: var(--primary); width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 5px var(--primary)"></span>' : ''}
                 </div>
-                <p style="font-size: 0.95rem; color: var(--text-2); font-weight: 500;">${n.message}</p>
+                <p style="font-size: 0.95rem; color: var(--text-2); font-weight: 500; line-height: 1.5;">${n.message}</p>
             </div>
         `).join('')
 
@@ -677,11 +692,11 @@ window.clearNotifications = async function () {
 
 // ---- DEACTIVATION LOGIC ----
 window.openDeactivateModal = function () {
-  document.getElementById('deactivateModal').style.display = 'flex'
+  document.getElementById('deactivateModal').classList.add('active')
 }
 
 window.closeDeactivateModal = function () {
-  document.getElementById('deactivateModal').style.display = 'none'
+  document.getElementById('deactivateModal').classList.remove('active')
 }
 
 window.submitDeactivationRequest = async function () {
@@ -736,22 +751,23 @@ async function loadCommunityFeedbacks() {
     }
     
     container.innerHTML = feedbacks.map(f => `
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;display:flex;flex-direction:column;gap:0.75rem;box-shadow:var(--shadow-sm);">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-          <div style="display:flex;align-items:center;gap:0.75rem;">
-            <img src="${f.userId?.profilePhoto || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--accent);">
+      <div class="list-item" style="flex-direction:column;align-items:stretch;gap:1.25rem">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
+          <div style="display:flex;align-items:center;gap:1rem;">
+            <img src="${f.userId?.profilePhoto || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'}" 
+                 style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--primary-light);">
             <div>
-              <div style="font-weight:600;font-size:0.95rem;color:var(--text);">${f.userId?.name || 'User'}</div>
-              <div style="font-size:0.75rem;color:var(--text-muted);">${f.role}</div>
+              <div style="font-weight:700;font-size:1.05rem;color:var(--text);">${f.userId?.name || 'User'}</div>
+              <div class="badge-v2 badge-info" style="font-size:0.7rem;margin-top:0.2rem">${f.role}</div>
             </div>
           </div>
-          <div style="color:#F59E0B;font-size:1rem;">
+          <div style="color:#F59E0B;font-size:1.1rem;display:flex;gap:2px;">
             ${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}
           </div>
         </div>
-        <p style="font-size:0.95rem;line-height:1.6;color:var(--text-2);font-style:italic;">"${f.comment}"</p>
-        <div style="font-size:0.75rem;color:var(--text-light);text-align:right;">
-          ${new Date(f.createdAt).toLocaleDateString()}
+        <p class="msg-bubble" style="font-style:italic;max-width:100%;background:var(--surface-2)">"${f.comment}"</p>
+        <div style="font-size:0.8rem;color:var(--text-light);text-align:right;">
+          Submitted: ${new Date(f.createdAt).toLocaleDateString()}
         </div>
       </div>
     `).join('');

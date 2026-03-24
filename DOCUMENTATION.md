@@ -55,7 +55,7 @@ Handles all three roles (`Student`, `Owner`, `Admin`).
 ### Hostel
 Stores property details. Linkable to Owner.
 - **Fields**: `ownerId`, `name`, `description`, `address`, `city`, `state`, `pincode`, `monthlyPrice`, `dailyPrice`, `depositAmount`, `rules`, `googleMapLink`, `keywords` (Array of strings).
-- **Images**: Sorted into arrays `buildingPhotos`, `roomPhotos`, `messPhotos`, `washroomPhotos`.
+- **Images**: Features a primary `thumbnailImage`, and categorized arrays `buildingPhotos`, `roomPhotos`, `messPhotos`, `washroomPhotos`.
 - **Status/Metrics**: `isApproved` (Boolean, handled by Admin), `views` (Number).
 - **Amenities**: `foodAvailability` (Boolean), `foodDetails` (String).
 
@@ -80,9 +80,10 @@ Handles hostel ratings and feedback from students.
 ### 4.2. Property Listing & Approval Flow (Owner -> Admin)
 1. **Verification**: Owners must complete their profile and request verification. 
 2. **Admin Verify**: Admin views pending verifications in `admin-dashboard.html` and approves them. Admin can also send custom notifications to the owner.
-3. **Add Listing**: Verified Owners can upload Hostels (categorized images uploaded directly to Cloudinary via Buffers in RAM to avoid disk usage).
-4. **Approval**: Uploaded Hostels default to `isApproved: false`. The Admin reviews and approves them.
-5. **Discovery**: Students only see Hostels where `isApproved` is `true`.
+3. **Add Listing**: Verified Owners can upload Hostels.
+4. **Performance Uploads**: Image uploads (Thumbnail, Building, Room, etc.) are batched using XHR to provide a visual progress bar. On the backend, Cloudinary streams are executed concurrently via `Promise.all` to radically reduce upload durations.
+5. **Approval**: Uploaded Hostels default to `isApproved: false`. The Admin reviews and approves them.
+6. **Discovery**: Students only see Hostels where `isApproved` is `true`.
 
 ### 4.3. Enquiry Loop
 1. Student views a Hostel and clicks "Send Enquiry".
@@ -126,6 +127,8 @@ RESTful conventions used aggressively. Responses standardly structured as `{ suc
 - **Global Layout Elements**: 
   - `navbar`: Fixed top navigation.
   - `premium-footer`: A multi-column, responsive grid footer containing brand 'About' info, localized Quick Links tailored per role, and SVG animated social icons for a professional touch.
+  - `sidebarAvatar`: Dynamically displays the user's uploaded `profilePhoto` instead of static text placeholders.
+- **Forms**: Managed by `.form-group` and heavily relies on `.form-row` combined with `flex-wrap` to ensure mobile-friendly responsiveness across all profile inputs.
 - **Global Pages**: 
   - `guide.html`: A comprehensive, premium user manual explaining the platform's features for students and owners with step-by-step visuals and instructions.
   - `about.html`: Detailed vision, mission, and technical highlights of the HostelBuddy ecosystem.

@@ -182,6 +182,36 @@ function setupThemeToggle () {
   })
 }
 
+// ---- SIDEBAR TOGGLE LOGIC (DASHBOARDS) ----
+window.toggleSidebar = function () {
+  console.log('toggleSidebar triggered')
+  const sidebar = document.querySelector('.sidebar')
+  const overlay = document.getElementById('sidebarOverlay')
+  if (sidebar && overlay) {
+    const isOpen = sidebar.classList.toggle('mobile-open')
+    overlay.classList.toggle('active')
+    document.body.style.overflow = isOpen ? 'hidden' : ''
+    console.log('Sidebar state:', isOpen ? 'Open' : 'Closed')
+  } else {
+    console.error('Sidebar or Overlay not found:', { sidebar, overlay })
+  }
+}
+
+
+// Close sidebar on resize if > 768px
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 768) {
+    const sidebar = document.querySelector('.sidebar')
+    const overlay = document.getElementById('sidebarOverlay')
+    if (sidebar && sidebar.classList.contains('mobile-open')) {
+      sidebar.classList.remove('mobile-open')
+      overlay.classList.remove('active')
+      document.body.style.overflow = ''
+    }
+  }
+})
+
 // Initialize theme immediately to prevent flash
 initTheme()
 document.addEventListener('DOMContentLoaded', setupThemeToggle)
+

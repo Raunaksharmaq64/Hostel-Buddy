@@ -16,7 +16,8 @@ The application is structured around three primary roles, each with a unique das
 2. **Hostel / PG Owner**:
    - Profiles with identity verification and contact details.
    - Can create, edit, and manage multiple property listings.
-   - Can upload category-specific photos (building, rooms, mess).
+   - Can upload a primary **Thumbnail Image** alongside category-specific photos (building, rooms, mess).
+   - Experience fast, parallelized image uploading with a live visual **Progress Bar**.
    - Dedicated enquiry management section to track and respond to student messages.
 
 3. **Admin (Super Administrator)**:
@@ -28,11 +29,12 @@ The application is structured around three primary roles, each with a unique das
 
 ## Key Design Features
 - **Platform Feedback System**: A transparent, robust feedback engine where students and owners can review the platform itself. Admins have full moderation control (approve/reject/delete), and approved feedbacks are dynamically displayed on user dashboards and the signup page to build trust.
+- **Dynamic Sidebar Avatars**: The application dynamically fetches and seamlessly integrates the user's uploaded Profile Photo into the navigation sidebar across all dashboards.
 - **Premium Glassmorphism UI**: High-end user interface utilizing GSAP animations, 3D card tilt effects, dynamic tooltips, and responsive glass panels.
 - **Guided Onboarding Tour**: A premium, spotlight-driven interactive tour for new users to quickly learn the platform's features (powered by `tour.js`).
 - **Global Footer Navigation**: A premium, responsive footer loaded with quick links and informative "About" details integrated across all views, including dashboards.
 - **Resource Pages**: Specialized pages for **Safety Guidelines**, **Privacy Policy**, **Terms of Service**, and a comprehensive **User Guide**.
-- **Security & Data Handling**: Fast JWT authentication and safe Mongoose cascade deletions to ensure a flawlessly clean database.
+- **Security & Data Handling**: Fast JWT authentication, safe Mongoose cascade deletions, and concurrent `Promise.all` backend image processing to ensure a flawlessly clean and fast experience.
 
 ## Tech Stack
 - **Frontend**: HTML5, Vanilla CSS3 (with premium styling, CSS variables, 3D hover effects, and modern fonts), Vanilla JavaScript.

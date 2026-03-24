@@ -7,67 +7,14 @@
     <link rel="stylesheet" href="css/style.css?v=5">
     <link rel="stylesheet" href="css/tour.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
-    <style>
-        .dashboard-container { padding-top: 0; }
-        .sidebar { top: 0; height: 100vh; }
-        .tab-content { display: none; animation: fadeUp 0.4s ease; }
-        .tab-content.active { display: block; }
-
-        /* Form overrides for light theme */
-        .form-input, .form-textarea, .form-select {
-            width: 100%; padding: .8rem 1rem;
-            border-radius: var(--radius); border: 1.5px solid var(--border-strong);
-            background: var(--surface); color: var(--text);
-            font-family: var(--font-body); font-size: .95rem;
-            transition: var(--transition);
-        }
-        .form-input:focus, .form-textarea:focus, .form-select:focus {
-            outline: none; border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(14,165,233,.12);
-        }
-        .form-select option { background: var(--surface); color: var(--text); }
-        .form-label { display: block; margin-bottom: .45rem; color: var(--text-2); font-size: .88rem; font-weight: 600; }
-        .form-row { display: flex; gap: 1rem; margin-bottom: 0; }
-        .form-group { flex: 1; margin-bottom: 1rem; }
-
-        /* Stat cards */
-        .stat-card-owner { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.75rem 2rem; transition: var(--transition); }
-        .stat-card-owner:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
-        .stat-card-owner h3 { color: var(--text-muted); font-size: .88rem; font-weight: 600; margin-bottom: .5rem; text-transform: uppercase; letter-spacing: .5px; }
-        .stat-card-owner h1 { font-size: 2.8rem; font-weight: 900; font-family: var(--font-head); line-height: 1; }
-
-        /* Listing cards */
-        .hostels-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
-        .hostel-manage-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; transition: var(--transition); }
-        .hostel-manage-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
-        .hostel-manage-card-body { padding: 1.25rem; }
-        .hostel-manage-card-badge { display: inline-flex; align-items: center; gap: .3rem; font-size: .78rem; font-weight: 700; padding: .25rem .75rem; border-radius: 999px; }
-
-        /* List items */
-        .enquiry-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1rem; border-left: 4px solid var(--primary); transition: var(--transition); }
-        .enquiry-item:hover { box-shadow: var(--shadow-md); }
-
-        /* Notification badge */
-        .notif-item { background: var(--surface-3); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; }
-        .notif-warn { border-left: 4px solid var(--accent); background: rgba(249,115,22,.05); }
-        .notif-success { border-left: 4px solid var(--success); background: rgba(16,185,129,.05); }
-        .notif-info { border-left: 4px solid var(--primary); background: rgba(14,165,233,.05); }
-
-        /* Image upload sections */
-        .img-upload-box { padding: 1.25rem; border: 1.5px dashed var(--border-strong); border-radius: var(--radius); background: var(--surface-3); }
-        .img-upload-box label { font-weight: 700; color: var(--text); font-size: .92rem; margin-bottom: .5rem; display: block; }
-
-        /* Verification card */
-        .verif-status-card { margin-bottom: 1.5rem; padding: 1rem 1.25rem; border-radius: var(--radius); background: var(--surface-3); border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .spinner { display: inline-block; width: 36px; height: 36px; border: 4px solid var(--primary); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
-    </style>
 </head>
-<body>
+<body class="dashboard-body">
 
     <!-- Navbar -->
     <nav class="navbar scrolled" id="dashNav">
+        <button class="hamburger-v2" onclick="toggleSidebar()" aria-label="Toggle Menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
         <a href="index.html" class="logo">HostelBuddy</a>
         <div style="display:flex;align-items:center;gap:1rem">
             <span id="userNameDisplay" style="font-weight:600;color:var(--text-muted);font-size:.93rem">Hello, Owner</span>
@@ -80,19 +27,17 @@
         </div>
     </nav>
 
-    <!-- Mobile toggle -->
-    <button id="sidebarToggle" onclick="document.querySelector('.sidebar').classList.toggle('mobile-open')"
-        style="display:none;position:fixed;bottom:1.5rem;right:1.5rem;z-index:200;width:52px;height:52px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:1.3rem;cursor:pointer;box-shadow:var(--shadow-glow)">☰</button>
 
     <div class="dashboard-container">
         <!-- Sidebar -->
         <aside class="sidebar" style="--sidebar-accent:var(--accent)">
             <div class="sidebar-header">
                 <div class="sidebar-avatar" id="sidebarAvatar" style="background:linear-gradient(135deg,var(--accent),#DC2626)">O</div>
-                <div>
+                <div style="flex:1">
                     <div class="sidebar-user-name" id="sidebarName">Owner</div>
                     <div class="sidebar-user-role">Owner Account</div>
                 </div>
+                <button class="sidebar-close-v2" onclick="toggleSidebar()" aria-label="Close Menu">✕</button>
             </div>
             <nav class="sidebar-nav">
                 <div class="sidebar-section-label">Management</div>
@@ -131,7 +76,7 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="main-content" style="padding-top:5.5rem">
+        <main class="main-content">
 
             <!-- Dashboard Tab -->
             <div id="dashboard" class="tab-content active">
@@ -142,11 +87,11 @@
                     </div>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem">
-                    <div class="stat-card-owner">
+                    <div class="stat-card-v2">
                         <h3>Total Hostels Listed</h3>
                         <h1 style="color:var(--accent)" id="stat-hostels">0</h1>
                     </div>
-                    <div class="stat-card-owner">
+                    <div class="stat-card-v2">
                         <h3>Total Enquiries</h3>
                         <h1 style="color:var(--primary)" id="stat-enquiries">0</h1>
                     </div>
@@ -267,6 +212,17 @@
 
                             <div class="form-row">
                                 <div class="form-group">
+                                    <div class="img-upload-box" style="border-color: var(--accent);">
+                                        <label style="color: var(--accent)">⭐ Thumbnail Image (Main Cover Photo)</label>
+                                        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.8rem">Students will see this specific photo first on the platform.</p>
+                                        <input type="file" id="hThumbnailImage" class="form-input" accept="image/*" style="border:none;padding:.4rem 0;background:transparent">
+                                        <div id="previewThumbnail" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
                                     <div class="img-upload-box">
                                         <label>🏢 Building &amp; Surroundings</label>
                                         <input type="file" id="hBuildingImages" class="form-input" multiple accept="image/*" style="border:none;padding:.4rem 0;background:transparent">
@@ -297,6 +253,16 @@
                                         <div id="previewBathrooms" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.5rem"></div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div id="uploadProgressContainer" style="display:none; margin-top:1.25rem; background:var(--surface-2); padding:1rem; border-radius:var(--radius); border:1px solid var(--border);">
+                            <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:700; color:var(--text); margin-bottom:0.5rem;">
+                                <span>Uploading Photos...</span>
+                                <span id="uploadProgressText">0%</span>
+                            </div>
+                            <div style="width:100%; height:8px; background:var(--border); border-radius:4px; overflow:hidden;">
+                                <div id="uploadProgressBar" style="width:0%; height:100%; background:var(--accent); transition:width 0.3s ease;"></div>
                             </div>
                         </div>
 
@@ -417,7 +383,7 @@
             </div>
 
             <!-- Deactivation Modal -->
-            <div id="deactivateModal" class="modal-overlay" style="display:none">
+            <div id="deactivateModal" class="modal-overlay">
                 <div class="modal" style="border-top:3px solid var(--danger)">
                     <div class="modal-header">
                         <h2 class="modal-title" style="color:var(--danger)">⚠️ Deactivate Account</h2>
@@ -474,38 +440,32 @@
                 </div>
             </div>
 
-            <!-- Premium Footer -->
-            <footer class="premium-footer">
-                <div class="footer-grid">
-                    <div class="footer-brand">
-                        <a href="index.html" class="logo" style="text-decoration:none;display:inline-block;margin-bottom:1rem">HostelBuddy</a>
-                        <p class="footer-about">HostelBuddy connects hostel owners with verified student seekers. List, manage, and grow your property business with ease.</p>
-                        <div class="footer-socials">
-                            <a href="#" class="social-icon"><svg viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg></a>
-                            <a href="#" class="social-icon"><svg viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg></a>
-                            <a href="#" class="social-icon"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/></svg></a>
-                            <a href="#" class="social-icon"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg></a>
-                        </div>
-                    </div>
-                    <div>
-                        <h4 class="footer-title">Quick Links</h4>
-                        <ul class="footer-links">
-                            <li><a href="javascript:switchTab('dashboard')">Dashboard</a></li>
-                            <li><a href="javascript:switchTab('my-hostels')">My Properties</a></li>
-                            <li><a href="javascript:switchTab('enquiries')">Enquiries</a></li>
-                            <li><a href="guide.html">How It Works</a></li>
-                            <li><a href="safety.html">Safety Guidelines</a></li>
-                            <li><a href="privacy.html">Privacy Policy</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="footer-bottom">
-                    <p>© 2026 HostelBuddy. All rights reserved.</p>
-                    <div class="footer-bottom-links"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></div>
-                </div>
-            </footer>
+    <footer class="premium-footer">
+        <div class="footer-grid" style="grid-template-columns:2fr 1fr">
+            <div class="footer-brand">
+                <a href="index.html" class="logo" style="text-decoration:none;display:inline-block;margin-bottom:1rem">HostelBuddy <span style="font-size:.9rem;color:var(--accent)">Owner</span></a>
+                <p class="footer-about">The most trusted platform for hostel owners and PG managers. Modern tools to track enquiries, manage listings, and grow your student community professionally.</p>
+            </div>
+            <div>
+                <h4 class="footer-title">Navigation</h4>
+                <ul class="footer-links">
+                    <li><a href="javascript:switchTab('analytics')">Analytics</a></li>
+                    <li><a href="javascript:switchTab('hostels')">My Properties</a></li>
+                    <li><a href="javascript:switchTab('enquiries')">Student Enquiries</a></li>
+                    <li><a href="guide.html">User Guide</a></li>
+                    <li><a href="safety.html">Safety Guidelines</a></li>
+                    <li><a href="privacy.html">Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 HostelBuddy. All rights reserved.</p>
+        </div>
+    </footer>
         </main>
     </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <script src="js/main.js?v=5"></script>
     <script src="js/owner.js?v=5"></script>
@@ -579,11 +539,6 @@
                 ]
             });
         });
-        // Mobile toggle
-        if (window.innerWidth <= 768) {
-            const t = document.getElementById('sidebarToggle');
-            if (t) t.style.display = 'flex';
-        }
     </script>
 </body>
 </html>

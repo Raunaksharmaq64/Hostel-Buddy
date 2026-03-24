@@ -22,7 +22,8 @@ const hostelSchema = new mongoose.Schema({
   },
   landmark: { type: String },
   
-  // Images (Arrays of URLs)
+  // Images (URLs)
+  thumbnailImage: { type: String },
   buildingPhotos: [{ type: String }],
   roomPhotos: [{ type: String }],
   messPhotos: [{ type: String }],

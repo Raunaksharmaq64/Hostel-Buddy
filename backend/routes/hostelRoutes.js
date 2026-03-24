@@ -27,6 +27,7 @@ router.post(
   protect,
   authorize('Owner', 'Admin'),
   upload.fields([
+    { name: 'thumbnailImage', maxCount: 1 },
     { name: 'buildingPhotos', maxCount: 5 },
     { name: 'roomPhotos', maxCount: 10 },
     { name: 'messPhotos', maxCount: 5 },
@@ -40,6 +41,7 @@ router.put(
   protect,
   authorize('Owner', 'Admin'),
   upload.fields([
+    { name: 'thumbnailImage', maxCount: 1 },
     { name: 'buildingPhotos', maxCount: 5 },
     { name: 'roomPhotos', maxCount: 10 },
     { name: 'messPhotos', maxCount: 5 },
