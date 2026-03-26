@@ -8,13 +8,15 @@ if (typeof dns.setDefaultResultOrder === 'function') {
 const sendEmail = async (options) => {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: Number(process.env.EMAIL_PORT) || 465,
+    port: process.env.EMAIL_PORT || 465,
     secure: true,
-    service: process.env.EMAIL_SERVICE || 'gmail',
+    // Do NOT use predefined 'service', because it can override IPv4 enforcements
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
     },
+    // Force Node's net.connect to use IPv4 only (value 4 means IPv4)
+    family: 4, 
     tls: {
       rejectUnauthorized: false
     }
