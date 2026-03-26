@@ -61,7 +61,8 @@
       </div>
       <input type="hidden" id="role" value="Student">
 
-      <form id="loginForm">
+      <div id="step-1">
+        <form id="loginForm">
         <div class="form-group">
           <label class="form-label">Email Address</label>
           <div class="input-icon-wrap">
@@ -91,10 +92,33 @@
 
       <div id="errorMessage" style="color:var(--danger);margin-top:1rem;font-size:0.9rem;min-height:20px;text-align:center"></div>
 
-      <p style="margin-top:1.75rem;text-align:center;color:var(--text-muted);font-size:0.9rem">
-        Don't have an account? <a href="signup.html" style="color:var(--primary);font-weight:600;text-decoration:none">Create one free →</a>
-      </p>
-      <p style="margin-top:0.5rem;text-align:center"><a href="index.html" style="color:var(--text-light);font-size:0.85rem;text-decoration:none">← Back to Home</a></p>
+        <p style="margin-top:1.75rem;text-align:center;color:var(--text-muted);font-size:0.9rem">
+          Don't have an account? <a href="signup.html" style="color:var(--primary);font-weight:600;text-decoration:none">Create one free →</a>
+        </p>
+        <p style="margin-top:0.5rem;text-align:center"><a href="index.html" style="color:var(--text-light);font-size:0.85rem;text-decoration:none">← Back to Home</a></p>
+      </div>
+
+      <!-- STEP 2: OTP Verification -->
+      <div id="step-2" style="display: none;">
+        <h1>Verify Email</h1>
+        <p class="auth-subtitle">Your account is unverified! We've sent a fresh 6-digit OTP to <strong id="displayEmail" style="color:var(--text)"></strong>. Please enter it below.</p>
+        
+        <form id="otpForm" style="margin-top: 2rem;">
+          <div class="form-group">
+            <label class="form-label">Secure OTP</label>
+            <div class="input-icon-wrap">
+              <input type="text" class="form-input" id="otpCode" required placeholder="Enter 6-digit code" maxlength="6" style="letter-spacing: 0.5rem; text-align: center; font-size: 1.25rem;">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-full btn-lg" id="btnVerify" style="margin-top:0.5rem;border-radius:var(--radius)">
+            Verify Email
+          </button>
+          <div style="text-align: center; margin-top: 1rem;">
+             <button type="button" id="resendOtpBtn" style="background:none;border:none;color:var(--primary);cursor:pointer;font-size:0.9rem;font-weight:600;">Resend OTP</button>
+          </div>
+        </form>
+        <div id="otpErrorMessage" style="color:var(--danger);margin-top:1rem;font-size:0.9rem;min-height:20px;text-align:center"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -194,9 +218,71 @@
         else window.location.href = 'admin-dashboard.html';
       }
     } catch (error) {
+      if (error.message.includes('verify your email')) {
+        document.getElementById('step-1').style.display = 'none';
+        document.getElementById('step-2').style.display = 'block';
+        document.getElementById('displayEmail').textContent = email;
+        
+        // Auto-trigger a resend so the user definitely has a fresh OTP in their inbox
+        fetchAPI('/auth/resend-verification', 'POST', { email }).catch(err => console.log(err));
+
+        if (typeof gsap !== 'undefined') gsap.fromTo('#step-2', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4 });
+      } else {
+        errorDiv.textContent = error.message;
+        btn.innerHTML = 'Sign In to Dashboard'; btn.style.opacity = '1';
+        if (typeof gsap !== 'undefined') gsap.fromTo('#authBox', { x: -8 }, { x: 8, duration: 0.08, yoyo: true, repeat: 6, onComplete: () => gsap.set('#authBox', { x: 0 }) });
+      }
+    }
+  });
+
+  // OTP Submission
+  document.getElementById('otpForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const otp = document.getElementById('otpCode').value.trim();
+    const email = document.getElementById('email').value.trim(); // pulled from step 1
+    const role = document.getElementById('role').value;
+    const errorDiv = document.getElementById('otpErrorMessage');
+    const btn = document.getElementById('btnVerify');
+    
+    errorDiv.textContent = '';
+    errorDiv.style.color = 'var(--danger)';
+    btn.innerHTML = '⏳ Verifying...'; btn.disabled = true;
+
+    try {
+      const data = await fetchAPI('/auth/verify-email', 'POST', { email, otp });
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      if (typeof gsap !== 'undefined') {
+        gsap.to('#authBox', { scale: 1.03, opacity: 0, duration: 0.4, onComplete: () => {
+          window.location.href = role === 'Student' ? 'student-dashboard.html' : 'owner-dashboard.html';
+        }});
+      } else {
+        window.location.href = role === 'Student' ? 'student-dashboard.html' : 'owner-dashboard.html';
+      }
+    } catch (error) {
       errorDiv.textContent = error.message;
-      btn.innerHTML = 'Sign In to Dashboard'; btn.style.opacity = '1';
+      btn.innerHTML = 'Verify Email'; btn.disabled = false;
       if (typeof gsap !== 'undefined') gsap.fromTo('#authBox', { x: -8 }, { x: 8, duration: 0.08, yoyo: true, repeat: 6, onComplete: () => gsap.set('#authBox', { x: 0 }) });
+    }
+  });
+
+  // Resend OTP
+  document.getElementById('resendOtpBtn').addEventListener('click', async () => {
+    const errorDiv = document.getElementById('otpErrorMessage');
+    const email = document.getElementById('email').value.trim();
+    errorDiv.textContent = 'Sending...'; errorDiv.style.color = 'var(--text-muted)';
+    try {
+      await fetchAPI('/auth/resend-verification', 'POST', { email });
+      errorDiv.textContent = 'OTP Resent Successfully!'; errorDiv.style.color = '#10B981';
+      setTimeout(() => { 
+        if (errorDiv.textContent.includes('Successfully')) {
+          errorDiv.textContent = ''; errorDiv.style.color = 'var(--danger)'; 
+        }
+      }, 3000);
+    } catch (error) {
+      errorDiv.style.color = 'var(--danger)';
+      errorDiv.textContent = error.message;
     }
   });
 </script>

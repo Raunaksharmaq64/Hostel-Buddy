@@ -44,6 +44,8 @@ const userSchema = new mongoose.Schema({
   deactivationReason: { type: String },
   resetPasswordOtp: { type: String },
   resetPasswordOtpExpiry: { type: Date },
+  isEmailVerified: { type: Boolean, default: false },
+  emailVerificationOtp: { type: String },
   notifications: [
     {
       message: { type: String, required: true },
