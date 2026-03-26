@@ -8,9 +8,9 @@ if (typeof dns.setDefaultResultOrder === 'function') {
 const sendEmail = async (options) => {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: 587, // Render blocks port 465 (SSL). Port 587 (STARTTLS) is usually open.
-    secure: false, // Must be false for port 587
-    requireTLS: true,
+    port: process.env.EMAIL_PORT || 587, 
+    secure: process.env.EMAIL_PORT == 465 ? true : false, 
+    requireTLS: process.env.EMAIL_PORT != 465 ? true : false,
     // Do NOT use predefined 'service', because it can override IPv4 enforcements
     auth: {
       user: process.env.EMAIL_USER,
