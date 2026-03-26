@@ -8,7 +8,7 @@ const sendEmail = async (options) => {
       pass: process.env.EMAIL_PASS
     },
     connectionTimeout: 10000,  // 10 seconds to establish connection
-    socketTimeout: 10000       // 10 seconds to wait for response
+    socketTimeout: 10000       // 10 seconds to wait for response.
   });
 
   const message = {
