@@ -42,6 +42,8 @@ const userSchema = new mongoose.Schema({
     default: 'none' 
   },
   deactivationReason: { type: String },
+  resetPasswordOtp: { type: String },
+  resetPasswordOtpExpiry: { type: Date },
   notifications: [
     {
       message: { type: String, required: true },
