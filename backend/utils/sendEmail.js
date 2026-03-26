@@ -1,9 +1,9 @@
 const nodemailer = require('nodemailer');
 const dns = require('dns');
 
-// Force Node.js to resolve IPv4 addresses first. 
-// Render instances often fail on IPv6 connections (ENETUNREACH) to smtp.gmail.com.
-dns.setDefaultResultOrder('ipv4first');
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 const sendEmail = async (options) => {
   const transporter = nodemailer.createTransport({
