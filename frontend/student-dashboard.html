@@ -40,10 +40,14 @@
                 <button class="sidebar-close-v2" onclick="toggleSidebar()" aria-label="Close Menu">✕</button>
             </div>
             <nav class="sidebar-nav">
-                <div class="sidebar-section-label">Navigation</div>
+                <div class="sidebar-section-label">Student Panel</div>
                 <button class="sidebar-item active" id="nav-discover" onclick="switchTab('discover')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                    Discover Hostels
+                    Search & Discover
+                </button>
+                <button class="sidebar-item" id="nav-hostels" onclick="switchTab('hostels')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    All Hostels
                 </button>
                 <button class="sidebar-item" id="nav-enquiries" onclick="switchTab('enquiries')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -157,6 +161,23 @@
                                 <p style="margin-top: 1rem;">Loading premium stays...</p>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hostels Tab -->
+            <div id="hostels" class="tab-content">
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">All Hostels</div>
+                        <div class="dash-sub">Browse all listed and verified properties in a clean, expanded view.</div>
+                    </div>
+                </div>
+                <!-- Clean layout without filters -->
+                <div class="hostels-grid" id="allHostelsContainer">
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; color: var(--text-muted);">
+                        <div class="spinner-v2"></div>
+                        <p style="margin-top: 1.25rem;">Loading premium stays...</p>
                     </div>
                 </div>
             </div>

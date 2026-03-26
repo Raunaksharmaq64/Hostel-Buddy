@@ -67,9 +67,11 @@
       </p>
 
       <div class="search-container" id="searchBar">
-        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="2" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input type="text" class="search-input" id="heroSearch" placeholder="Search by city, college, or locality...">
-        <button class="btn btn-primary" onclick="performSearch()">Search Hubs</button>
+        <div style="display:flex; align-items:center; flex:1; gap:0.75rem; width:100%;">
+          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" stroke-width="2" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" class="search-input" id="heroSearch" placeholder="Search by city, college, or locality..." style="width:100%;">
+        </div>
+        <button class="btn btn-primary" onclick="performSearch()" style="white-space:nowrap;">Search Hubs</button>
       </div>
 
       <div class="hero-stats" id="heroStats">
@@ -192,7 +194,7 @@
   <!-- ========== FOR OWNERS ========== -->
   <section class="section" style="background:var(--surface-2)">
     <div class="container">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;">
+      <div class="owners-grid" style="display:grid;gap:4rem;align-items:center;">
         <div class="reveal">
           <div class="section-tag">✦ For Owners</div>
           <h2 class="section-title" style="margin-bottom:1rem">List Your Property.<br><span class="text-gradient-warm">Reach More Students.</span></h2>

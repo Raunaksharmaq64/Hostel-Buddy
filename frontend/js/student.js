@@ -22,6 +22,7 @@ function switchTab (tabId) {
 
   // Load data based on tab
   if (tabId === 'discover') searchHostels()
+  if (tabId === 'hostels') loadAllHostels()
   if (tabId === 'enquiries') loadEnquiries()
   if (tabId === 'profile') loadProfileDetails()
   if (tabId === 'feedback') loadCommunityFeedbacks()
@@ -221,6 +222,63 @@ function renderHostels (hostels) {
     container.innerHTML = `<p style="color:var(--danger)">Error loading hostels: ${error.message}</p>`
   }
 }
+
+async function loadAllHostels() {
+  const container = document.getElementById('allHostelsContainer')
+  if (!container) return;
+  container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; color: var(--text-muted);">
+          <div class="spinner-v2"></div>
+          <p style="margin-top: 1.25rem; font-weight: 600;">Loading premium stays...</p>
+      </div>
+  `
+  try {
+    const res = await fetchAPI('/hostels')
+    const hostels = res.data;
+    if (hostels.length === 0) {
+      container.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted); background: var(--surface-3); border-radius: var(--radius-lg); border: 1px dashed var(--border-strong);">
+              <h3 style="margin-bottom: 0.5rem; color: var(--text);">No properties found</h3>
+              <p>There are no hostels listed yet.</p>
+          </div>
+      `
+      return
+    }
+    
+    container.innerHTML = hostels.map(h => `
+        <div class="hostel-card">
+            <div class="hostel-card-img">
+                <img src="${h.thumbnailImage ? getOptimizedUrl(h.thumbnailImage, 600) : (h.buildingPhotos && h.buildingPhotos.length > 0 ? getOptimizedUrl(h.buildingPhotos[0], 600) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')}" alt="Hostel Room" loading="lazy">
+            </div>
+            <div style="padding: 1.25rem;">
+                <h3 class="hostel-title" style="display: flex; justify-content: space-between; align-items: flex-start; gap:.5rem;">
+                    ${h.name} 
+                    ${h.isVerified ? '<span class="badge-v2 badge-approved" style="font-size:.7rem;padding:.2rem .5rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg> Verified</span>' : ''}
+                </h3>
+                <p style="color:var(--text-muted); font-size: 0.9rem; margin-top:.4rem; line-height:1.4;">📍 ${h.city}, ${h.address}</p>
+                
+                <div style="margin-top: 1rem;">
+                    <span class="badge-v2 badge-info" style="font-size:.75rem">
+                        🍽️ Food: ${h.foodAvailability ? 'Yes' : 'No'}
+                    </span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                    <span class="hostel-price">₹${h.monthlyPrice}<span style="font-size: 0.9rem; color:var(--text-muted); font-weight:500;">/mo</span></span>
+                    <button class="btn btn-outline btn-sm" onclick="openHostelDetails('${h._id}')">Details &rarr;</button>
+                </div>
+            </div>
+        </div>
+    `).join('')
+
+    gsap.from('#allHostelsContainer .hostel-card', {
+      y: 30, opacity: 0, duration: 0.8, stagger: 0.1, ease: 'power2.out'
+    })
+  } catch (error) {
+    container.innerHTML = `<p style="color:var(--danger); grid-column:1/-1;">Error loading properties: ${error.message}</p>`
+  }
+}
+
 
 // ---- DETAILED VIEW LOGIC ----
 window.openHostelDetails = async function (id) {

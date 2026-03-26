@@ -163,7 +163,7 @@
   box-sizing: border-box;
 }
 
-html { scroll-behavior: smooth; font-size: 16px; }
+html { scroll-behavior: smooth; font-size: 16px; overflow-x: hidden; }
 
 body {
   font-family: var(--font-body);
@@ -610,8 +610,38 @@ h1,h2,h3,h4,h5,h6 {
   }
   .theme-toggle {
     margin-left: 0.25rem !important;
+    width: 38px;
+    height: 38px;
   }
 }
+
+/* Base Hamburger (Index) */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 1000;
+  padding: 5px;
+  margin-left: auto;
+}
+.hamburger span {
+  display: block;
+  width: 25px;
+  height: 3px;
+  background-color: var(--text);
+  border-radius: 3px;
+  transition: var(--transition);
+}
+.hamburger.open span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+.hamburger.open span:nth-child(2) { opacity: 0; }
+.hamburger.open span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+/* Owners Grid */
+.owners-grid { grid-template-columns: 1fr 1fr; }
+
 
 
 
@@ -1183,48 +1213,8 @@ h1,h2,h3,h4,h5,h6 {
 /* ============================================
    MODAL
    ============================================ */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15,23,42,0.55);
-  backdrop-filter: blur(6px);
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  overflow-y: auto;
-  animation: fadeIn 0.25s ease;
-}
-.modal {
-  background: var(--surface);
-  border-radius: var(--radius-xl);
-  padding: 2rem;
-  max-width: 600px;
-  width: 100%;
-  box-shadow: var(--shadow-lg);
-  animation: fadeUp 0.3s ease;
-}
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-}
-.modal-title { font-size: 1.25rem; font-weight: 700; }
-.modal-close {
-  background: var(--surface-2);
-  border: none;
-  border-radius: 50%;
-  width: 36px; height: 36px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-  color: var(--text-muted);
-}
-.modal-close:hover { background: var(--danger-light); color: var(--danger); }
+/* Previous modal code consolidated below */
+
 
 /* ============================================
    TOAST
@@ -1463,6 +1453,18 @@ h1,h2,h3,h4,h5,h6 {
   .auth-visual { display: none; }
   .auth-form-panel { padding: 2rem 1.5rem; }
 
+  .owners-grid { grid-template-columns: 1fr; gap: 2rem !important; }
+
+  /* Redesign Search sidebar for mobile */
+  .filter-sidebar {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 100% !important;
+    position: static !important;
+    margin-bottom: 2rem;
+  }
+
+
   /* Mobile Dashboard Sidebar Fix */
   .sidebar {
     top: 0;
@@ -1631,32 +1633,41 @@ h1,h2,h3,h4,h5,h6 {
 /* Modals & Overlays */
 .modal-overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px);
-  display: flex; align-items: center; justify-content: center; z-index: 2000;
-  padding: 1rem; opacity: 0; visibility: hidden; transition: all 0.3s ease;
+  background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(6px);
+  display: flex; align-items: flex-start; justify-content: center; z-index: 2100;
+  padding: 2.5rem 1rem; opacity: 0; visibility: hidden; transition: all 0.3s ease;
+  overflow-y: auto; /* Let the overlay be the main scroller */
+  -webkit-overflow-scrolling: touch;
 }
 .modal-overlay.active { opacity: 1; visibility: visible; }
 
 .modal {
   background: var(--surface); border-radius: var(--radius-xl);
-  width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto;
+  width: 100%; max-width: 900px; 
+  margin: auto; /* Vertically centers if smaller than viewport */
+  position: relative; 
   box-shadow: var(--shadow-lg); border: 1px solid var(--border);
-  position: relative; transform: translateY(30px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: translateY(30px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .modal-overlay.active .modal { transform: translateY(0); }
 
 .modal-header {
   padding: 1.5rem 2rem; border-bottom: 1px solid var(--border);
   display: flex; justify-content: space-between; align-items: center;
-  position: sticky; top: 0; background: var(--surface); z-index: 10;
+  position: sticky; top: 0; background: var(--surface); z-index: 20;
+  border-top-left-radius: var(--radius-xl); border-top-right-radius: var(--radius-xl);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.03);
 }
+.modal-title { font-size: 1.35rem; font-weight: 800; color: var(--text); }
 .modal-close {
-  background: var(--surface-3); border: none; width: 40px; height: 40px;
-  border-radius: 50%; cursor: pointer; color: var(--text-muted);
+  background: var(--surface-3); border: none; width: 44px; height: 44px;
+  border-radius: 50%; cursor: pointer; color: var(--text-muted); margin-left: 1rem;
   display: flex; align-items: center; justify-content: center; transition: var(--transition);
+  font-size: 1.2rem; flex-shrink: 0; z-index: 30;
 }
 .modal-close:hover { background: var(--danger-light); color: var(--danger); transform: rotate(90deg); }
-.modal-body { padding: 2.5rem; }
+.modal-body { padding: 2rem; }
+
 
 /* Image Gallery Grids */
 .gallery-grid {
@@ -1712,8 +1723,6 @@ h1,h2,h3,h4,h5,h6 {
 /* Modal Body Utility */
 .modal-body {
     padding: 2rem;
-    max-height: 75vh;
-    overflow-y: auto;
 }
 
 /* Info Box Utility */
