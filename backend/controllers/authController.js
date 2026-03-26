@@ -181,6 +181,7 @@ exports.forgotPassword = async (req, res) => {
 
       res.status(200).json({ success: true, message: 'OTP sent to email' });
     } catch (err) {
+      console.error('EMAIL SENDING ERROR (forgot password):', err);
       user.resetPasswordOtp = undefined;
       user.resetPasswordOtpExpiry = undefined;
       await user.save({ validateBeforeSave: false });
