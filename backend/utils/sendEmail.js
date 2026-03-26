@@ -3,13 +3,20 @@ const nodemailer = require('nodemailer');
 const sendEmail = async (options) => {
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: process.env.EMAIL_PORT || 465,
+    port: Number(process.env.EMAIL_PORT) || 465,
     secure: true,
     service: process.env.EMAIL_SERVICE || 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
+    },
+    tls: {
+      rejectUnauthorized: false
     }
+  });
+
+  transporter.on('error', (err) => {
+    console.error('Nodemailer Transporter Error:', err);
   });
 
   const message = {
