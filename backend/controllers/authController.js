@@ -68,17 +68,13 @@ exports.register = async (req, res) => {
       </div>
     `;
 
-    try {
-      await sendEmail({
-        email: user.email,
-        subject: 'Hostel Buddy - Verify Your Email',
-        html: message
-      });
-      res.status(201).json({ success: true, requiresVerification: true, message: 'Please verify your email address with the OTP sent to you.' });
-    } catch (err) {
-      console.error(err);
-      res.status(201).json({ success: true, requiresVerification: true, message: 'Account created but failed to send email. You can request a new OTP from the login screen.' });
-    }
+    // Fire email in background so user gets instant response
+    res.status(201).json({ success: true, requiresVerification: true, message: 'Please verify your email address with the OTP sent to you.' });
+    sendEmail({
+      email: user.email,
+      subject: 'Hostel Buddy - Verify Your Email',
+      html: message
+    }).catch(err => console.error('Failed to send verification email:', err.message));
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -323,16 +319,13 @@ exports.resendVerification = async (req, res) => {
       </div>
     `;
 
-    try {
-      await sendEmail({
-        email: user.email,
-        subject: 'Hostel Buddy - Verify Your Email',
-        html: message
-      });
-      res.status(200).json({ success: true, message: 'OTP sent to email' });
-    } catch (err) {
-      return res.status(500).json({ success: false, message: 'Email could not be sent', error: err.message });
-    }
+    // Fire email in background so user gets instant response
+    res.status(200).json({ success: true, message: 'OTP sent to email' });
+    sendEmail({
+      email: user.email,
+      subject: 'Hostel Buddy - Verify Your Email',
+      html: message
+    }).catch(err => console.error('Failed to send resend-verification email:', err.message));
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

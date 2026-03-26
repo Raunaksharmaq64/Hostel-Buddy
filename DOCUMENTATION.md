@@ -22,7 +22,7 @@ Hostel Buddy is a full-stack web application designed to connect Students search
 │   ├── models/            # Mongoose Schemas (User.js, Hostel.js, Enquiry.js)
 │   ├── routes/            # Express Routers mapping endpoints to controllers
 │   ├── server.js          # Entry point for the backend server
-│   └── .env               # Environment variables (DB URI, JWT secret, Cloudinary keys)
+│   └── .env               # Environment variables (DB URI, JWT, Cloudinary keys, Email config)
 ├── frontend/
 │   ├── css/
 │   │   └── style.css      # Single stylesheet featuring glassmorphism and modern UI tokens
@@ -72,10 +72,12 @@ Handles hostel ratings and feedback from students.
 
 ## 4. Working Workflows
 
-### 4.1. Authentication Flow
+### 4.1. Authentication & Security Flow
 1. User submits `signup.html` or `login.html`.
-2. Backend `authController.js` validates credentials, hashes passwords (via Mongoose `pre('save')` hook), and returns a User object along with a JWT token.
-3. Frontend saves JWT to `localStorage` and redirects to the appropriate dashboard based on `role`.
+2. Backend `authController.js` validates credentials, hashes passwords (via Mongoose `pre('save')` hook).
+3. If new, the system generates a 6-digit OTP and dispatches an HTML email via NodeMailer. The user is created with `isEmailVerified: false`.
+4. Front-end triggers a dynamic, no-reload OTP modal. Upon successful `/api/auth/verify-email`, the account activates and returns the JWT token.
+5. User navigates through the optional **Forgot Password** flow similarly, securely verifying OTPs before changing credentials.
 
 ### 4.2. Property Listing & Approval Flow (Owner -> Admin)
 1. **Verification**: Owners must complete their profile and request verification. 
@@ -142,11 +144,14 @@ RESTful conventions used aggressively. Responses standardly structured as `{ suc
 
 | Prefix             | Endpoint                     | Method | Role Required | Description                                  |
 |--------------------|------------------------------|--------|---------------|----------------------------------------------|
-| `/api/auth`        | `/register`                  | POST   | None          | Creates new User account                     |
-|                    | `/login`                     | POST   | None          | Returns JWT token                            |
+| `/api/auth`        | `/register`                  | POST   | None          | Creates new User account and sends OTP       |
+|                    | `/login`                     | POST   | None          | Returns JWT token (blocks unverified users)  |
+|                    | `/verify-email`              | POST   | None          | Validates OTP and activates account          |
+|                    | `/forgot-password`           | POST   | None          | Dispatches password reset OTP via email      |
+|                    | `/reset-password`            | POST   | None          | Validates OTP and updates password           |
 |                    | `/me`                        | GET    | Any matched   | Returns current logged-in user profile       |
 | `/api/profiles`    | `/student` or `/owner`       | PUT    | Student/Owner | Updates respective profile details           |
-|                    | `/notifications`             | GET    | Any           | Get unread messages sent by admin            |
+|                    | `/notifications`             | GET    | Any           | Get unread messages sent by Admin/System     |
 |                    | `/request-deactivation`      | POST   | Any           | Flag account for admin deletion              |
 | `/api/hostels`     | `/`                          | GET    | Student       | Discover active/approved hostels             |
 |                    | `/`                          | POST   | Owner         | Submit new hostel listing                    |
@@ -168,4 +173,5 @@ When preparing to deploy (e.g., Render, Heroku, Vercel for frontend/Railway for 
    - `MONGO_URI` (production MongoDB atlas link)
    - `JWT_SECRET` & `JWT_EXPIRE`
    - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+   - `EMAIL_SERVICE`, `EMAIL_USER`, `EMAIL_PASS` (for OTP delivery)
 2. **CORS Configuration**: Change `server.js` cors options to only allow requests from the live frontend origin rather than `localhost`.
