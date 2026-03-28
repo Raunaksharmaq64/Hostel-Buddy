@@ -205,41 +205,110 @@ const selectedImages = {
   washroomPhotos: []
 }
 
+// Image compression helper
+function compressImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = event => {
+      const img = new Image()
+      img.src = event.target.result
+      img.onload = () => {
+        let width = img.width
+        let height = img.height
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height *= maxWidth / width))
+            width = maxWidth
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width *= maxHeight / height))
+            height = maxHeight
+          }
+        }
+
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, width, height)
+
+        canvas.toBlob(blob => {
+          if (!blob) {
+            reject(new Error('Canvas is empty'))
+            return
+          }
+          const compressedFile = new File([blob], file.name, {
+            type: 'image/jpeg',
+            lastModified: Date.now()
+          })
+          resolve(compressedFile)
+        }, 'image/jpeg', quality)
+      }
+      img.onerror = error => reject(error)
+    }
+    reader.onerror = error => reject(error)
+  })
+}
+
 function handleImagePreviews (inputId, previewContainerId, storeKey) {
-  document.getElementById(inputId).addEventListener('change', function (e) {
+  document.getElementById(inputId).addEventListener('change', async function (e) {
     const container = document.getElementById(previewContainerId)
 
     if (this.files) {
-      Array.from(this.files).forEach(file => {
-        // Prevent duplicate files based on name + size
-        if (!selectedImages[storeKey].some(f => f.name === file.name && f.size === file.size)) {
-          selectedImages[storeKey].push(file)
+      // Disable input while processing to prevent duplicate selections
+      this.disabled = true
+      
+      // Keep track of old text for processing UX
+      const fileLabel = this.closest('.form-group') ? this.closest('.form-group').querySelector('label') : null
+      const originalLabelText = fileLabel ? fileLabel.innerText : ''
+      if (fileLabel) fileLabel.innerText = 'Compressing...'
 
-          const reader = new FileReader()
-          reader.onload = function (event) {
-            const wrapper = document.createElement('div')
-            wrapper.className = 'preview-img-wrapper'
+      const filesArray = Array.from(this.files)
+      
+      for (const file of filesArray) {
+        // Prevent duplicate files based on name (size will change after compression)
+        if (!selectedImages[storeKey].some(f => f.name === file.name)) {
+          try {
+            // Compress the image before adding to store
+            const compressedFile = await compressImage(file)
+            selectedImages[storeKey].push(compressedFile)
 
-            const img = document.createElement('img')
-            img.src = event.target.result
+            const reader = new FileReader()
+            reader.onload = function (event) {
+              const wrapper = document.createElement('div')
+              wrapper.className = 'preview-img-wrapper'
 
-            const removeBtn = document.createElement('button')
-            removeBtn.innerHTML = '×'
-            removeBtn.className = 'preview-remove-btn'
+              const img = document.createElement('img')
+              img.src = event.target.result
 
-            removeBtn.onclick = (eventClick) => {
-              eventClick.preventDefault()
-              wrapper.remove()
-              selectedImages[storeKey] = selectedImages[storeKey].filter(f => f !== file)
+              const removeBtn = document.createElement('button')
+              removeBtn.innerHTML = '×'
+              removeBtn.className = 'preview-remove-btn'
+
+              removeBtn.onclick = (eventClick) => {
+                eventClick.preventDefault()
+                wrapper.remove()
+                selectedImages[storeKey] = selectedImages[storeKey].filter(f => f !== compressedFile)
+              }
+
+              wrapper.appendChild(img)
+              wrapper.appendChild(removeBtn)
+              container.appendChild(wrapper)
             }
-
-            wrapper.appendChild(img)
-            wrapper.appendChild(removeBtn)
-            container.appendChild(wrapper)
+            reader.readAsDataURL(compressedFile)
+          } catch (err) {
+            console.error('Error compressing image:', err)
+            showToast('Failed to process image: ' + file.name, 'error')
           }
-          reader.readAsDataURL(file)
         }
-      })
+      }
+      
+      // Restore input and label
+      this.disabled = false
+      if (fileLabel) fileLabel.innerText = originalLabelText
     }
     // Reset file input so same file can be selected again if removed
     this.value = ''
@@ -315,7 +384,13 @@ document.getElementById('hostelForm').addEventListener('submit', async (e) => {
         if (e.lengthComputable) {
           const percent = Math.round((e.loaded / e.total) * 100)
           progressBar.style.width = percent + '%'
-          progressText.textContent = percent + '%'
+          if (percent === 100) {
+            progressText.textContent = '100% - Processing on server... Please wait.'
+            progressBar.style.background = 'var(--warning, #f59e0b)' // Switch color to indicate processing stage
+          } else {
+            progressText.textContent = percent + '%'
+            progressBar.style.background = 'var(--primary)'
+          }
         }
       }
       
