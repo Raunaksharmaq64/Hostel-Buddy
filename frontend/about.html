@@ -36,7 +36,7 @@
             padding: 0.5rem 1.2rem;
             border-radius: 50px;
             font-size: 0.9rem;
-            color: var(--text-main);
+            color: var(--text);
             display: inline-block;
             margin: 0.3rem;
         }
@@ -182,7 +182,7 @@
         <!-- Vision Statement -->
         <section style="text-align: center; margin-top: 8rem; padding: 4rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(16, 185, 129, 0.05)); border-radius: 40px; border: 1px solid var(--glass-border);">
             <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">🚀 Final Vision</h2>
-            <p style="font-size: 1.2rem; color: var(--text-main); margin-bottom: 2rem; max-width: 800px; margin-inline: auto;">
+            <p style="font-size: 1.2rem; color: var(--text); margin-bottom: 2rem; max-width: 800px; margin-inline: auto;">
                 HostelBuddy transforms <b>offline chaos, middlemen, and uncertainty</b> into a <b>digital, verified, and seamless</b> housing experience.
             </p>
             <p style="font-size: 1.4rem; font-weight: 700; color: var(--primary);">
@@ -212,8 +212,12 @@
                 </ul>
             </div>
         </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 HostelBuddy. All rights reserved.</p>
+        </div>
     </footer>
 
+    <script src="js/main.js"></script>
     <script>
         gsap.registerPlugin(ScrollTrigger);
         gsap.from(".hero-title", { y: 50, opacity: 0, duration: 1, ease: "power3.out" });

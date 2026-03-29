@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2. Load Initial Data
   loadProfileDetails()
   searchHostels()
+  setupFeedbackForm()
 })
 
 // Tab Navigation Logic
@@ -447,6 +448,8 @@ window.openBookingModal = function (id, name) {
   document.getElementById('bookingHostelName').textContent = name
   document.getElementById('bookingMessage').dataset.hostelId = id
   const modal = document.getElementById('bookingModal')
+  // OVERRIDE default modal-overlay z-index (2100) and push OVER hostelDetailModal
+  modal.style.zIndex = '3000';
   modal.classList.add('active')
 }
 
@@ -671,25 +674,28 @@ window.deleteEnquiry = async function (id) {
 }
 
 // ---- PLATFORM FEEDBACK LOGIC ----
-document.getElementById('feedbackForm')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const btn = e.target.querySelector('button');
-  btn.textContent = 'Submitting...';
-  
-  const rating = document.getElementById('feedbackRating').value;
-  const comment = document.getElementById('feedbackComment').value.trim();
-  
-  try {
-    await fetchAPI('/feedback/submit', 'POST', { rating: Number(rating), comment });
-    showToast('Thank you! Your feedback has been submitted for review.', 'success');
-    document.getElementById('feedbackComment').value = '';
-    document.getElementById('feedbackRating').value = '5';
-  } catch (err) {
-    showToast(err.message, 'error');
-  } finally {
-    btn.textContent = 'Submit Feedback';
-  }
-});
+function setupFeedbackForm() {
+    document.getElementById('feedbackForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      const originalText = btn.textContent;
+      btn.textContent = 'Submitting...';
+      
+      const rating = document.getElementById('feedbackRating').value;
+      const comment = document.getElementById('feedbackComment').value.trim();
+      
+      try {
+        await fetchAPI('/feedback/submit', 'POST', { rating: Number(rating), comment });
+        showToast('Thank you! Your feedback has been submitted for review.', 'success');
+        document.getElementById('feedbackComment').value = '';
+        document.getElementById('feedbackRating').value = '5';
+      } catch (err) {
+        showToast(err.message === 'Failed to fetch' ? 'Unable to reach server. Please try again.' : err.message, 'error');
+      } finally {
+        btn.textContent = originalText;
+      }
+    });
+}
 
 async function loadCommunityFeedbacks() {
   const container = document.getElementById('communityFeedbacksContainer');

@@ -184,12 +184,23 @@ exports.requestDeactivation = async (req, res) => {
 // @access  Private (Owner/Student)
 exports.getNotifications = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select('notifications');
-    if (!user) {
+    const thirtySixHoursAgo = new Date(Date.now() - 36 * 60 * 60 * 1000);
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      {
+        $pull: {
+          notifications: { createdAt: { $lt: thirtySixHoursAgo } }
+        }
+      },
+      { new: true, select: 'notifications' }
+    );
+
+    if (!updatedUser) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
     // Sort notifications by date (newest first)
-    const sortedNotifications = user.notifications.sort((a, b) => b.createdAt - a.createdAt);
+    const sortedNotifications = updatedUser.notifications.sort((a, b) => b.createdAt - a.createdAt);
     res.status(200).json({ success: true, data: sortedNotifications });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });

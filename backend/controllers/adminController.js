@@ -160,8 +160,16 @@ exports.approveVerification = async (req, res) => {
 
     user = await User.findByIdAndUpdate(
       req.params.id,
-      { $set: { verificationStatus: status, isVerified: status === 'verified' } },
-      { returnDocument: 'after' }
+      { 
+        $set: { verificationStatus: status, isVerified: status === 'verified' },
+        $push: {
+          notifications: {
+            message: `Your account verification has been ${status}.`,
+            type: status === 'verified' ? 'success' : 'warning'
+          }
+        }
+      },
+      { new: true }
     );
 
     // Optionally update all their hostels to verified as well
@@ -170,12 +178,6 @@ exports.approveVerification = async (req, res) => {
     } else {
         await Hostel.updateMany({ ownerId: user._id }, { $set: { isVerified: false } });
     }
-
-    user.notifications.push({
-      message: `Your account verification has been ${status}.`,
-      type: status === 'verified' ? 'success' : 'warning'
-    });
-    await user.save();
 
     res.status(200).json({ success: true, data: user });
   } catch (error) {

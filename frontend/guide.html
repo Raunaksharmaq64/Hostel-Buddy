@@ -32,10 +32,10 @@
         .step-content h4 {
             font-size: 1.2rem;
             margin-bottom: 0.5rem;
-            color: var(--text-main);
+            color: var(--text);
         }
         .step-content p {
-            color: var(--text-muted);
+            color: var(--text);
             font-size: 0.95rem;
             line-height: 1.6;
         }
@@ -233,9 +233,9 @@
         </div>
     </footer>
 
+    <script src="js/main.js"></script>
     <script>
         gsap.from(".hero-title", { y: 50, opacity: 0, duration: 1, ease: "power3.out" });
-        gsap.from(".guide-step", { x: -30, opacity: 0, duration: 0.8, stagger: 0.1, ease: "power3.out", scrollTrigger: ".guide-section" });
     </script>
 </body>
 </html>

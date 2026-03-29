@@ -23,6 +23,7 @@
             margin-bottom: 1.2rem;
             background: linear-gradient(45deg, var(--primary), #818cf8, #10b981);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 800;
         }
@@ -122,8 +123,8 @@
 
     <main class="safety-container">
         <div class="safety-header">
-            <h1>🛡️ Safety <span style="color: #fff;">Guidelines</span></h1>
-            <p style="font-size: 1.3rem; color: #94a3b8; max-width: 700px; margin: 0 auto;">Your safety is our priority. HostelBuddy is designed for security, but collective awareness is key.</p>
+            <h1>🛡️ Safety <span style="color: var(--text);">Guidelines</span></h1>
+            <p style="font-size: 1.3rem; color: var(--text-muted); max-width: 700px; margin: 0 auto;">Your safety is our priority. HostelBuddy is designed for security, but collective awareness is key.</p>
         </div>
 
         <div class="safety-grid">
@@ -207,9 +208,9 @@
 
         <section class="safety-footer-box reveal">
             <h3 style="color: #fb7185; justify-content: center; font-size: 1.5rem;">⚠️ Important Disclaimer</h3>
-            <p style="color: #94a3b8; line-height: 1.8; margin-bottom: 2rem; max-width: 800px; margin: 0 auto 2rem;">
+            <p style="color: var(--text-muted); line-height: 1.8; margin-bottom: 2rem; max-width: 800px; margin: 0 auto 2rem;">
                 HostelBuddy acts as a platform to connect students and owners. We do NOT physically verify every property daily, handle payments, or guarantee user behavior.
-                <b>Final decisions must be made carefully by the users.</b>
+                <b style="color: var(--text);">Final decisions must be made carefully by the users.</b>
             </p>
             
             <div style="font-weight: 700; font-size: 1.2rem; color: #fff; margin-bottom: 2.5rem; display: flex; flex-direction: column; gap: 10px;">
@@ -242,8 +243,12 @@
                 </ul>
             </div>
         </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 HostelBuddy. All rights reserved.</p>
+        </div>
     </footer>
 
+    <script src="js/main.js"></script>
     <script>
         gsap.registerPlugin(ScrollTrigger);
 

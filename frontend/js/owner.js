@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 2. Load Initial Data
   loadDashboardStats()
+  setupFeedbackForm()
 })
 
 function updateSidebarAvatar(user) {
@@ -799,25 +800,29 @@ window.submitDeactivationRequest = async function () {
 }
 
 // ---- PLATFORM FEEDBACK LOGIC ----
-document.getElementById('feedbackForm')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const btn = e.target.querySelector('button');
-  btn.textContent = 'Submitting...';
-  
-  const rating = document.getElementById('feedbackRating').value;
-  const comment = document.getElementById('feedbackComment').value.trim();
-  
-  try {
-    await fetchAPI('/feedback/submit', 'POST', { rating: Number(rating), comment });
-    showToast('Thank you! Your feedback has been submitted for review.', 'success');
-    document.getElementById('feedbackComment').value = '';
-    document.getElementById('feedbackRating').value = '5';
-  } catch (err) {
-    showToast(err.message, 'error');
-  } finally {
-    btn.textContent = 'Submit Feedback';
-  }
-});
+// ---- PLATFORM FEEDBACK LOGIC ----
+function setupFeedbackForm() {
+    document.getElementById('feedbackForm')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      const originalText = btn.textContent;
+      btn.textContent = 'Submitting...';
+      
+      const rating = document.getElementById('feedbackRating').value;
+      const comment = document.getElementById('feedbackComment').value.trim();
+      
+      try {
+        await fetchAPI('/feedback/submit', 'POST', { rating: Number(rating), comment });
+        showToast('Thank you! Your feedback has been submitted for review.', 'success');
+        document.getElementById('feedbackComment').value = '';
+        document.getElementById('feedbackRating').value = '5';
+      } catch (err) {
+        showToast(err.message === 'Failed to fetch' ? 'Unable to reach server. Please try again.' : err.message, 'error');
+      } finally {
+        btn.textContent = originalText;
+      }
+    });
+}
 
 async function loadCommunityFeedbacks() {
   const container = document.getElementById('communityFeedbacksContainer');

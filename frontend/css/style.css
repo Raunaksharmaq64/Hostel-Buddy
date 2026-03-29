@@ -163,7 +163,7 @@
   box-sizing: border-box;
 }
 
-html { scroll-behavior: smooth; font-size: 16px; overflow-x: hidden; }
+html { scroll-behavior: smooth; font-size: 16px; overflow-x: hidden; width: 100%; max-width: 100%; }
 
 body {
   font-family: var(--font-body);
@@ -171,6 +171,8 @@ body {
   color: var(--text);
   line-height: 1.6;
   overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -1654,7 +1656,7 @@ h1,h2,h3,h4,h5,h6 {
 .modal-header {
   padding: 1.5rem 2rem; border-bottom: 1px solid var(--border);
   display: flex; justify-content: space-between; align-items: center;
-  position: sticky; top: 0; background: var(--surface); z-index: 20;
+  position: sticky; top: 0; background: var(--surface); z-index: 1050;
   border-top-left-radius: var(--radius-xl); border-top-right-radius: var(--radius-xl);
   box-shadow: 0 4px 10px rgba(0,0,0,0.03);
 }
@@ -1663,7 +1665,7 @@ h1,h2,h3,h4,h5,h6 {
   background: var(--surface-3); border: none; width: 44px; height: 44px;
   border-radius: 50%; cursor: pointer; color: var(--text-muted); margin-left: 1rem;
   display: flex; align-items: center; justify-content: center; transition: var(--transition);
-  font-size: 1.2rem; flex-shrink: 0; z-index: 30;
+  font-size: 1.2rem; flex-shrink: 0; z-index: 1060;
 }
 .modal-close:hover { background: var(--danger-light); color: var(--danger); transform: rotate(90deg); }
 .modal-body { padding: 2rem; }
@@ -1791,3 +1793,12 @@ h1,h2,h3,h4,h5,h6 {
 .animate-up {
     animation: slideUpFade 0.5s ease forwards;
 }
+
+/* ============================================
+   LAYOUT FIXES
+   ============================================ */
+.footer-bottom {
+    text-align: center;
+    width: 100%;
+}
+

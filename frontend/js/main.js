@@ -105,57 +105,8 @@ window.showToast = function (message, type = 'success') {
   }, 3000)
 }
 
-window.customConfirm = function (message) {
-  return new Promise((resolve) => {
-    const overlay = document.createElement('div')
-    overlay.className = 'modal-overlay'
-    overlay.style.display = 'flex'
-    overlay.style.alignItems = 'center'
-    overlay.style.justifyContent = 'center'
-    overlay.style.zIndex = '9999'
-
-    const modal = document.createElement('div')
-    modal.className = 'card-3d'
-    modal.style.padding = '2rem'
-    modal.style.maxWidth = '400px'
-    modal.style.textAlign = 'center'
-    modal.style.background = 'var(--surface)'
-    modal.style.borderRadius = 'var(--radius-lg)'
-    modal.style.border = '1px solid var(--border)'
-    modal.style.boxShadow = 'var(--shadow-lg)'
-
-    modal.innerHTML = `
-            <h3 style="margin-bottom: 1rem; color: var(--text); font-size: 1.5rem; font-weight: 800;">Confirm Action</h3>
-            <p style="color: var(--text-2); margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.5;">${message}</p>
-            <div style="display: flex; gap: 1rem; justify-content: center;">
-                <button class="btn btn-outline" id="confirmCancelBtn" style="flex: 1;">Cancel</button>
-                <button class="btn btn-primary" id="confirmOkBtn" style="flex: 1;">Confirm</button>
-            </div>
-        `
-
-    overlay.appendChild(modal)
-    document.body.appendChild(overlay)
-
-    gsap.from(modal, { y: 30, opacity: 0, duration: 0.3 })
-
-    const cleanup = () => {
-      gsap.to(overlay, {
-        opacity: 0,
-        duration: 0.3,
-        onComplete: () => overlay.remove()
-      })
-    }
-
-    document.getElementById('confirmCancelBtn').addEventListener('click', () => {
-      cleanup()
-      resolve(false)
-    })
-
-    document.getElementById('confirmOkBtn').addEventListener('click', () => {
-      cleanup()
-      resolve(true)
-    })
-  })
+window.customConfirm = async function (message) {
+  return window.confirm(message);
 }
 
 // ---- DARK MODE LOGIC ----

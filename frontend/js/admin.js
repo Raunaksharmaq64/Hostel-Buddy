@@ -52,10 +52,8 @@ async function loadAnalytics () {
             </div>
         `).join('')
 
-    if (typeof gsap !== 'undefined') {
-      gsap.from('.stat-card-v2', { scale: 0.85, opacity: 0, duration: 0.5, stagger: 0.08, ease: 'back.out(1.5)' })
-    }
-
+    // Removed gsap from stat-card-v2 to guarantee visibility
+    
     // Render Most Viewed
     const popContainer = document.getElementById('mostViewedContainer')
     if (d.mostViewedHostels && d.mostViewedHostels.length > 0) {
@@ -70,9 +68,6 @@ async function loadAnalytics () {
                     </div>
                 </div>
             `).join('')
-      if (typeof gsap !== 'undefined') {
-        gsap.from('#mostViewedContainer .list-item', { y: 20, opacity: 0, duration: 0.4, stagger: 0.1 })
-      }
     } else {
       popContainer.innerHTML = '<div class="panel" style="text-align:center;color:var(--text-muted);padding:2rem;">No property data available.</div>'
     }
@@ -131,8 +126,13 @@ async function loadVerifications () {
 }
 
 window.handleVerification = async function (id, status) {
-  const isConfirmed = await customConfirm(`Are you sure you want to mark this request as ${status}?`)
-  if (!isConfirmed) return
+  console.log('handleVerification triggered for:', id, status);
+  const isConfirmed = await customConfirm(`Are you sure you want to mark this request as ${status}?`);
+  if (!isConfirmed) {
+    console.log('Verification cancelled by user');
+    return;
+  }
+  console.log('Verification confirmed, sending API request...');
   try {
     await fetchAPI(`/admin/verifications/${id}`, 'PUT', { status })
     showToast(`Request marked as ${status}.`, 'success')

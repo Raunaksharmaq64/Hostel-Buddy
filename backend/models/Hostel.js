@@ -45,11 +45,10 @@ const hostelSchema = new mongoose.Schema({
   
   // Admin monitoring
   isApproved: { type: Boolean, default: false },
-  isVerified: { type: Boolean, default: false },
-  views: { type: Number, default: 0 },
+  isVerified: { type: Boolean, default: false }, // Syncs with Owner's verification
   rating: { type: Number, default: 0 },
-
-  createdAt: { type: Date, default: Date.now }
+  views: { type: Number, default: 0 },
+  createdAt: { type: Date, default: Date.now },
 });
 
 module.exports = mongoose.model('Hostel', hostelSchema);
