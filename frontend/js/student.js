@@ -43,6 +43,13 @@ async function loadProfileDetails () {
     const res = await fetchAPI('/auth/me')
     const user = res.data
 
+    if (user.hasUnreadPlatformUpdates && document.getElementById('megaphoneIcon')) {
+      const icon = document.getElementById('megaphoneIcon');
+      if (!document.getElementById('updatesDot')) {
+        icon.innerHTML += '<span id="updatesDot" style="position:absolute; top:4px; right:4px; width:8px; height:8px; background:var(--danger, red); border-radius:50%; box-shadow:0 0 4px var(--danger, red);"></span>';
+      }
+    }
+
     document.getElementById('profileName').value = user.name || ''
     document.getElementById('profilePhone').value = user.phone || ''
     document.getElementById('collegeName').value = user.collegeName || ''
@@ -51,6 +58,9 @@ async function loadProfileDetails () {
     if (user.profilePhoto) {
       document.getElementById('profilePreview').src = user.profilePhoto
     }
+    
+    // Load Notifications
+    loadNotifications()
   } catch (err) {
     console.error(err)
   }
@@ -718,5 +728,102 @@ async function loadCommunityFeedbacks() {
     `).join('');
   } catch (err) {
     container.innerHTML = `<p style="color:var(--danger)">Failed to load feedbacks.</p>`;
+  }
+}
+
+// ---- NOTIFICATIONS LOGIC ----
+async function loadNotifications () {
+  const container = document.getElementById('notificationsContainer')
+  if (!container) return
+  try {
+    const res = await fetchAPI('/profiles/notifications')
+    const notifications = res.data
+
+    const clearBtn = document.getElementById('clearNotifBtn')
+    if (clearBtn) clearBtn.style.display = notifications.length > 0 ? 'inline-block' : 'none'
+
+    if (notifications.length === 0) {
+      container.innerHTML = '<p class="text-muted">No notifications yet.</p>'
+      return
+    }
+
+    container.innerHTML = notifications.map(n => `
+            <div class="notif-item ${n.type}">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem;">
+                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">${new Date(n.createdAt).toLocaleString()}</span>
+                    ${!n.isRead ? '<span style="background: var(--primary); width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 5px var(--primary)"></span>' : ''}
+                </div>
+                <p style="font-size: 0.95rem; color: var(--text-2); font-weight: 500; line-height: 1.5;">${n.message}</p>
+            </div>
+        `).join('')
+
+    // Mark as read after a short delay
+    setTimeout(markNotificationsRead, 3000)
+  } catch (err) {
+    console.error('Failed to load notifications:', err)
+  }
+}
+
+async function markNotificationsRead () {
+  try {
+    await fetchAPI('/profiles/notifications/read', 'PUT')
+  } catch (err) {
+    console.error('Failed to mark notifications read:', err)
+  }
+}
+
+window.clearNotifications = async function () {
+  const isConfirmed = await customConfirm('Are you sure you want to clear all your notifications?')
+  if (!isConfirmed) return
+
+  try {
+    await fetchAPI('/profiles/notifications', 'DELETE')
+    showToast('Notifications cleared successfully.', 'success')
+    loadNotifications()
+  } catch (err) {
+    showToast(err.message, 'error')
+  }
+}
+
+// ---- PLATFORM UPDATES ----
+window.openPlatformUpdatesModal = function () {
+  document.getElementById('updatesModal').classList.add('active')
+  loadPlatformUpdates()
+
+  const dot = document.getElementById('updatesDot');
+  if (dot) dot.remove();
+  fetchAPI('/profiles/updates/read', 'PUT').catch(e => console.error(e));
+}
+
+window.closePlatformUpdatesModal = function () {
+  document.getElementById('updatesModal').classList.remove('active')
+}
+
+async function loadPlatformUpdates() {
+  const container = document.getElementById('platformUpdatesContainer')
+  if (!container) return
+  container.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="spinner"></div></div>'
+
+  try {
+    const res = await fetchAPI('/profiles/updates')
+    const updates = res.data
+
+    if (updates.length === 0) {
+      container.innerHTML = '<div class="panel" style="text-align:center;color:var(--text-muted);padding:2.5rem">No new platform updates.</div>'
+      return
+    }
+
+    container.innerHTML = updates.map(u => `
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem; border-left:4px solid var(--primary)">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <h4 style="font-size:1.05rem; font-weight:700; margin:0; color:var(--text)">${u.title}</h4>
+                    <span style="font-size:0.75rem; color:var(--text-muted); white-space:nowrap; margin-left:1rem;">${new Date(u.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div style="font-size:0.9rem; color:var(--text-2); margin-top:0.6rem; white-space:pre-wrap; line-height:1.5">${u.message}</div>
+            </div>
+        `).join('')
+  } catch (err) {
+    console.error('Failed to load updates:', err)
+    container.innerHTML = '<p style="color:var(--danger)">Failed to load updates.</p>'
   }
 }

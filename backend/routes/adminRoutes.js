@@ -11,7 +11,10 @@ const {
   respondToEnquiry,
   getDeactivationRequests,
   handleDeactivationRequest,
-  notifyOwner
+  notifyOwner,
+  createPlatformUpdate,
+  getPlatformUpdates,
+  deletePlatformUpdate
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -46,5 +49,10 @@ router.put('/deactivations/:id', handleDeactivationRequest);
 
 // Notification
 router.post('/notify-owner/:id', notifyOwner);
+
+// Platform Updates
+router.post('/updates', createPlatformUpdate);
+router.get('/updates', getPlatformUpdates);
+router.delete('/updates/:id', deletePlatformUpdate);
 
 module.exports = router;

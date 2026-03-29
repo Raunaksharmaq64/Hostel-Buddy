@@ -24,6 +24,7 @@ function switchTab (tabId) {
   if (tabId === 'reviews') loadReviews()
   if (tabId === 'system-requests') loadDeactivations()
   if (tabId === 'platform-feedback') loadPlatformFeedbacks()
+  if (tabId === 'platform-updates') loadPlatformUpdates()
 }
 
 // Spinner helper
@@ -541,3 +542,82 @@ window.submitNotification = async function () {
     showToast(err.message, 'error')
   }
 }
+
+// ---- PLATFORM UPDATES MANAGEMENT ----
+async function loadPlatformUpdates() {
+  const container = document.getElementById('platformUpdatesListContainer');
+  if (!container) return;
+  container.innerHTML = spinner;
+
+  try {
+    const res = await fetchAPI('/admin/updates');
+    const updates = res.data;
+
+    if (updates.length === 0) {
+      container.innerHTML = '<div class="panel" style="text-align:center;color:var(--text-muted);padding:2.5rem">No platform updates created yet.</div>';
+      return;
+    }
+
+    container.innerHTML = updates.map(u => `
+      <div class="list-item" style="flex-direction:column;align-items:stretch;border-left-color:var(--primary)">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem">
+              <h4 style="font-size:1.05rem;font-weight:700;">${u.title}</h4>
+              <span class="badge-v2 badge-info" style="font-size:0.75rem">Target: ${u.targetRole}</span>
+          </div>
+
+          <div class="msg-bubble" style="margin-top:1rem;background:var(--surface-2);white-space:pre-wrap;">${u.message}</div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem;flex-wrap:wrap;gap:1rem;">
+              <div style="font-size:0.8rem;color:var(--text-light)">
+                  Published: ${new Date(u.createdAt).toLocaleString()}
+              </div>
+              <button class="btn btn-sm btn-outline" style="border-color:var(--danger);color:var(--danger)" onclick="deletePlatformUpdate('${u._id}')">Delete Update</button>
+          </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('loadPlatformUpdates Error:', err);
+    container.innerHTML = '<p style="color:var(--danger)">Failed to load platform updates.</p>';
+  }
+}
+
+window.deletePlatformUpdate = async function (id) {
+  const isConfirmed = await customConfirm('Are you sure you want to delete this update? It will be removed from all user dashboards.');
+  if (!isConfirmed) return;
+  try {
+    await fetchAPI(`/admin/updates/${id}`, 'DELETE');
+    showToast('Update deleted successfully.', 'success');
+    loadPlatformUpdates();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createUpdateForm = document.getElementById('createUpdateForm');
+    if (createUpdateForm) {
+        createUpdateForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = createUpdateForm.querySelector('button[type="submit"]');
+            const originalText = btn.textContent;
+            btn.textContent = 'Broadcasting...';
+            btn.disabled = true;
+
+            const title = document.getElementById('updateTitle').value;
+            const message = document.getElementById('updateMessage').value;
+            const targetRole = document.getElementById('updateRole').value;
+
+            try {
+                await fetchAPI('/admin/updates', 'POST', { title, message, targetRole });
+                showToast('Platform update broadcast successfully!', 'success');
+                createUpdateForm.reset();
+                loadPlatformUpdates();
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+    }
+});

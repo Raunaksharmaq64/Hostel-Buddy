@@ -76,6 +76,10 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                     Platform Feedbacks
                 </button>
+                <button class="sidebar-item" id="nav-platform-updates" onclick="switchTab('platform-updates')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Platform Updates
+                </button>
                 <div class="sidebar-section-label" style="margin-top:1rem">Links</div>
                 <a href="guide.html" class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>User Guide</a>
                 <a href="safety.html" class="sidebar-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Safety</a>
@@ -218,6 +222,50 @@
                 </div>
             </div>
 
+            <!-- Platform Updates Tab -->
+            <div id="platform-updates" class="tab-content">
+                <div class="dash-topbar" style="display:flex; justify-content:space-between; align-items:flex-start">
+                    <div>
+                        <div class="dash-title">Platform Updates</div>
+                        <div class="dash-sub">Broadcast new features and announcements to Students and Owners.</div>
+                    </div>
+                </div>
+                
+                <div style="display:grid;grid-template-columns:minmax(300px, 1fr) 2fr;gap:2rem;align-items:start">
+                    <!-- Create Update Form -->
+                    <div class="panel">
+                        <h3 style="margin-bottom:1rem;font-size:1.1rem">Create New Update</h3>
+                        <form id="createUpdateForm">
+                            <div class="form-group" style="margin-bottom:1rem">
+                                <label class="form-label">Title</label>
+                                <input type="text" id="updateTitle" class="form-input" placeholder="e.g. New UI Released!" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom:1rem">
+                                <label class="form-label">Target Audience</label>
+                                <select id="updateRole" class="form-input" required style="cursor:pointer">
+                                    <option value="All">All Users</option>
+                                    <option value="Student">Students Only</option>
+                                    <option value="Owner">Owners Only</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Message</label>
+                                <textarea id="updateMessage" class="form-input" rows="4" placeholder="Detail the new features..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-full" style="margin-top:1rem">Broadcast Update</button>
+                        </form>
+                    </div>
+
+                    <!-- List of Updates -->
+                    <div>
+                        <h3 style="margin-bottom:1rem;font-size:1.1rem">Past Updates</h3>
+                        <div id="platformUpdatesListContainer" style="display:flex;flex-direction:column;gap:1rem;">
+                            <div style="text-align:center;padding:2rem;color:var(--text-muted)"><div class="spinner"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -274,6 +322,7 @@
 
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="js/main.js?v=5"></script>
     <script src="js/admin.js?v=5"></script>
     <script>

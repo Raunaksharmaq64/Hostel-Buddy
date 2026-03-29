@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Hostel = require('../models/Hostel');
 const Enquiry = require('../models/Enquiry');
+const PlatformUpdate = require('../models/PlatformUpdate');
 
 // @desc    Get all users based on role
 // @route   GET /api/admin/users
@@ -84,6 +85,15 @@ exports.approveHostel = async (req, res) => {
     hostel.isApproved = isApproved;
     await hostel.save();
 
+    const owner = await User.findById(hostel.ownerId);
+    if (owner) {
+      owner.notifications.push({
+        message: `Your hostel listing "${hostel.name}" has been ${isApproved ? 'approved' : 'unapproved'} by the admin.`,
+        type: isApproved ? 'success' : 'warning'
+      });
+      await owner.save();
+    }
+
     res.status(200).json({ success: true, data: hostel });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -161,6 +171,12 @@ exports.approveVerification = async (req, res) => {
         await Hostel.updateMany({ ownerId: user._id }, { $set: { isVerified: false } });
     }
 
+    user.notifications.push({
+      message: `Your account verification has been ${status}.`,
+      type: status === 'verified' ? 'success' : 'warning'
+    });
+    await user.save();
+
     res.status(200).json({ success: true, data: user });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -208,6 +224,15 @@ exports.respondToEnquiry = async (req, res) => {
       }, 
       { returnDocument: 'after' }
     );
+
+    const student = await User.findById(enquiry.studentId);
+    if (student) {
+      student.notifications.push({
+        message: `An admin has responded to an enquiry you made.`,
+        type: 'info'
+      });
+      await student.save();
+    }
 
     res.status(200).json({ success: true, data: enquiry });
   } catch (error) {
@@ -290,6 +315,49 @@ exports.notifyOwner = async (req, res) => {
 
     await user.save();
     res.status(200).json({ success: true, message: 'Notification sent to owner.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Create Platform Update
+// @route   POST /api/admin/updates
+// @access  Private (Admin)
+exports.createPlatformUpdate = async (req, res) => {
+  try {
+    const { title, message, targetRole } = req.body;
+    if (!title || !message) {
+        return res.status(400).json({ success: false, message: 'Title and message are required' });
+    }
+    const update = await PlatformUpdate.create({ title, message, targetRole: targetRole || 'All' });
+    res.status(201).json({ success: true, data: update });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Get Platform Updates
+// @route   GET /api/admin/updates
+// @access  Private (Admin)
+exports.getPlatformUpdates = async (req, res) => {
+  try {
+    const updates = await PlatformUpdate.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, count: updates.length, data: updates });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Delete Platform Update
+// @route   DELETE /api/admin/updates/:id
+// @access  Private (Admin)
+exports.deletePlatformUpdate = async (req, res) => {
+  try {
+    const update = await PlatformUpdate.findByIdAndDelete(req.params.id);
+    if (!update) {
+      return res.status(404).json({ success: false, message: 'Update not found' });
+    }
+    res.status(200).json({ success: true, data: {} });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

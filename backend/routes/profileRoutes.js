@@ -6,7 +6,9 @@ const {
   requestDeactivation, 
   getNotifications, 
   markNotificationsRead,
-  clearNotifications
+  clearNotifications,
+  getPlatformUpdates,
+  markPlatformUpdatesRead
 } = require('../controllers/profileController');
 const { protect, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -22,6 +24,10 @@ router.post('/request-deactivation', protect, requestDeactivation);
 router.get('/notifications', protect, getNotifications);
 router.put('/notifications/read', protect, markNotificationsRead);
 router.delete('/notifications', protect, clearNotifications);
+
+// Platform Updates
+router.get('/updates', protect, getPlatformUpdates);
+router.put('/updates/read', protect, markPlatformUpdatesRead);
 
 module.exports = router;
 

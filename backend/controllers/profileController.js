@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const PlatformUpdate = require('../models/PlatformUpdate');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
 
@@ -224,6 +225,42 @@ exports.clearNotifications = async (req, res) => {
     await user.save();
 
     res.status(200).json({ success: true, message: 'Notifications cleared successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Get Platform Updates for User
+// @route   GET /api/profiles/updates
+// @access  Private
+exports.getPlatformUpdates = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    // Fetch updates that match 'All' or the user's specific role
+    const updates = await PlatformUpdate.find({ 
+      targetRole: { $in: ['All', user.role] } 
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, count: updates.length, data: updates });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Mark Platform Updates as Read
+// @route   PUT /api/profiles/updates/read
+// @access  Private
+exports.markPlatformUpdatesRead = async (req, res) => {
+  try {
+    await User.updateOne(
+      { _id: req.user.id },
+      { $set: { lastReadPlatformUpdate: Date.now() } }
+    );
+    res.status(200).json({ success: true, message: 'Platform updates marked as read' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

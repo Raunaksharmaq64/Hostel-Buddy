@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const PlatformUpdate = require('../models/PlatformUpdate');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail');
 
@@ -126,9 +127,17 @@ exports.login = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
+    
+    // Check for unread platform updates
+    const lastUpdate = await PlatformUpdate.findOne({ targetRole: { $in: ['All', user.role] } }).sort({ createdAt: -1 });
+    let hasUnreadPlatformUpdates = false;
+    if (lastUpdate) {
+      hasUnreadPlatformUpdates = !user.lastReadPlatformUpdate || user.lastReadPlatformUpdate < lastUpdate.createdAt;
+    }
+
     res.status(200).json({
       success: true,
-      data: user
+      data: { ...user.toObject(), hasUnreadPlatformUpdates }
     });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
