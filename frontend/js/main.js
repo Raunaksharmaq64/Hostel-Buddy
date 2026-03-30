@@ -105,8 +105,74 @@ window.showToast = function (message, type = 'success') {
   }, 3000)
 }
 
-window.customConfirm = async function (message) {
-  return window.confirm(message);
+window.customConfirm = function (message) {
+  return new Promise((resolve) => {
+    // Check if modal already exists and clean it up to prevent duplicates
+    const existing = document.getElementById('customConfirmOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div')
+    overlay.id = 'customConfirmOverlay'
+    overlay.className = 'modal-overlay'
+    overlay.style.display = 'flex'
+    overlay.style.alignItems = 'center'
+    overlay.style.justifyContent = 'center'
+    overlay.style.zIndex = '9999'
+
+    const modal = document.createElement('div')
+    modal.className = 'card-3d'
+    modal.style.padding = '2rem'
+    modal.style.maxWidth = '400px'
+    modal.style.textAlign = 'center'
+    modal.style.background = 'var(--surface)'
+    modal.style.borderRadius = 'var(--radius-xl)'
+    modal.style.border = '1px solid rgba(0,0,0,0.08)'
+    modal.style.boxShadow = '0 10px 40px rgba(0,0,0,0.1)'
+    modal.style.transform = 'translateY(20px) scale(0.95)'
+    modal.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+
+    modal.innerHTML = `
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⚠️</div>
+            <h3 style="margin-bottom: 0.75rem; color: var(--text); font-size: 1.4rem; font-weight: 800;">Confirm Action</h3>
+            <p style="color: var(--text-2); margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.5;">${message}</p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button class="btn btn-outline" id="confirmCancelBtn" style="flex: 1; border-radius: var(--radius-md);">Cancel</button>
+                <button class="btn btn-primary" id="confirmOkBtn" style="flex: 1; border-radius: var(--radius-md);">Continue</button>
+            </div>
+        `
+
+    overlay.appendChild(modal)
+    document.body.appendChild(overlay)
+
+    // Trigger animations via requestAnimationFrame to ensure CSS transitions fire
+    requestAnimationFrame(() => {
+        overlay.classList.add('active');
+        modal.style.transform = 'translateY(0) scale(1)';
+    });
+
+    const cleanup = () => {
+      overlay.classList.remove('active');
+      modal.style.transform = 'translateY(20px) scale(0.95)';
+      setTimeout(() => overlay.remove(), 300);
+    }
+
+    const cancelBtn = overlay.querySelector('#confirmCancelBtn');
+    const okBtn = overlay.querySelector('#confirmOkBtn');
+
+    if(cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+          cleanup()
+          resolve(false)
+        })
+    }
+
+    if(okBtn) {
+        okBtn.addEventListener('click', () => {
+          cleanup()
+          resolve(true)
+        })
+    }
+  })
 }
 
 // ---- DARK MODE LOGIC ----

@@ -29,3 +29,9 @@ Thumbs.db
 # Project specific
 backend/uploads/
 frontend/uploads/
+
+# Agent instructions
+AGENTS.md
+
+# Testing files
+tmp-test-delete.js

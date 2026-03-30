@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadProfileDetails()
   searchHostels()
   setupFeedbackForm()
+  checkUnreadNotifications() // Check for unread admin notifications for sidebar dot
 })
 
 // Tab Navigation Logic
@@ -25,7 +26,14 @@ function switchTab (tabId) {
   if (tabId === 'discover') searchHostels()
   if (tabId === 'hostels') loadAllHostels()
   if (tabId === 'enquiries') loadEnquiries()
-  if (tabId === 'profile') loadProfileDetails()
+  if (tabId === 'profile') {
+      loadProfileDetails()
+      loadNotifications() // Load and auto-read only when profile tab is opened
+      
+      // Clear sidebar dot if user clicks profile tab
+      const profileDot = document.getElementById('profileDot');
+      if (profileDot) profileDot.remove();
+  }
   if (tabId === 'feedback') loadCommunityFeedbacks()
 }
 
@@ -47,7 +55,15 @@ async function loadProfileDetails () {
     if (user.hasUnreadPlatformUpdates && document.getElementById('megaphoneIcon')) {
       const icon = document.getElementById('megaphoneIcon');
       if (!document.getElementById('updatesDot')) {
-        icon.innerHTML += '<span id="updatesDot" style="position:absolute; top:4px; right:4px; width:8px; height:8px; background:var(--danger, red); border-radius:50%; box-shadow:0 0 4px var(--danger, red);"></span>';
+        icon.innerHTML += '<span id="updatesDot" style="position:absolute; top:2px; right:2px; width:10px; height:10px; background:var(--danger, red); border-radius:50%; box-shadow:0 0 0 2px var(--surface), 0 0 6px var(--danger, red); animation: pulseDot 2s infinite;"></span>';
+        
+        // Ensure keyframes for pulseDot exist
+        if (!document.getElementById('pulseStyle')) {
+            const style = document.createElement('style');
+            style.id = 'pulseStyle';
+            style.innerHTML = `@keyframes pulseDot { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }`;
+            document.head.appendChild(style);
+        }
       }
     }
 
@@ -61,7 +77,7 @@ async function loadProfileDetails () {
     }
     
     // Load Notifications
-    loadNotifications()
+    // Removed loadNotifications() from here, moved to switchTab('profile') so they aren't auto-read invisibly!
   } catch (err) {
     console.error(err)
   }
@@ -322,30 +338,41 @@ window.openHostelDetails = async function (id) {
     const reviews = reviewsRes.data
 
     document.getElementById('modalHeader').innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; width:100%; padding-right:1rem">
-                <div style="flex: 1; min-width: 280px;">
-                    <h1 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text);">
-                        ${h.name} 
-                        ${h.isVerified ? '<span class="badge-v2 badge-approved" style="font-size:0.75rem;">Verified</span>' : ''}
-                    </h1>
-                    <p style="color: var(--text-muted); font-size: 1rem; margin-bottom: 1rem;">📍 ${h.address}, ${h.city}</p>
-                    
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                        <span class="badge-v2 badge-info" style="text-transform:none">🍽️ Food: ${h.foodAvailability ? 'Available' : 'N/A'}</span>
-                        <span class="badge-v2 badge-info" style="text-transform:none">📞 Owner: ${h.ownerId ? h.ownerId.phone : 'N/A'}</span>
-                    </div>
-                </div>
-                
-                <div style="background: var(--surface-2); padding: 1.25rem; border-radius: var(--radius); border: 1px solid var(--border); text-align: center; min-width: 200px;">
-                    <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">₹${h.monthlyPrice}</div>
-                    <div style="font-size: 0.75rem; color: var(--text-light); font-weight: 700; text-transform:uppercase;">per month</div>
-                    <button class="btn btn-primary" style="width:100%; margin-top:1rem;" onclick="openBookingModal('${h._id}', '${h.name.replace(/'/g, "\\'")}')">Send Enquiry</button>
-                </div>
+            <div style="display: flex; align-items: center; width:100%; gap: 1rem; padding-right:1rem">
+                <h1 style="font-size: 1.35rem; font-weight: 800; color: var(--text); margin:0;">
+                    ${h.name} 
+                    ${h.isVerified ? '<span class="badge-v2 badge-approved" style="font-size:0.7rem; padding: 0.2rem 0.5rem; vertical-align: middle; margin-left: 0.5rem;">Verified</span>' : ''}
+                </h1>
             </div>
         `
 
     document.getElementById('modalBody').innerHTML = `
         <div style="display:flex; flex-direction:column; gap:2.5rem;">
+            
+            <!-- Top Intro Section (Hero) -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; width:100%; margin-top: -1rem;">
+                <div style="flex: 1; min-width: 280px;">
+                    <p style="color: var(--text-muted); font-size: 1.05rem; margin-bottom: 1.25rem;">📍 ${h.address}, ${h.city}</p>
+                    
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <span class="badge-v2 badge-info" style="text-transform:none; font-size: 0.9rem;">🍽️ Food: ${h.foodAvailability ? 'Available' : 'Not Available'}</span>
+                        <span class="badge-v2 badge-info" style="text-transform:none; font-size: 0.9rem;">📞 Contact Options Inside</span>
+                    </div>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(124, 58, 237, 0.05)); padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid rgba(14, 165, 233, 0.2); text-align: center; min-width: 240px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                        <div style="font-size: 2.2rem; font-weight: 900; color: var(--text); font-family: var(--font-head);">₹${h.monthlyPrice}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform:uppercase; text-align: left; line-height: 1.1;">per<br>month</div>
+                    </div>
+                    <button class="btn btn-primary" style="width:100%; margin-top: 1.25rem; font-size: 1.05rem;" onclick="openBookingModal('${h._id}', '${h.name.replace(/'/g, "\\'")}')">
+                        <span style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                            ✉️ Send Enquiry
+                        </span>
+                    </button>
+                    ${h.ownerId ? `<div style="margin-top: 0.85rem; font-size: 0.85rem; color: var(--text-light); font-weight: 600;">Managed by ${h.ownerId.name}</div>` : ''}
+                </div>
+            </div>
             <!-- About Section -->
             <section>
                 <h3 style="font-size:1.2rem; color:var(--text); margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
@@ -829,7 +856,26 @@ async function loadPlatformUpdates() {
             </div>
         `).join('')
   } catch (err) {
-    console.error('Failed to load updates:', err)
     container.innerHTML = '<p style="color:var(--danger)">Failed to load updates.</p>'
+  }
+}
+
+// Initialize check for unread admin notifications for sidebar
+async function checkUnreadNotifications() {
+  try {
+    const res = await fetchAPI('/profiles/notifications');
+    const notifications = res.data || [];
+    const hasUnread = notifications.some(n => !n.isRead);
+
+    if (hasUnread) {
+        const profileTab = document.getElementById('nav-profile');
+        if (profileTab && !document.getElementById('profileDot')) {
+            // Add red dot with pulse
+            profileTab.style.position = 'relative';
+            profileTab.innerHTML += '<span id="profileDot" style="position:absolute; top:8px; right:12px; width:8px; height:8px; background:var(--danger, red); border-radius:50%; box-shadow:0 0 0 2px var(--surface), 0 0 4px var(--danger, red); animation: pulseDot 2s infinite;"></span>';
+        }
+    }
+  } catch (err) {
+      console.error('Failed to check unread admin notifications', err);
   }
 }

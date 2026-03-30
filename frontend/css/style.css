@@ -1802,3 +1802,17 @@ h1,h2,h3,h4,h5,h6 {
     width: 100%;
 }
 
+
+/* Responsive Grid Split */
+.responsive-grid-split {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) 2fr;
+  gap: 2rem;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .responsive-grid-split {
+    grid-template-columns: 1fr;
+  }
+}
+
