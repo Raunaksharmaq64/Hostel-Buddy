@@ -17,7 +17,12 @@ exports.createEnquiry = async (req, res) => {
       studentId: req.user.id,
       ownerId: hostel.ownerId,
       hostelId: hostel._id,
-      message
+      message,
+      messages: [{
+        senderId: req.user.id,
+        senderModel: 'Student',
+        text: message
+      }]
     });
 
     res.status(201).json({ success: true, data: enquiry });
@@ -87,6 +92,49 @@ exports.replyToEnquiry = async (req, res) => {
 
     enquiry.ownerReply = ownerReply;
     enquiry.status = 'Responded';
+    await enquiry.save();
+
+    res.status(200).json({ success: true, data: enquiry });
+  } catch(err) {
+    res.status(500).json({ success: false, message: 'Server error', error: err.message });
+  }
+};
+
+// @desc    Add a message to an enquiry thread
+// @route   POST /api/enquiries/:id/message
+// @access  Private (Student/Owner)
+exports.addMessageToEnquiry = async (req, res) => {
+  try {
+    const { text } = req.body;
+    let enquiry = await Enquiry.findById(req.params.id);
+
+    if (!enquiry) {
+      return res.status(404).json({ success: false, message: 'Enquiry not found' });
+    }
+
+    // Ensure authorized
+    const isStudent = enquiry.studentId.toString() === req.user.id;
+    const isOwner = enquiry.ownerId.toString() === req.user.id;
+
+    if (!isStudent && !isOwner) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    if (!text || text.trim() === '') {
+      return res.status(400).json({ success: false, message: 'Message cannot be empty' });
+    }
+
+    enquiry.messages.push({
+      senderId: req.user.id,
+      senderModel: req.user.role || (isStudent ? 'Student' : 'Owner'),
+      text: text
+    });
+
+    if (isOwner) {
+      enquiry.status = 'Responded';
+      enquiry.ownerReply = text; // Keep legacy field updated for single-reply backward compatibility
+    }
+
     await enquiry.save();
 
     res.status(200).json({ success: true, data: enquiry });

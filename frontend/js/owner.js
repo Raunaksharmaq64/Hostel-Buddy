@@ -625,42 +625,65 @@ async function loadOwnerEnquiries () {
                 </div>
 
                 <!-- Conversation Body -->
-                <div class="chat-body">
-                    <!-- Student's Message -->
-                    <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                        <div class="msg-meta">
-                            <span>👤 ${eq.studentId ? eq.studentId.name : 'Student'}</span> &middot; <span>${sentDate}</span>
-                        </div>
-                        <div class="msg-bubble msg-student">"${eq.message}"</div>
-                    </div>
+                <div class="chat-body" style="max-height: 350px; overflow-y: auto; padding-bottom: 1rem;">
+                    ${(() => {
+                        let messagesHtml = '';
+                        if (eq.messages && eq.messages.length > 0) {
+                            messagesHtml = eq.messages.map(m => {
+                                const isMe = m.senderModel === 'Owner';
+                                const pDate = new Date(m.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour:'2-digit', minute:'2-digit' });
+                                if (isMe) {
+                                    return `
+                                        <div style="display:flex;flex-direction:column;align-items:flex-end;">
+                                            <div class="msg-meta"><span>You</span> &middot; <span>${pDate}</span></div>
+                                            <div class="msg-bubble msg-owner">${m.text}</div>
+                                        </div>
+                                    `;
+                                } else {
+                                    const senderLabel = m.senderModel === 'Admin' ? '✅ Platform' : `👤 ${eq.studentId ? eq.studentId.name : 'Student'}`;
+                                    return `
+                                        <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                                            <div class="msg-meta"><span>${senderLabel}</span> &middot; <span>${pDate}</span></div>
+                                            <div class="msg-bubble msg-student">${m.text}</div>
+                                        </div>
+                                    `;
+                                }
+                            }).join('');
+                        } else {
+                            // legacy fallback
+                            messagesHtml = `
+                                <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                                    <div class="msg-meta"><span>👤 ${eq.studentId ? eq.studentId.name : 'Student'}</span> &middot; <span>${sentDate}</span></div>
+                                    <div class="msg-bubble msg-student">"${eq.message}"</div>
+                                </div>
+                            `;
+                            
+                            if (eq.ownerReply) {
+                                messagesHtml += `
+                                    <div style="display:flex;flex-direction:column;align-items:flex-end;">
+                                        <div class="msg-meta">Your Reply</div>
+                                        <div class="msg-bubble msg-owner">${eq.ownerReply}</div>
+                                    </div>
+                                `;
+                            }
+                        }
+                        
+                        if (eq.adminResponse) {
+                            messagesHtml += `
+                                <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                                    <div class="msg-meta" style="color:var(--success);font-weight:700;text-transform:uppercase">✅ Platform Response</div>
+                                    <div class="msg-bubble msg-admin">${eq.adminResponse}</div>
+                                </div>
+                            `;
+                        }
+                        return messagesHtml;
+                    })()}
+                </div>
 
-                    <!-- Official Admin Response if any -->
-                    ${eq.adminResponse
-? `
-                        <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                            <div class="msg-meta" style="color:var(--success);font-weight:700;text-transform:uppercase">✅ Platform Response</div>
-                            <div class="msg-bubble msg-admin">${eq.adminResponse}</div>
-                        </div>
-                    `
-: ''}
-
-                    <!-- Owner's Reply OR Reply Form -->
-                    ${eq.ownerReply
-? `
-                        <div style="display:flex;flex-direction:column;align-items:flex-end;">
-                            <div class="msg-meta">Your Reply</div>
-                            <div class="msg-bubble msg-owner">${eq.ownerReply}</div>
-                        </div>
-                    `
-: `
-                        <div style="border-top: 1px dashed var(--border); padding-top:1.25rem; display:flex; flex-direction:column; gap:0.75rem;">
-                            <p style="font-size:0.8rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Reply to Student</p>
-                            <textarea id="replyInput_${eq._id}" class="form-textarea" rows="2" placeholder="Write your reply..."></textarea>
-                            <div style="display:flex;justify-content:flex-end;">
-                                <button class="btn btn-primary btn-sm" onclick="submitEnquiryReply('${eq._id}')">Send Reply ➤</button>
-                            </div>
-                        </div>
-                    `}
+                <!-- Chat Input Footer -->
+                <div style="padding: 1rem 1.25rem; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" id="replyInput_${eq._id}" class="form-input" placeholder="Write your reply..." style="flex: 1; padding: 0.6rem; margin-bottom: 0;">
+                    <button class="btn btn-primary btn-sm" style="padding: 0.6rem 1.2rem;" onclick="submitEnquiryReply('${eq._id}')">Send ➤</button>
                 </div>
             </div>
             `
@@ -676,11 +699,14 @@ window.submitEnquiryReply = async function (id) {
   if (!ownerReply) { showToast('Please type a reply.', 'error'); return }
 
   try {
-    await fetchAPI(`/enquiries/${id}/reply`, 'PUT', { ownerReply })
+    if(replyInput) replyInput.disabled = true;
+    await fetchAPI(`/enquiries/${id}/message`, 'POST', { text: ownerReply })
     showToast('Reply sent successfully.', 'success')
     loadOwnerEnquiries()
   } catch (err) {
     showToast(err.message, 'error')
+  } finally {
+    if(replyInput) replyInput.disabled = false;
   }
 }
 

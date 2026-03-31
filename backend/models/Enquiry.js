@@ -6,6 +6,12 @@ const enquirySchema = new mongoose.Schema({
   hostelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hostel', required: true },
   
   message: { type: String, required: true },
+  messages: [{
+    senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    senderModel: { type: String, enum: ['Student', 'Owner', 'Admin'] },
+    text: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now }
+  }],
   status: { 
     type: String, 
     enum: ['Pending', 'Responded', 'Closed'], 

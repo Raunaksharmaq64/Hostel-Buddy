@@ -5,7 +5,8 @@ const {
   getOwnerEnquiries,
   updateEnquiryStatus,
   replyToEnquiry,
-  deleteEnquiry
+  deleteEnquiry,
+  addMessageToEnquiry
 } = require('../controllers/enquiryController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -16,6 +17,7 @@ router.get('/student', protect, authorize('Student'), getStudentEnquiries);
 router.get('/owner', protect, authorize('Owner'), getOwnerEnquiries);
 router.put('/:id/status', protect, authorize('Owner'), updateEnquiryStatus);
 router.put('/:id/reply', protect, authorize('Owner'), replyToEnquiry);
+router.post('/:id/message', protect, addMessageToEnquiry); // both Student and Owner
 router.delete('/:id', protect, deleteEnquiry); // Anyone who owns or created can delete
 
 module.exports = router;

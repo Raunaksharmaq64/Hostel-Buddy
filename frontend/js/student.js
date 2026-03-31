@@ -615,44 +615,74 @@ async function loadEnquiries () {
                 </div>
 
                 <!-- Conversation Body -->
-                <div class="chat-body">
-                    <!-- Student's Message -->
-                    <div style="display:flex;flex-direction:column;align-items:flex-end;">
-                        <div class="msg-meta">
-                            <span>You</span> &middot; <span>${sentDate}</span>
-                        </div>
-                        <div class="msg-bubble msg-owner">"${eq.message}"</div>
-                    </div>
+                <div class="chat-body" style="max-height: 350px; overflow-y: auto; padding-bottom: 1rem;">
+                    ${(() => {
+                        let messagesHtml = '';
+                        if (eq.messages && eq.messages.length > 0) {
+                            messagesHtml = eq.messages.map(m => {
+                                const isMe = m.senderModel === 'Student';
+                                const pDate = new Date(m.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour:'2-digit', minute:'2-digit' });
+                                if (isMe) {
+                                    return `
+                                        <div style="display:flex;flex-direction:column;align-items:flex-end;">
+                                            <div class="msg-meta"><span>You</span> &middot; <span>${pDate}</span></div>
+                                            <div class="msg-bubble msg-owner">${m.text}</div>
+                                        </div>
+                                    `;
+                                } else {
+                                    const senderLabel = m.senderModel === 'Admin' ? '✅ Platform' : '🏠 Host';
+                                    return `
+                                        <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                                            <div class="msg-meta"><span>${senderLabel}</span> &middot; <span>${pDate}</span></div>
+                                            <div class="msg-bubble msg-student">${m.text}</div>
+                                        </div>
+                                    `;
+                                }
+                            }).join('');
+                        } else {
+                            // legacy fallback
+                            messagesHtml = `
+                                <div style="display:flex;flex-direction:column;align-items:flex-end;">
+                                    <div class="msg-meta"><span>You</span> &middot; <span>${sentDate}</span></div>
+                                    <div class="msg-bubble msg-owner">"${eq.message}"</div>
+                                </div>
+                            `;
+                            if (eq.ownerReply) {
+                                messagesHtml += `
+                                    <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                                        <div class="msg-meta"><span>🏠 Owner Reply</span></div>
+                                        <div class="msg-bubble msg-student">${eq.ownerReply}</div>
+                                    </div>
+                                `;
+                            } else {
+                                messagesHtml += `
+                                    <div style="text-align:center;padding:1.25rem;border-radius:var(--radius);background:var(--surface-3);border:1px dashed var(--border);color:var(--text-muted);font-size:0.9rem;">
+                                        ⏳ Waiting for the owner to reply...
+                                    </div>
+                                `;
+                            }
+                        }
+                        
+                        if (eq.adminResponse) {
+                            messagesHtml += `
+                                <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                                    <div class="msg-meta" style="color:var(--success);font-weight:700;text-transform:uppercase">✅ Platform Response</div>
+                                    <div class="msg-bubble msg-admin">${eq.adminResponse}</div>
+                                </div>
+                            `;
+                        }
+                        return messagesHtml;
+                    })()}
+                </div>
 
-                    <!-- Owner's Reply -->
-                    ${eq.ownerReply
-? `
-                        <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                            <div class="msg-meta">
-                                <span>🏠 Owner Reply</span>
-                            </div>
-                            <div class="msg-bubble msg-student">${eq.ownerReply}</div>
-                        </div>
-                    `
-: `
-                        <div style="text-align:center;padding:1.25rem;border-radius:var(--radius);background:var(--surface-3);border:1px dashed var(--border);color:var(--text-muted);font-size:0.9rem;">
-                            ⏳ Waiting for the owner to reply...
-                        </div>
-                    `}
-
-                    <!-- Admin Response -->
-                    ${eq.adminResponse
-? `
-                        <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                            <div class="msg-meta" style="color:var(--success);font-weight:700;text-transform:uppercase">✅ Platform Response</div>
-                            <div class="msg-bubble msg-admin">${eq.adminResponse}</div>
-                        </div>
-                    `
-: ''}
+                <!-- Chat Input Footer -->
+                <div style="padding: 1rem 1.25rem; background: var(--surface); border-top: 1px solid var(--border); display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" id="replyInput_${eq._id}" class="form-input" placeholder="Type a message..." style="flex: 1; padding: 0.6rem; margin-bottom: 0;">
+                    <button class="btn btn-primary btn-sm" style="padding: 0.6rem 1.2rem;" onclick="sendEnquiryMessage('${eq._id}')">Send</button>
                 </div>
 
                 <!-- footer info -->
-                <div style="padding:0.75rem 1.25rem;background:var(--surface-2);border-top:1px solid var(--border);font-size:0.8rem;color:var(--text-muted);display:flex;justify-content:space-between;">
+                <div style="padding:0.6rem 1.25rem;background:var(--surface-2);border-top:1px solid var(--border);font-size:0.8rem;color:var(--text-muted);display:flex;justify-content:space-between;">
                     <span>📞 Owner Contact: <strong>${eq.ownerId ? eq.ownerId.phone : 'N/A'}</strong></span>
                 </div>
             </div>
@@ -664,6 +694,25 @@ async function loadEnquiries () {
 }
 
 // ---- DEACTIVATION LOGIC ----
+
+window.sendEnquiryMessage = async function (id) {
+  const input = document.getElementById(`replyInput_${id}`)
+  const text = input.value.trim()
+
+  if (!text) return
+
+  try {
+    input.disabled = true;
+    await fetchAPI(`/enquiries/${id}/message`, 'POST', { text })
+    input.value = ''
+    loadEnquiries() // reload thread
+  } catch (err) {
+    showToast(err.message, 'error')
+  } finally {
+    input.disabled = false;
+  }
+}
+
 window.openDeactivateModal = function () {
   document.getElementById('deactivateModal').classList.add('active')
 }
