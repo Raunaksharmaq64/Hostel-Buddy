@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Hostel = require('../models/Hostel');
 const Enquiry = require('../models/Enquiry');
+const Notification = require('../models/Notification');
 const PlatformUpdate = require('../models/PlatformUpdate');
 
 // @desc    Get all users based on role
@@ -29,7 +30,7 @@ exports.deleteUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    
+
     // Also delete associated Hostels and Enquiries (Mock cascade delete)
     if (user.role === 'Owner') {
       const ownerHostels = await Hostel.find({ ownerId: user._id }, '_id');
@@ -40,7 +41,7 @@ exports.deleteUser = async (req, res) => {
 
       if (hostelIds.length > 0) {
         await User.updateMany(
-          { role: 'Student' }, 
+          { role: 'Student' },
           { $pull: { savedHostels: { $in: hostelIds } } }
         );
       }
@@ -87,11 +88,11 @@ exports.approveHostel = async (req, res) => {
 
     const owner = await User.findById(hostel.ownerId);
     if (owner) {
-      owner.notifications.push({
+      await Notification.create({
+        recipientId: owner._id,
         message: `Your hostel listing "${hostel.name}" has been ${isApproved ? 'approved' : 'unapproved'} by the admin.`,
         type: isApproved ? 'success' : 'warning'
       });
-      await owner.save();
     }
 
     res.status(200).json({ success: true, data: hostel });
@@ -110,11 +111,11 @@ exports.getAnalytics = async (req, res) => {
     const hostelCount = await Hostel.countDocuments();
     const activeHostelCount = await Hostel.countDocuments({ isApproved: true });
     const enquiryCount = await Enquiry.countDocuments();
-    
+
     const mostViewedHostels = await Hostel.find()
-                                      .sort('-views')
-                                      .limit(5)
-                                      .select('name views');
+      .sort('-views')
+      .limit(5)
+      .select('name views');
 
     res.status(200).json({
       success: true,
@@ -148,9 +149,9 @@ exports.getVerifications = async (req, res) => {
 exports.approveVerification = async (req, res) => {
   try {
     const { status } = req.body; // 'verified' or 'rejected'
-    
+
     if (!['verified', 'rejected'].includes(status)) {
-        return res.status(400).json({ success: false, message: 'Invalid status. Must be "verified" or "rejected".' });
+      return res.status(400).json({ success: false, message: 'Invalid status. Must be "verified" or "rejected".' });
     }
 
     let user = await User.findById(req.params.id);
@@ -160,23 +161,25 @@ exports.approveVerification = async (req, res) => {
 
     user = await User.findByIdAndUpdate(
       req.params.id,
-      { 
-        $set: { verificationStatus: status, isVerified: status === 'verified' },
-        $push: {
-          notifications: {
-            message: `Your account verification has been ${status}.`,
-            type: status === 'verified' ? 'success' : 'warning'
-          }
-        }
+      {
+        $set: { verificationStatus: status, isVerified: status === 'verified' }
       },
       { new: true }
     );
 
+    if (user) {
+      await Notification.create({
+        recipientId: user._id,
+        message: `Your account verification has been ${status}.`,
+        type: status === 'verified' ? 'success' : 'warning'
+      });
+    }
+
     // Optionally update all their hostels to verified as well
     if (status === 'verified') {
-        await Hostel.updateMany({ ownerId: user._id }, { $set: { isVerified: true } });
+      await Hostel.updateMany({ ownerId: user._id }, { $set: { isVerified: true } });
     } else {
-        await Hostel.updateMany({ ownerId: user._id }, { $set: { isVerified: false } });
+      await Hostel.updateMany({ ownerId: user._id }, { $set: { isVerified: false } });
     }
 
     res.status(200).json({ success: true, data: user });
@@ -195,7 +198,7 @@ exports.getAllEnquiries = async (req, res) => {
       .populate('hostelId', 'name address city')
       .populate('ownerId', 'name phone')
       .sort('-createdAt');
-      
+
     res.status(200).json({ success: true, count: enquiries.length, data: enquiries });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -219,21 +222,21 @@ exports.respondToEnquiry = async (req, res) => {
     }
 
     enquiry = await Enquiry.findByIdAndUpdate(
-      req.params.id, 
-      { 
-        adminResponse: responseText, 
-        status: 'Responded' 
-      }, 
+      req.params.id,
+      {
+        adminResponse: responseText,
+        status: 'Responded'
+      },
       { returnDocument: 'after' }
     );
 
     const student = await User.findById(enquiry.studentId);
     if (student) {
-      student.notifications.push({
+      await Notification.create({
+        recipientId: student._id,
         message: `An admin has responded to an enquiry you made.`,
         type: 'info'
       });
-      await student.save();
     }
 
     res.status(200).json({ success: true, data: enquiry });
@@ -277,7 +280,7 @@ exports.handleDeactivationRequest = async (req, res) => {
 
         if (hostelIds.length > 0) {
           await User.updateMany(
-            { role: 'Student' }, 
+            { role: 'Student' },
             { $pull: { savedHostels: { $in: hostelIds } } }
           );
         }
@@ -309,13 +312,11 @@ exports.notifyOwner = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    user.notifications.push({
+    await Notification.create({
+      recipientId: user._id,
       message,
-      type: type || 'warning',
-      createdAt: Date.now()
+      type: type || 'warning'
     });
-
-    await user.save();
     res.status(200).json({ success: true, message: 'Notification sent to owner.' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -329,7 +330,7 @@ exports.createPlatformUpdate = async (req, res) => {
   try {
     const { title, message, targetRole } = req.body;
     if (!title || !message) {
-        return res.status(400).json({ success: false, message: 'Title and message are required' });
+      return res.status(400).json({ success: false, message: 'Title and message are required' });
     }
     const update = await PlatformUpdate.create({ title, message, targetRole: targetRole || 'All' });
     res.status(201).json({ success: true, data: update });

@@ -46,6 +46,12 @@ const userSchema = new mongoose.Schema({
   resetPasswordOtpExpiry: { type: Date },
   isEmailVerified: { type: Boolean, default: false },
   emailVerificationOtp: { type: String },
+  /**
+   * @deprecated 
+   * Notifications are now stored in a separate 'Notification' collection for 
+   * performance and scalability (TTL auto-cleanup).
+   * This field is kept for backward compatibility but is no longer being updated.
+   */
   notifications: [
     {
       message: { type: String, required: true },

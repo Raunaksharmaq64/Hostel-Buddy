@@ -4,7 +4,7 @@ const API_URL = window.location.hostname === 'localhost' || window.location.host
   : '/api'
 
 // Utility to handle API calls
-async function fetchAPI (endpoint, method = 'GET', body = null, isFormData = false) {
+async function fetchAPI(endpoint, method = 'GET', body = null, isFormData = false) {
   const token = localStorage.getItem('token')
   const headers = {}
 
@@ -41,7 +41,7 @@ async function fetchAPI (endpoint, method = 'GET', body = null, isFormData = fal
 }
 
 // Ensure auth redirects
-function checkAuth (roleRequired = null) {
+function checkAuth(roleRequired = null) {
   const token = localStorage.getItem('token')
   const currentUser = JSON.parse(localStorage.getItem('user'))
 
@@ -64,14 +64,14 @@ function checkAuth (roleRequired = null) {
 }
 
 // Handle global logout
-function logout () {
+function logout() {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
   window.location.href = 'login.html'
 }
 
 // Handle Hero Search execution
-function performSearch () {
+function performSearch() {
   const val = document.getElementById('heroSearch').value
   if (val) {
     // Normally we'd redirect to a search page
@@ -146,8 +146,8 @@ window.customConfirm = function (message) {
 
     // Trigger animations via requestAnimationFrame to ensure CSS transitions fire
     requestAnimationFrame(() => {
-        overlay.classList.add('active');
-        modal.style.transform = 'translateY(0) scale(1)';
+      overlay.classList.add('active');
+      modal.style.transform = 'translateY(0) scale(1)';
     });
 
     const cleanup = () => {
@@ -159,31 +159,31 @@ window.customConfirm = function (message) {
     const cancelBtn = overlay.querySelector('#confirmCancelBtn');
     const okBtn = overlay.querySelector('#confirmOkBtn');
 
-    if(cancelBtn) {
-        cancelBtn.addEventListener('click', () => {
-          cleanup()
-          resolve(false)
-        })
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        cleanup()
+        resolve(false)
+      })
     }
 
-    if(okBtn) {
-        okBtn.addEventListener('click', () => {
-          cleanup()
-          resolve(true)
-        })
+    if (okBtn) {
+      okBtn.addEventListener('click', () => {
+        cleanup()
+        resolve(true)
+      })
     }
   })
 }
 
 // ---- DARK MODE LOGIC ----
-function initTheme () {
+function initTheme() {
   const savedTheme = localStorage.getItem('theme')
   if (savedTheme === 'dark') {
     document.documentElement.setAttribute('data-theme', 'dark')
   }
 }
 
-function setupThemeToggle () {
+function setupThemeToggle() {
   const toggles = document.querySelectorAll('.theme-toggle')
   toggles.forEach(btn => {
     btn.addEventListener('click', () => {

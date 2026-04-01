@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const PlatformUpdate = require('../models/PlatformUpdate');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
@@ -132,12 +133,12 @@ exports.requestVerification = async (req, res) => {
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    
+
     // Check required fields before allowing verification request
     if (!user.aadhaarNumber || !user.hostelName || !user.address || !user.city) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Please complete your profile including Aadhaar, Hostel Name, City, and Address before requesting verification.' 
+      return res.status(400).json({
+        success: false,
+        message: 'Please complete your profile including Aadhaar, Hostel Name, City, and Address before requesting verification.'
       });
     }
 
@@ -184,24 +185,11 @@ exports.requestDeactivation = async (req, res) => {
 // @access  Private (Owner/Student)
 exports.getNotifications = async (req, res) => {
   try {
-    const thirtySixHoursAgo = new Date(Date.now() - 36 * 60 * 60 * 1000);
+    const notifications = await Notification.find({ recipientId: req.user.id })
+      .sort({ createdAt: -1 })
+      .limit(50); // Get latest 50 notifications
 
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
-      {
-        $pull: {
-          notifications: { createdAt: { $lt: thirtySixHoursAgo } }
-        }
-      },
-      { new: true, select: 'notifications' }
-    );
-
-    if (!updatedUser) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-    // Sort notifications by date (newest first)
-    const sortedNotifications = updatedUser.notifications.sort((a, b) => b.createdAt - a.createdAt);
-    res.status(200).json({ success: true, data: sortedNotifications });
+    res.status(200).json({ success: true, data: notifications });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -212,9 +200,9 @@ exports.getNotifications = async (req, res) => {
 // @access  Private (Owner/Student)
 exports.markNotificationsRead = async (req, res) => {
   try {
-    await User.updateOne(
-      { _id: req.user.id },
-      { $set: { "notifications.$[].isRead": true } }
+    await Notification.updateMany(
+      { recipientId: req.user.id, isRead: false },
+      { $set: { isRead: true } }
     );
     res.status(200).json({ success: true, message: 'Notifications marked as read' });
   } catch (error) {
@@ -227,14 +215,7 @@ exports.markNotificationsRead = async (req, res) => {
 // @access  Private (Owner/Student)
 exports.clearNotifications = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    user.notifications = []; // Clear array
-    await user.save();
-
+    await Notification.deleteMany({ recipientId: req.user.id });
     res.status(200).json({ success: true, message: 'Notifications cleared successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -250,10 +231,10 @@ exports.getPlatformUpdates = async (req, res) => {
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    
+
     // Fetch updates that match 'All' or the user's specific role
-    const updates = await PlatformUpdate.find({ 
-      targetRole: { $in: ['All', user.role] } 
+    const updates = await PlatformUpdate.find({
+      targetRole: { $in: ['All', user.role] }
     }).sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, count: updates.length, data: updates });

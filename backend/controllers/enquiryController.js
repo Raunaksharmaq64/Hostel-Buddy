@@ -39,7 +39,7 @@ exports.getStudentEnquiries = async (req, res) => {
     const enquiries = await Enquiry.find({ studentId: req.user.id })
       .populate('hostelId', 'name address')
       .populate('ownerId', 'name phone');
-      
+
     res.status(200).json({ success: true, count: enquiries.length, data: enquiries });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -54,16 +54,16 @@ exports.getOwnerEnquiries = async (req, res) => {
     const enquiries = await Enquiry.find({ ownerId: req.user.id })
       .populate('studentId', 'name email phone collegeName')
       .populate('hostelId', 'name');
-      
+
     // Mask student phone number for privacy
     const maskedEnquiries = enquiries.map(enq => {
       const eqObj = enq.toObject();
       if (eqObj.studentId && eqObj.studentId.phone) {
-         const phone = eqObj.studentId.phone;
-         if (phone.length >= 4) {
-             const masked = phone.slice(0, -4).replace(/./g, '*') + phone.slice(-4);
-             eqObj.studentId.phone = masked;
-         }
+        const phone = eqObj.studentId.phone;
+        if (phone.length >= 4) {
+          const masked = phone.slice(0, -4).replace(/./g, '*') + phone.slice(-4);
+          eqObj.studentId.phone = masked;
+        }
       }
       return eqObj;
     });
@@ -95,7 +95,7 @@ exports.replyToEnquiry = async (req, res) => {
     await enquiry.save();
 
     res.status(200).json({ success: true, data: enquiry });
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ success: false, message: 'Server error', error: err.message });
   }
 };
@@ -138,7 +138,7 @@ exports.addMessageToEnquiry = async (req, res) => {
     await enquiry.save();
 
     res.status(200).json({ success: true, data: enquiry });
-  } catch(err) {
+  } catch (err) {
     res.status(500).json({ success: false, message: 'Server error', error: err.message });
   }
 };

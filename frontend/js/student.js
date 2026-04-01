@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 })
 
 // Tab Navigation Logic
-function switchTab (tabId) {
+function switchTab(tabId) {
   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'))
   document.querySelectorAll('.sidebar-item[id^="nav-"]').forEach(item => item.classList.remove('active'))
 
@@ -27,18 +27,18 @@ function switchTab (tabId) {
   if (tabId === 'hostels') loadAllHostels()
   if (tabId === 'enquiries') loadEnquiries()
   if (tabId === 'profile') {
-      loadProfileDetails()
-      loadNotifications() // Load and auto-read only when profile tab is opened
-      
-      // Clear sidebar dot if user clicks profile tab
-      const profileDot = document.getElementById('profileDot');
-      if (profileDot) profileDot.remove();
+    loadProfileDetails()
+    loadNotifications() // Load and auto-read only when profile tab is opened
+
+    // Clear sidebar dot if user clicks profile tab
+    const profileDot = document.getElementById('profileDot');
+    if (profileDot) profileDot.remove();
   }
   if (tabId === 'feedback') loadCommunityFeedbacks()
 }
 
 // Helper for Cloudinary Image Optimization
-function getOptimizedUrl (url, width = 800) {
+function getOptimizedUrl(url, width = 800) {
   if (!url) return ''
   if (url.includes('cloudinary.com') && url.includes('/upload/')) {
     return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`)
@@ -47,7 +47,7 @@ function getOptimizedUrl (url, width = 800) {
 }
 
 // ---- PROFILE LOGIC ----
-async function loadProfileDetails () {
+async function loadProfileDetails() {
   try {
     const res = await fetchAPI('/auth/me')
     const user = res.data
@@ -56,13 +56,13 @@ async function loadProfileDetails () {
       const icon = document.getElementById('megaphoneIcon');
       if (!document.getElementById('updatesDot')) {
         icon.innerHTML += '<span id="updatesDot" style="position:absolute; top:2px; right:2px; width:10px; height:10px; background:var(--danger, red); border-radius:50%; box-shadow:0 0 0 2px var(--surface), 0 0 6px var(--danger, red); animation: pulseDot 2s infinite;"></span>';
-        
+
         // Ensure keyframes for pulseDot exist
         if (!document.getElementById('pulseStyle')) {
-            const style = document.createElement('style');
-            style.id = 'pulseStyle';
-            style.innerHTML = `@keyframes pulseDot { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }`;
-            document.head.appendChild(style);
+          const style = document.createElement('style');
+          style.id = 'pulseStyle';
+          style.innerHTML = `@keyframes pulseDot { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }`;
+          document.head.appendChild(style);
         }
       }
     }
@@ -75,7 +75,7 @@ async function loadProfileDetails () {
     if (user.profilePhoto) {
       document.getElementById('profilePreview').src = user.profilePhoto
     }
-    
+
     // Load Notifications
     // Removed loadNotifications() from here, moved to switchTab('profile') so they aren't auto-read invisibly!
   } catch (err) {
@@ -119,7 +119,7 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
   try {
     const res = await fetchAPI('/profiles/student', 'PUT', formData, true)
     showToast('Profile updated successfully!', 'success')
-    
+
     // Update local storage so avatar persists
     if (res.data) {
       const existingUser = JSON.parse(localStorage.getItem('user'))
@@ -151,7 +151,7 @@ function updateSidebarAvatar(user) {
 
 // ---- HOSTEL DISCOVERY LOGIC ----
 let searchTimeout
-async function searchHostels () {
+async function searchHostels() {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(async () => {
     const query = document.getElementById('searchInput').value
@@ -206,7 +206,7 @@ window.resetFilters = function () {
   searchHostels()
 }
 
-function renderHostels (hostels) {
+function renderHostels(hostels) {
   const container = document.getElementById('hostelsContainer')
 
   if (hostels.length === 0) return
@@ -271,7 +271,7 @@ async function loadAllHostels() {
       `
       return
     }
-    
+
     container.innerHTML = hostels.map(h => `
         <div class="hostel-card">
             <div class="hostel-card-img">
@@ -453,8 +453,8 @@ window.openHostelDetails = async function (id) {
             `).join('')
     }
 
-    const allBuildingPhotos = h.thumbnailImage && (!h.buildingPhotos || !h.buildingPhotos.includes(h.thumbnailImage)) 
-      ? [h.thumbnailImage, ...(h.buildingPhotos || [])] 
+    const allBuildingPhotos = h.thumbnailImage && (!h.buildingPhotos || !h.buildingPhotos.includes(h.thumbnailImage))
+      ? [h.thumbnailImage, ...(h.buildingPhotos || [])]
       : h.buildingPhotos;
 
     renderGrid('galleryBuilding', allBuildingPhotos, 'No building photos available.')
@@ -571,7 +571,7 @@ window.submitEnquiry = async function () {
   }
 }
 
-async function loadEnquiries () {
+async function loadEnquiries() {
   const container = document.getElementById('enquiriesContainer')
   container.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="spinner-v2"></div></div>'
 
@@ -617,62 +617,62 @@ async function loadEnquiries () {
                 <!-- Conversation Body -->
                 <div class="chat-body" style="max-height: 350px; overflow-y: auto; padding-bottom: 1rem;">
                     ${(() => {
-                        let messagesHtml = '';
-                        if (eq.messages && eq.messages.length > 0) {
-                            messagesHtml = eq.messages.map(m => {
-                                const isMe = m.senderModel === 'Student';
-                                const pDate = new Date(m.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour:'2-digit', minute:'2-digit' });
-                                if (isMe) {
-                                    return `
+          let messagesHtml = '';
+          if (eq.messages && eq.messages.length > 0) {
+            messagesHtml = eq.messages.map(m => {
+              const isMe = m.senderModel === 'Student';
+              const pDate = new Date(m.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+              if (isMe) {
+                return `
                                         <div style="display:flex;flex-direction:column;align-items:flex-end;">
                                             <div class="msg-meta"><span>You</span> &middot; <span>${pDate}</span></div>
                                             <div class="msg-bubble msg-owner">${m.text}</div>
                                         </div>
                                     `;
-                                } else {
-                                    const senderLabel = m.senderModel === 'Admin' ? '✅ Platform' : '🏠 Host';
-                                    return `
+              } else {
+                const senderLabel = m.senderModel === 'Admin' ? '✅ Platform' : '🏠 Host';
+                return `
                                         <div style="display:flex;flex-direction:column;align-items:flex-start;">
                                             <div class="msg-meta"><span>${senderLabel}</span> &middot; <span>${pDate}</span></div>
                                             <div class="msg-bubble msg-student">${m.text}</div>
                                         </div>
                                     `;
-                                }
-                            }).join('');
-                        } else {
-                            // legacy fallback
-                            messagesHtml = `
+              }
+            }).join('');
+          } else {
+            // legacy fallback
+            messagesHtml = `
                                 <div style="display:flex;flex-direction:column;align-items:flex-end;">
                                     <div class="msg-meta"><span>You</span> &middot; <span>${sentDate}</span></div>
                                     <div class="msg-bubble msg-owner">"${eq.message}"</div>
                                 </div>
                             `;
-                            if (eq.ownerReply) {
-                                messagesHtml += `
+            if (eq.ownerReply) {
+              messagesHtml += `
                                     <div style="display:flex;flex-direction:column;align-items:flex-start;">
                                         <div class="msg-meta"><span>🏠 Owner Reply</span></div>
                                         <div class="msg-bubble msg-student">${eq.ownerReply}</div>
                                     </div>
                                 `;
-                            } else {
-                                messagesHtml += `
+            } else {
+              messagesHtml += `
                                     <div style="text-align:center;padding:1.25rem;border-radius:var(--radius);background:var(--surface-3);border:1px dashed var(--border);color:var(--text-muted);font-size:0.9rem;">
                                         ⏳ Waiting for the owner to reply...
                                     </div>
                                 `;
-                            }
-                        }
-                        
-                        if (eq.adminResponse) {
-                            messagesHtml += `
+            }
+          }
+
+          if (eq.adminResponse) {
+            messagesHtml += `
                                 <div style="display:flex;flex-direction:column;align-items:flex-start;">
                                     <div class="msg-meta" style="color:var(--success);font-weight:700;text-transform:uppercase">✅ Platform Response</div>
                                     <div class="msg-bubble msg-admin">${eq.adminResponse}</div>
                                 </div>
                             `;
-                        }
-                        return messagesHtml;
-                    })()}
+          }
+          return messagesHtml;
+        })()}
                 </div>
 
                 <!-- Chat Input Footer -->
@@ -751,42 +751,42 @@ window.deleteEnquiry = async function (id) {
 
 // ---- PLATFORM FEEDBACK LOGIC ----
 function setupFeedbackForm() {
-    document.getElementById('feedbackForm')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = e.target.querySelector('button');
-      const originalText = btn.textContent;
-      btn.textContent = 'Submitting...';
-      
-      const rating = document.getElementById('feedbackRating').value;
-      const comment = document.getElementById('feedbackComment').value.trim();
-      
-      try {
-        await fetchAPI('/feedback/submit', 'POST', { rating: Number(rating), comment });
-        showToast('Thank you! Your feedback has been submitted for review.', 'success');
-        document.getElementById('feedbackComment').value = '';
-        document.getElementById('feedbackRating').value = '5';
-      } catch (err) {
-        showToast(err.message === 'Failed to fetch' ? 'Unable to reach server. Please try again.' : err.message, 'error');
-      } finally {
-        btn.textContent = originalText;
-      }
-    });
+  document.getElementById('feedbackForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    const originalText = btn.textContent;
+    btn.textContent = 'Submitting...';
+
+    const rating = document.getElementById('feedbackRating').value;
+    const comment = document.getElementById('feedbackComment').value.trim();
+
+    try {
+      await fetchAPI('/feedback/submit', 'POST', { rating: Number(rating), comment });
+      showToast('Thank you! Your feedback has been submitted for review.', 'success');
+      document.getElementById('feedbackComment').value = '';
+      document.getElementById('feedbackRating').value = '5';
+    } catch (err) {
+      showToast(err.message === 'Failed to fetch' ? 'Unable to reach server. Please try again.' : err.message, 'error');
+    } finally {
+      btn.textContent = originalText;
+    }
+  });
 }
 
 async function loadCommunityFeedbacks() {
   const container = document.getElementById('communityFeedbacksContainer');
   if (!container) return;
   container.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="spinner"></div></div>';
-  
+
   try {
     const res = await fetchAPI('/feedback/public');
     const feedbacks = res.data;
-    
+
     if (feedbacks.length === 0) {
       container.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted);background:var(--surface-2);border-radius:var(--radius);border:1px dashed var(--border);">No community reviews yet. Be the first to share your experience!</div>';
       return;
     }
-    
+
     container.innerHTML = feedbacks.map(f => `
       <div class="list-item" style="flex-direction:column;align-items:stretch;gap:1.25rem">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
@@ -814,7 +814,7 @@ async function loadCommunityFeedbacks() {
 }
 
 // ---- NOTIFICATIONS LOGIC ----
-async function loadNotifications () {
+async function loadNotifications() {
   const container = document.getElementById('notificationsContainer')
   if (!container) return
   try {
@@ -846,7 +846,7 @@ async function loadNotifications () {
   }
 }
 
-async function markNotificationsRead () {
+async function markNotificationsRead() {
   try {
     await fetchAPI('/profiles/notifications/read', 'PUT')
   } catch (err) {
@@ -917,14 +917,14 @@ async function checkUnreadNotifications() {
     const hasUnread = notifications.some(n => !n.isRead);
 
     if (hasUnread) {
-        const profileTab = document.getElementById('nav-profile');
-        if (profileTab && !document.getElementById('profileDot')) {
-            // Add red dot with pulse
-            profileTab.style.position = 'relative';
-            profileTab.innerHTML += '<span id="profileDot" style="position:absolute; top:8px; right:12px; width:8px; height:8px; background:var(--danger, red); border-radius:50%; box-shadow:0 0 0 2px var(--surface), 0 0 4px var(--danger, red); animation: pulseDot 2s infinite;"></span>';
-        }
+      const profileTab = document.getElementById('nav-profile');
+      if (profileTab && !document.getElementById('profileDot')) {
+        // Add red dot with pulse
+        profileTab.style.position = 'relative';
+        profileTab.innerHTML += '<span id="profileDot" style="position:absolute; top:8px; right:12px; width:8px; height:8px; background:var(--danger, red); border-radius:50%; box-shadow:0 0 0 2px var(--surface), 0 0 4px var(--danger, red); animation: pulseDot 2s infinite;"></span>';
+      }
     }
   } catch (err) {
-      console.error('Failed to check unread admin notifications', err);
+    console.error('Failed to check unread admin notifications', err);
   }
 }

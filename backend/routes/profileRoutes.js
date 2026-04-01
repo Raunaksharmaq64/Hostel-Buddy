@@ -1,10 +1,10 @@
 const express = require('express');
-const { 
-  updateStudentProfile, 
-  updateOwnerProfile, 
-  requestVerification, 
-  requestDeactivation, 
-  getNotifications, 
+const {
+  updateStudentProfile,
+  updateOwnerProfile,
+  requestVerification,
+  requestDeactivation,
+  getNotifications,
   markNotificationsRead,
   clearNotifications,
   getPlatformUpdates,

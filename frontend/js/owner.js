@@ -27,7 +27,7 @@ function updateSidebarAvatar(user) {
 }
 
 // Tab Navigation Logic
-function switchTab (tabId) {
+function switchTab(tabId) {
   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'))
   document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'))
 
@@ -51,7 +51,7 @@ function switchTab (tabId) {
 }
 
 // ---- DASHBOARD STATS LOGIC ----
-async function loadDashboardStats () {
+async function loadDashboardStats() {
   try {
     const [hostelRes, enqRes] = await Promise.all([
       fetchAPI('/hostels/owner/my-hostels'),
@@ -66,7 +66,7 @@ async function loadDashboardStats () {
 }
 
 // ---- PROFILE LOGIC ----
-async function loadOwnerProfile () {
+async function loadOwnerProfile() {
   try {
     const res = await fetchAPI('/auth/me')
     const user = res.data
@@ -174,7 +174,7 @@ document.getElementById('ownerProfileForm').addEventListener('submit', async (e)
   try {
     const res = await fetchAPI('/profiles/owner', 'PUT', formData, true)
     showToast('Profile updated successfully!', 'success')
-    
+
     // Update local storage so avatar persists
     if (res.data) {
       const existingUser = JSON.parse(localStorage.getItem('user'))
@@ -262,21 +262,21 @@ function compressImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.8) {
   })
 }
 
-function handleImagePreviews (inputId, previewContainerId, storeKey) {
+function handleImagePreviews(inputId, previewContainerId, storeKey) {
   document.getElementById(inputId).addEventListener('change', async function (e) {
     const container = document.getElementById(previewContainerId)
 
     if (this.files) {
       // Disable input while processing to prevent duplicate selections
       this.disabled = true
-      
+
       // Keep track of old text for processing UX
       const fileLabel = this.closest('.form-group') ? this.closest('.form-group').querySelector('label') : null
       const originalLabelText = fileLabel ? fileLabel.innerText : ''
       if (fileLabel) fileLabel.innerText = 'Compressing...'
 
       const filesArray = Array.from(this.files)
-      
+
       for (const file of filesArray) {
         // Prevent duplicate files based on name (size will change after compression)
         if (!selectedImages[storeKey].some(f => f.name === file.name)) {
@@ -314,7 +314,7 @@ function handleImagePreviews (inputId, previewContainerId, storeKey) {
           }
         }
       }
-      
+
       // Restore input and label
       this.disabled = false
       if (fileLabel) fileLabel.innerText = originalLabelText
@@ -385,10 +385,10 @@ document.getElementById('hostelForm').addEventListener('submit', async (e) => {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest()
       xhr.open(method, `${API_URL}${urlPath}`, true)
-      
+
       const token = localStorage.getItem('token')
       if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
-      
+
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) {
           const percent = Math.round((e.loaded / e.total) * 100)
@@ -402,7 +402,7 @@ document.getElementById('hostelForm').addEventListener('submit', async (e) => {
           }
         }
       }
-      
+
       xhr.onload = () => {
         try {
           const res = JSON.parse(xhr.responseText)
@@ -412,7 +412,7 @@ document.getElementById('hostelForm').addEventListener('submit', async (e) => {
           reject(new Error('Failed to parse response'))
         }
       }
-      
+
       xhr.onerror = () => reject(new Error('Network error'))
       xhr.send(formDataObj)
     })
@@ -511,7 +511,7 @@ window.cancelHostelEdit = function () {
 }
 
 // ---- MY HOSTELS LOGIC ----
-async function loadMyHostels () {
+async function loadMyHostels() {
   const container = document.getElementById('myHostelsContainer')
   container.innerHTML = '<div style="text-align:center;padding:2.5rem;"><div class="spinner-v2"></div></div>'
 
@@ -568,7 +568,7 @@ window.deleteHostel = async function (id) {
 }
 
 // ---- ENQUIRIES LOGIC ----
-async function loadOwnerEnquiries () {
+async function loadOwnerEnquiries() {
   const container = document.getElementById('ownerEnquiriesContainer')
   container.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="spinner-v2"></div></div>'
 
@@ -627,57 +627,57 @@ async function loadOwnerEnquiries () {
                 <!-- Conversation Body -->
                 <div class="chat-body" style="max-height: 350px; overflow-y: auto; padding-bottom: 1rem;">
                     ${(() => {
-                        let messagesHtml = '';
-                        if (eq.messages && eq.messages.length > 0) {
-                            messagesHtml = eq.messages.map(m => {
-                                const isMe = m.senderModel === 'Owner';
-                                const pDate = new Date(m.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour:'2-digit', minute:'2-digit' });
-                                if (isMe) {
-                                    return `
+          let messagesHtml = '';
+          if (eq.messages && eq.messages.length > 0) {
+            messagesHtml = eq.messages.map(m => {
+              const isMe = m.senderModel === 'Owner';
+              const pDate = new Date(m.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+              if (isMe) {
+                return `
                                         <div style="display:flex;flex-direction:column;align-items:flex-end;">
                                             <div class="msg-meta"><span>You</span> &middot; <span>${pDate}</span></div>
                                             <div class="msg-bubble msg-owner">${m.text}</div>
                                         </div>
                                     `;
-                                } else {
-                                    const senderLabel = m.senderModel === 'Admin' ? '✅ Platform' : `👤 ${eq.studentId ? eq.studentId.name : 'Student'}`;
-                                    return `
+              } else {
+                const senderLabel = m.senderModel === 'Admin' ? '✅ Platform' : `👤 ${eq.studentId ? eq.studentId.name : 'Student'}`;
+                return `
                                         <div style="display:flex;flex-direction:column;align-items:flex-start;">
                                             <div class="msg-meta"><span>${senderLabel}</span> &middot; <span>${pDate}</span></div>
                                             <div class="msg-bubble msg-student">${m.text}</div>
                                         </div>
                                     `;
-                                }
-                            }).join('');
-                        } else {
-                            // legacy fallback
-                            messagesHtml = `
+              }
+            }).join('');
+          } else {
+            // legacy fallback
+            messagesHtml = `
                                 <div style="display:flex;flex-direction:column;align-items:flex-start;">
                                     <div class="msg-meta"><span>👤 ${eq.studentId ? eq.studentId.name : 'Student'}</span> &middot; <span>${sentDate}</span></div>
                                     <div class="msg-bubble msg-student">"${eq.message}"</div>
                                 </div>
                             `;
-                            
-                            if (eq.ownerReply) {
-                                messagesHtml += `
+
+            if (eq.ownerReply) {
+              messagesHtml += `
                                     <div style="display:flex;flex-direction:column;align-items:flex-end;">
                                         <div class="msg-meta">Your Reply</div>
                                         <div class="msg-bubble msg-owner">${eq.ownerReply}</div>
                                     </div>
                                 `;
-                            }
-                        }
-                        
-                        if (eq.adminResponse) {
-                            messagesHtml += `
+            }
+          }
+
+          if (eq.adminResponse) {
+            messagesHtml += `
                                 <div style="display:flex;flex-direction:column;align-items:flex-start;">
                                     <div class="msg-meta" style="color:var(--success);font-weight:700;text-transform:uppercase">✅ Platform Response</div>
                                     <div class="msg-bubble msg-admin">${eq.adminResponse}</div>
                                 </div>
                             `;
-                        }
-                        return messagesHtml;
-                    })()}
+          }
+          return messagesHtml;
+        })()}
                 </div>
 
                 <!-- Chat Input Footer -->
@@ -699,14 +699,14 @@ window.submitEnquiryReply = async function (id) {
   if (!ownerReply) { showToast('Please type a reply.', 'error'); return }
 
   try {
-    if(replyInput) replyInput.disabled = true;
+    if (replyInput) replyInput.disabled = true;
     await fetchAPI(`/enquiries/${id}/message`, 'POST', { text: ownerReply })
     showToast('Reply sent successfully.', 'success')
     loadOwnerEnquiries()
   } catch (err) {
     showToast(err.message, 'error')
   } finally {
-    if(replyInput) replyInput.disabled = false;
+    if (replyInput) replyInput.disabled = false;
   }
 }
 
@@ -747,7 +747,7 @@ window.clearAllOwnerEnquiries = async function () {
 }
 
 // ---- NOTIFICATIONS LOGIC ----
-async function loadNotifications () {
+async function loadNotifications() {
   const container = document.getElementById('notificationsContainer')
   if (!container) return
   try {
@@ -779,7 +779,7 @@ async function loadNotifications () {
   }
 }
 
-async function markNotificationsRead () {
+async function markNotificationsRead() {
   try {
     await fetchAPI('/profiles/notifications/read', 'PUT')
   } catch (err) {
@@ -828,42 +828,42 @@ window.submitDeactivationRequest = async function () {
 // ---- PLATFORM FEEDBACK LOGIC ----
 // ---- PLATFORM FEEDBACK LOGIC ----
 function setupFeedbackForm() {
-    document.getElementById('feedbackForm')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = e.target.querySelector('button');
-      const originalText = btn.textContent;
-      btn.textContent = 'Submitting...';
-      
-      const rating = document.getElementById('feedbackRating').value;
-      const comment = document.getElementById('feedbackComment').value.trim();
-      
-      try {
-        await fetchAPI('/feedback/submit', 'POST', { rating: Number(rating), comment });
-        showToast('Thank you! Your feedback has been submitted for review.', 'success');
-        document.getElementById('feedbackComment').value = '';
-        document.getElementById('feedbackRating').value = '5';
-      } catch (err) {
-        showToast(err.message === 'Failed to fetch' ? 'Unable to reach server. Please try again.' : err.message, 'error');
-      } finally {
-        btn.textContent = originalText;
-      }
-    });
+  document.getElementById('feedbackForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    const originalText = btn.textContent;
+    btn.textContent = 'Submitting...';
+
+    const rating = document.getElementById('feedbackRating').value;
+    const comment = document.getElementById('feedbackComment').value.trim();
+
+    try {
+      await fetchAPI('/feedback/submit', 'POST', { rating: Number(rating), comment });
+      showToast('Thank you! Your feedback has been submitted for review.', 'success');
+      document.getElementById('feedbackComment').value = '';
+      document.getElementById('feedbackRating').value = '5';
+    } catch (err) {
+      showToast(err.message === 'Failed to fetch' ? 'Unable to reach server. Please try again.' : err.message, 'error');
+    } finally {
+      btn.textContent = originalText;
+    }
+  });
 }
 
 async function loadCommunityFeedbacks() {
   const container = document.getElementById('communityFeedbacksContainer');
   if (!container) return;
   container.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="spinner"></div></div>';
-  
+
   try {
     const res = await fetchAPI('/feedback/public');
     const feedbacks = res.data;
-    
+
     if (feedbacks.length === 0) {
       container.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted);background:var(--surface-2);border-radius:var(--radius);border:1px dashed var(--border);">No community reviews yet. Be the first to share your experience!</div>';
       return;
     }
-    
+
     container.innerHTML = feedbacks.map(f => `
       <div class="list-item" style="flex-direction:column;align-items:stretch;gap:1.25rem">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
