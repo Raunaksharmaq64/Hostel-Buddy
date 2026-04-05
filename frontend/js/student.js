@@ -352,7 +352,10 @@ window.openHostelDetails = async function (id) {
             <!-- Top Intro Section (Hero) -->
             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; width:100%; margin-top: -1rem;">
                 <div style="flex: 1; min-width: 280px;">
-                    <p style="color: var(--text-muted); font-size: 1.05rem; margin-bottom: 1.25rem;">📍 ${h.address}, ${h.city}</p>
+                    <p style="color: var(--text-muted); font-size: 1.05rem; margin-bottom: 1.25rem;">
+                        📍 ${h.address}, ${h.city}
+                        ${h.googleMapLink ? `<br><a href="${h.googleMapLink}" target="_blank" style="display:inline-block; margin-top:6px; font-size:0.9rem; font-weight:600; color:var(--primary); text-decoration:none;">🌍 Open in Google Maps ↗</a>` : ''}
+                    </p>
                     
                     <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
                         <span class="badge-v2 badge-info" style="text-transform:none; font-size: 0.9rem;">🍽️ Food: ${h.foodAvailability ? 'Available' : 'Not Available'}</span>
