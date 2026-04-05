@@ -164,6 +164,8 @@
                     </div>
                     <button class="btn btn-accent btn-sm" onclick="switchTab('add-hostel')">+ Add New Listing</button>
                 </div>
+                <div id="renewalNotifications" style="margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 1rem;"></div>
+
                 <div class="hostels-grid" id="myHostelsContainer">
                     <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted)">
                         <div class="spinner"></div>
@@ -181,6 +183,14 @@
                 </div>
 
                 <div class="panel" style="max-width:820px">
+                    <!-- Pricing Notification -->
+                    <div style="background:var(--warning-light, #fff3cd); border:1px solid var(--warning, #ffc107); border-radius:var(--radius-md); padding:1rem; margin-bottom:1.5rem; color:#856404; display:flex; align-items:center; gap:0.75rem;">
+                        <span style="font-size:1.5rem">💳</span>
+                        <div>
+                            <strong>Listing Fee Notice:</strong> A premium monthly subscription of <strong>₹299/month</strong> is required to list your property and get verified access to students. Payment will be processed securely after you submit this form.
+                        </div>
+                    </div>
+
                     <form id="hostelForm">
                         <div class="form-row">
                             <div class="form-group">
@@ -602,6 +612,8 @@
     <script src="js/main.js?v=5"></script>
     <script src="js/owner.js?v=5"></script>
     <script src="js/tour.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <script>
         // Sidebar active state
         function updateSidebarActive(tab) {

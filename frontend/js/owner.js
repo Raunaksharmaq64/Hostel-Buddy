@@ -428,8 +428,10 @@ document.getElementById('hostelForm').addEventListener('submit', async (e) => {
       showToast('Listing updated successfully!', 'success')
       cancelHostelEdit()
     } else {
-      await xhrWithProgress('/hostels', 'POST', formData)
-      showToast('Listing created! Awaiting admin approval.', 'success')
+      const res = await xhrWithProgress('/hostels', 'POST', formData)
+      showToast('Listing created! Awaiting payment...', 'info')
+      handleRazorpayCheckout(res.data._id)
+      
       e.target.reset()
       Object.keys(selectedImages).forEach(key => selectedImages[key] = []);
       ['previewThumbnail', 'previewBuilding', 'previewRooms', 'previewMess', 'previewBathrooms'].forEach(id => {
@@ -523,17 +525,56 @@ async function loadMyHostels() {
       container.innerHTML = "You haven't listed any hostels yet."
       return
     }
+    const now = new Date();
+    let notificationsHtml = '';
 
-    container.innerHTML = hostels.map(h => `
+    container.innerHTML = hostels.map(h => {
+      let subStatusClass = 'badge-pending';
+      let subText = 'Payment Pending';
+      let renewBtn = '';
+      let isExpiringSoon = false;
+
+      if (h.subscriptionStatus === 'active') {
+          subStatusClass = 'badge-approved';
+          const expiryDate = new Date(h.subscriptionExpiry);
+          subText = 'Active (until ' + expiryDate.toLocaleDateString() + ')';
+          
+          let diffDays = (expiryDate - now) / (1000 * 60 * 60 * 24);
+          if (diffDays > 0 && diffDays <= 3) {
+             isExpiringSoon = true;
+             notificationsHtml += `
+                 <div style="background:var(--warning-light, #fff3cd); border:1px solid var(--warning, #ffc107); padding:1rem; border-radius:var(--radius-md); color:#856404;">
+                     <strong>Action Required:</strong> Subscription for <strong>${h.name}</strong> expires in ${Math.ceil(diffDays)} days! 
+                     <button class="btn btn-sm" style="background:#ffc107; color:#000; margin-left:1rem; border:none; padding:4px 10px;" onclick="handleRazorpayCheckout('${h._id}')">Renew Now</button>
+                 </div>
+             `;
+          }
+      } else if (h.subscriptionStatus === 'expired') {
+          subStatusClass = 'badge-rejected';
+          subText = 'Expired';
+          renewBtn = `<button class="btn btn-primary btn-sm" onclick="handleRazorpayCheckout('${h._id}')" style="margin-left:auto; white-space:nowrap;">Renew Now</button>`;
+      } else {
+          subStatusClass = 'badge-pending';
+          subText = 'Payment Pending';
+          renewBtn = `<button class="btn btn-primary btn-sm" onclick="handleRazorpayCheckout('${h._id}')" style="margin-left:auto; white-space:nowrap;">Pay Now</button>`;
+      }
+
+      return `
             <div class="hostel-manage-card">
                 <div class="hostel-manage-card-body">
                     <h3 style="margin-bottom:0.5rem">${h.name}</h3>
                     <p style="color:var(--text-muted);font-size:0.9rem">📍 ${h.address}, ${h.city}</p>
                     <div class="info-box" style="margin:1.25rem 0">
                         <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <span style="font-size:0.9rem;font-weight:600">Status:</span>
+                            <span style="font-size:0.9rem;font-weight:600">Admin Approval:</span>
                             <span class="badge-v2 ${h.isApproved ? 'badge-approved' : 'badge-pending'}" style="font-size:0.75rem">
                                 ${h.isApproved ? 'Approved' : 'Pending Approval'}
+                            </span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem">
+                            <span style="font-size:0.9rem;font-weight:600">Subscription:</span>
+                            <span class="badge-v2 ${subStatusClass}" style="font-size:0.75rem">
+                                ${subText}
                             </span>
                         </div>
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem">
@@ -541,13 +582,20 @@ async function loadMyHostels() {
                             <span style="font-weight:700;color:var(--primary)">👁️ ${h.views}</span>
                         </div>
                     </div>
-                    <div class="action-btns">
+                    <div class="action-btns" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
                         <button class="btn btn-outline btn-sm" style="flex:1" onclick="editHostel('${h._id}')">Edit Listing</button>
                         <button class="btn btn-outline btn-sm" style="flex:1;border-color:var(--danger);color:var(--danger)" onclick="deleteHostel('${h._id}')">Delete</button>
+                        ${renewBtn}
                     </div>
                 </div>
             </div>
-        `).join('')
+        `;
+    }).join('')
+
+    const notifsContainer = document.getElementById('renewalNotifications');
+    if (notifsContainer) {
+        notifsContainer.innerHTML = notificationsHtml;
+    }
 
     gsap.from('#myHostelsContainer > div', { y: 20, opacity: 0, duration: 0.5, stagger: 0.1 })
   } catch (err) {
@@ -930,5 +978,55 @@ async function loadPlatformUpdates() {
   } catch (err) {
     console.error('Failed to load updates:', err)
     container.innerHTML = '<p style="color:var(--danger)">Failed to load updates.</p>'
+  }
+}
+
+// ---- RAZORPAY SUBSCRIPTION LOGIC ----
+window.handleRazorpayCheckout = async function(hostelId) {
+  try {
+    const keyRes = await fetchAPI('/payments/get-key', 'GET');
+    const orderRes = await fetchAPI('/payments/create-order', 'POST', { hostelId });
+    const order = orderRes.order;
+
+    const options = {
+      key: keyRes.key, // Fetched dynamically from backend
+
+      amount: order.amount,
+      currency: order.currency,
+      name: "HostelBuddy",
+      description: "Monthly Listing Subscription",
+      image: "https://cdn-icons-png.flaticon.com/512/3030/3030336.png",
+      order_id: order.id,
+      handler: async function (response) {
+        try {
+          const verifyRes = await fetchAPI('/payments/verify', 'POST', {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            hostelId: hostelId
+          });
+          if (verifyRes.success) {
+            showToast('Payment successful! Subscription active.', 'success');
+            loadMyHostels();
+          }
+        } catch (verifyErr) {
+          showToast('Payment verification failed. Contact support.', 'error');
+        }
+      },
+      prefill: {
+        name: document.getElementById('userNameDisplay').textContent.replace('Hello, ', ''),
+        email: JSON.parse(localStorage.getItem('user'))?.email || '',
+      },
+      theme: { color: "#f97316" }
+    };
+
+    const rzp1 = new window.Razorpay(options);
+    rzp1.on('payment.failed', function (response){
+      showToast('Payment failed! Try again from your dashboard.', 'error');
+      loadMyHostels(); // Refresh to show pending status
+    });
+    rzp1.open();
+  } catch (err) {
+    showToast('Failed to initiate payment: ' + (err.message || 'Unknown error'), 'error');
   }
 }

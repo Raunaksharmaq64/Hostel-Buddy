@@ -44,8 +44,9 @@ exports.getHostels = async (req, res) => {
 
     let query = {};
     
-    // Only show approved listings by default
+    // Only show approved and active listings by default
     query.isApproved = true;
+    query.subscriptionStatus = 'active';
 
     if (location) {
       query.$or = [

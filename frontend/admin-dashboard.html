@@ -60,6 +60,10 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                     Listings
                 </button>
+                <button class="sidebar-item" id="nav-subscriptions" onclick="switchTab('subscriptions')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                    Subscriptions
+                </button>
                 <button class="sidebar-item" id="nav-enquiries" onclick="switchTab('enquiries')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                     Enquiries
@@ -166,6 +170,36 @@
                     </div>
                 </div>
                 <div class="admin-list" id="hostelsContainer">
+                    <div style="text-align:center;padding:2rem;color:var(--text-muted)"><div class="spinner"></div></div>
+                </div>
+            </div>
+
+            <!-- Subscriptions Tab -->
+            <div id="subscriptions" class="tab-content">
+                <div class="dash-topbar">
+                    <div>
+                        <div class="dash-title">Subscription Management</div>
+                        <div class="dash-sub">Track revenue and manage active/expired listing access.</div>
+                    </div>
+                </div>
+
+                <!-- Stats Grid inside Subscriptions Tab -->
+                <div class="analytics-grid" style="margin-bottom: 2rem;">
+                    <div class="stat-card">
+                        <div class="stat-title">Monthly Revenue Pipeline</div>
+                        <div class="stat-value" id="subStatRevenue">₹0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Active Subscriptions</div>
+                        <div class="stat-value" id="subStatActive" style="color:var(--success)">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">Expired / Pending</div>
+                        <div class="stat-value" id="subStatPending" style="color:var(--danger)">0</div>
+                    </div>
+                </div>
+
+                <div class="admin-list" id="subscriptionsContainer">
                     <div style="text-align:center;padding:2rem;color:var(--text-muted)"><div class="spinner"></div></div>
                 </div>
             </div>

@@ -20,6 +20,7 @@ function switchTab (tabId) {
   if (tabId === 'students') loadUsers('Student')
   if (tabId === 'owners') loadUsers('Owner')
   if (tabId === 'listings') loadListings()
+  if (tabId === 'subscriptions') loadSubscriptions()
   if (tabId === 'enquiries') loadEnquiries()
   if (tabId === 'reviews') loadReviews()
   if (tabId === 'system-requests') loadDeactivations()
@@ -262,6 +263,83 @@ window.deleteAdminHostel = async function (id) {
     await fetchAPI(`/hostels/${id}`, 'DELETE')
     showToast('Listing deleted successfully.', 'success')
     loadListings()
+  } catch (err) {
+    showToast(err.message, 'error')
+  }
+}
+
+// ---- SUBSCRIPTIONS MANAGEMENT ----
+async function loadSubscriptions() {
+  const container = document.getElementById('subscriptionsContainer')
+  if (!container) return
+  container.innerHTML = spinner
+
+  try {
+    const res = await fetchAPI('/admin/subscriptions')
+    const subs = res.data
+    const stats = res.stats
+
+    document.getElementById('subStatRevenue').textContent = '₹' + stats.totalRevenue;
+    document.getElementById('subStatActive').textContent = stats.activeSubs;
+    document.getElementById('subStatPending').textContent = (stats.pendingSubs + stats.expiredSubs);
+
+    if (subs.length === 0) {
+      container.innerHTML = '<div class="panel" style="text-align:center;color:var(--text-muted);padding:2.5rem">No listings found in the system yet.</div>'
+      return
+    }
+
+    container.innerHTML = subs.map(h => {
+      let statusClass = 'badge-pending';
+      let statusText = 'Pending Payment';
+      let expiryText = 'N/A';
+      
+      if (h.subscriptionStatus === 'active') {
+          statusClass = 'badge-approved';
+          statusText = 'Active';
+          expiryText = new Date(h.subscriptionExpiry).toLocaleDateString();
+      } else if (h.subscriptionStatus === 'expired') {
+          statusClass = 'badge-rejected';
+          statusText = 'Expired';
+      }
+
+      return `
+        <div class="list-item" style="border-left-color: ${h.subscriptionStatus === 'active' ? 'var(--success)' : (h.subscriptionStatus === 'expired' ? 'var(--danger)' : '#F59E0B')}">
+            <div style="flex:1;">
+                <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.4rem">
+                    <h4>${h.name}</h4>
+                    <span class="badge-v2 ${statusClass}">${statusText}</span>
+                </div>
+                <p>📍 ${h.city}</p>
+                <div style="display:flex;gap:1.5rem;font-size:0.92rem;color:var(--text-muted);flex-wrap:wrap;margin-top:0.6rem;">
+                    <span><strong style="color:var(--text)">Owner:</strong> ${h.ownerId ? h.ownerId.name : 'Unknown'}</span>
+                    <span><strong style="color:var(--text)">Contact:</strong> 📞 ${h.ownerId ? h.ownerId.phone : 'N/A'}</span>
+                    <span><strong style="color:var(--text)">Expiry Date:</strong> 📅 ${expiryText}</span>
+                </div>
+            </div>
+            <div class="action-btns" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                ${h.subscriptionStatus !== 'active' 
+                    ? `<button class="btn btn-sm btn-outline" style="border-color:var(--success);color:#059669;white-space:nowrap;" onclick="manageSubscription('${h._id}', 'grant_month')">✔ Grant 1 Month</button>`
+                    : `<button class="btn btn-sm btn-outline" style="border-color:var(--danger);color:var(--danger);white-space:nowrap;" onclick="manageSubscription('${h._id}', 'revoke')">✖ Revoke Access</button>`
+                }
+            </div>
+        </div>
+      `;
+    }).join('')
+  } catch (err) {
+    console.error('loadSubscriptions Error:', err)
+    container.innerHTML = '<p style="color:var(--danger)">Failed to load subscriptions.</p>'
+  }
+}
+
+window.manageSubscription = async function (id, action) {
+  const actionText = action === 'grant_month' ? 'grant a free month to' : 'revoke access for';
+  const isConfirmed = await customConfirm(`Are you sure you want to ${actionText} this property?`);
+  if (!isConfirmed) return
+
+  try {
+    await fetchAPI(`/admin/subscriptions/${id}/manage`, 'PUT', { action })
+    showToast(`Subscription updated successfully.`, 'success')
+    loadSubscriptions()
   } catch (err) {
     showToast(err.message, 'error')
   }

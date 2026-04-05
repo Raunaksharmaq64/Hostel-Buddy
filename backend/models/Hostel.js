@@ -48,6 +48,15 @@ const hostelSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false }, // Syncs with Owner's verification
   rating: { type: Number, default: 0 },
   views: { type: Number, default: 0 },
+  // Subscription Details
+  subscriptionStatus: { 
+    type: String, 
+    enum: ['pending', 'active', 'expired'], 
+    default: 'pending' 
+  },
+  subscriptionExpiry: { type: Date },
+  lastPaymentId: { type: String },
+
   createdAt: { type: Date, default: Date.now },
 });
 

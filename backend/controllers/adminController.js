@@ -366,3 +366,71 @@ exports.deletePlatformUpdate = async (req, res) => {
   }
 };
 
+// @desc    Get all subscriptions for admin tracking
+// @route   GET /api/admin/subscriptions
+// @access  Private (Admin)
+exports.getAdminSubscriptions = async (req, res) => {
+  try {
+    const hostels = await Hostel.find()
+      .select('name city subscriptionStatus subscriptionExpiry')
+      .populate('ownerId', 'name email phone')
+      .sort({ createdAt: -1 });
+
+    // Calculate basic stats for the dashboard
+    let totalRevenue = 0;
+    let activeSubs = 0;
+    let pendingSubs = 0;
+    let expiredSubs = 0;
+
+    hostels.forEach(h => {
+      if (h.subscriptionStatus === 'active') {
+        activeSubs++;
+        totalRevenue += 299; // ₹299 per active listing
+      } else if (h.subscriptionStatus === 'expired') {
+        expiredSubs++;
+      } else {
+        pendingSubs++;
+      }
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      stats: { totalRevenue, activeSubs, pendingSubs, expiredSubs },
+      data: hostels 
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Manage a specific subscription
+// @route   PUT /api/admin/subscriptions/:id/manage
+// @access  Private (Admin)
+exports.manageSubscription = async (req, res) => {
+  try {
+    const { action } = req.body; // 'grant_month' or 'revoke'
+    let hostel = await Hostel.findById(req.params.id);
+
+    if (!hostel) {
+      return res.status(404).json({ success: false, message: 'Hostel not found' });
+    }
+
+    if (action === 'grant_month') {
+      hostel.subscriptionStatus = 'active';
+      hostel.subscriptionExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // +30 days
+      await hostel.save();
+      
+      return res.status(200).json({ success: true, message: 'Granted 30 free days.', data: hostel });
+    } else if (action === 'revoke') {
+      hostel.subscriptionStatus = 'expired';
+      hostel.subscriptionExpiry = new Date(); // Expire immediately
+      await hostel.save();
+
+      return res.status(200).json({ success: true, message: 'Subscription revoked immediately.', data: hostel });
+    }
+
+    res.status(400).json({ success: false, message: 'Invalid action.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};

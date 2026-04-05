@@ -14,7 +14,9 @@ const {
   notifyOwner,
   createPlatformUpdate,
   getPlatformUpdates,
-  deletePlatformUpdate
+  deletePlatformUpdate,
+  getAdminSubscriptions,
+  manageSubscription
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -54,5 +56,9 @@ router.post('/notify-owner/:id', notifyOwner);
 router.post('/updates', createPlatformUpdate);
 router.get('/updates', getPlatformUpdates);
 router.delete('/updates/:id', deletePlatformUpdate);
+
+// Subscriptions Management
+router.get('/subscriptions', getAdminSubscriptions);
+router.put('/subscriptions/:id/manage', manageSubscription);
 
 module.exports = router;
