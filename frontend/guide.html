@@ -3,75 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Guide - HostelBuddy</title>
+    <title>Owner Guide - HostelBuddy Partner Program</title>
     <link rel="stylesheet" href="css/style.css">
+    
+    <!-- GSAP & ScrollTrigger -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
     <style>
+        .hero {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(5, 150, 105, 0.1));
+            border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+        }
         .guide-section {
+            margin-bottom: 5rem;
+            position: relative;
+        }
+        .about-hostelbuddy {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-strong);
+            padding: 3.5rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            margin-bottom: 5rem;
+            line-height: 1.8;
+            font-size: 1.05rem;
+            color: var(--text-2);
+        }
+        .about-hostelbuddy h2 {
+            font-size: 2.2rem;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+        }
+        .about-hostelbuddy p {
+            margin-bottom: 1rem;
+        }
+        .about-hostelbuddy span.highlight {
+            color: var(--secondary);
+            font-weight: 700;
+        }
+        
+        .timeline {
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: rgba(16, 185, 129, 0.2);
+            left: 24px;
+            border-radius: 4px;
+        }
+        .timeline-step {
+            position: relative;
+            padding-left: 5rem;
             margin-bottom: 4rem;
         }
-        .guide-step {
-            display: flex;
-            gap: 1.5rem;
-            margin-bottom: 2.5rem;
-            align-items: flex-start;
-        }
-        .step-number {
-            background: var(--primary);
-            color: white;
-            width: 32px;
-            height: 32px;
+        .timeline-icon {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 52px;
+            height: 52px;
+            background: #fff;
+            border: 4px solid var(--secondary);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-        }
-        .step-content h4 {
             font-size: 1.2rem;
-            margin-bottom: 0.5rem;
-            color: var(--text);
-        }
-        .step-content p {
-            color: var(--text);
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-        .role-badge {
-            display: inline-block;
-            padding: 0.4rem 1rem;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            margin-bottom: 1rem;
-            background: rgba(99, 102, 241, 0.1);
-            color: var(--primary);
-            border: 1px solid rgba(99, 102, 241, 0.2);
-        }
-        .owner-theme .role-badge {
-            background: rgba(16, 185, 129, 0.1);
             color: var(--secondary);
-            border-color: rgba(16, 185, 129, 0.2);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            z-index: 10;
         }
-        .owner-theme .step-number {
-            background: var(--secondary);
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        [data-theme="dark"] .timeline-icon {
+            background: var(--surface-2);
         }
-        .icon-box {
-            width: 50px;
-            height: 50px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .timeline-content {
+            background: var(--surface);
+            padding: 2.5rem;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+        .timeline-content h3 {
+            font-size: 1.6rem;
             margin-bottom: 1rem;
-            color: var(--primary);
+            color: var(--text);
         }
-        .owner-theme .icon-box { color: var(--secondary); }
+        .timeline-content p {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+        .timeline-visual {
+            background: var(--bg-2);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            border: 1px dashed var(--border-strong);
+            text-align: center;
+        }
+        .price-badge {
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            padding: 0.5rem 1.2rem;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            display: inline-block;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -80,8 +128,8 @@
         <div class="logo">HostelBuddy</div>
         <div class="nav-links">
             <a href="index.html">Home</a>
-            <a href="login.html" class="btn btn-outline">Log In</a>
-            <a href="signup.html" class="btn btn-primary">Sign Up</a>
+            <a href="login.html" class="btn btn-outline" style="border-color:var(--secondary); color:var(--secondary)">Owner Login</a>
+            <a href="signup.html" class="btn btn-primary" style="background:var(--secondary);">List Property</a>
         
             <button class="theme-toggle" aria-label="Toggle Dark Mode" style="margin-left: 1rem;">
               <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -90,152 +138,168 @@
         </div>
     </nav>
 
-    <header class="hero" style="height: auto; padding: 12rem 5% 6rem;">
-        <h1 class="hero-title">📘 Complete <br> <span>User Guide</span></h1>
-        <p class="hero-subtitle">HostelBuddy ek premium platform hai jahan aap easily nearby hostels aur PGs find, compare aur contact kar sakte ho — all in one place.</p>
+    <header class="hero" style="height: auto; padding: 12rem 5% 6rem; text-align: center;">
+        <div class="badge" style="background: var(--secondary-light); color: var(--secondary); font-size: 0.9rem; padding: 0.4rem 1.2rem; margin-bottom: 1.5rem; text-transform: uppercase;">Exclusive For Property Owners</div>
+        <h1 class="hero-title" style="font-size: 4rem; line-height: 1.1;">Grow Your Business With <br> <span style="color:var(--secondary)">HostelBuddy</span></h1>
+        <p class="hero-subtitle" style="margin-top: 2rem; max-width: 700px; margin-left: auto; margin-right: auto;">
+            Stop waiting for students to walk past your banner. Get premium visibility, manage enquiries digitally, and secure 100% occupancy with our state-of-the-art platform.
+        </p>
     </header>
 
-    <main style="max-width: 1000px; margin: 0 auto; padding: 0 5% 8rem;">
+    <main style="max-width: 1100px; margin: 0 auto; padding: 4rem 5% 8rem;">
         
-        <!-- Intro Card -->
-        <div class="glass-panel card-3d" style="padding: 2.5rem; margin-bottom: 5rem;">
-            <div style="display: flex; gap: 1.5rem; align-items: center; margin-bottom: 1.5rem;">
-                <div class="icon-box" style="margin-bottom: 0;">👋</div>
-                <h2 style="font-size: 1.8rem;">Welcome to HostelBuddy</h2>
-            </div>
-            <p style="color: var(--text-muted);">Chahe aap student ho ya hostel owner — yeh platform dono ke liye useful hai. Is guide me hum step-by-step batayenge ki platform ko kaise use karna hai.</p>
+        <!-- About HostelBuddy -->
+        <section class="about-hostelbuddy gs-reveal">
+            <h2>🌍 What is HostelBuddy?</h2>
+            <p><strong>HostelBuddy</strong> is India's most advanced and transparent digital housing ecosystem. Traditional methods of finding pg's through brokers and posters are dead. Today's students want high-quality photos, verified details, and instant chat connectivity before they even step out of their homes.</p>
+            <p>Our platform guarantees <span class="highlight">ZERO fake listings</span> through mandatory Admin KYC approval. By listing here, your property isn't just taking up space—it becomes a highly-reputed, trusted accommodation for thousands of university students searching nearby every day.</p>
+            <p>We provide owners with an exquisite <strong>Digital Dashboard</strong> to track total views on their properties, directly chat with interested students (saving phone call chaos), and powerfully format their hostel's amenities dynamically.</p>
+        </section>
+
+        <div style="text-align: center; margin-bottom: 4rem;">
+            <h2 style="font-size: 2.5rem;">How To Go Live in <span style="color:var(--secondary)">4 Simple Steps</span></h2>
+            <p style="color:var(--text-muted); font-size: 1.1rem; margin-top: 1rem;">Our straightforward onboarding and monetization pipeline.</p>
         </div>
 
-        <!-- Student Section -->
-        <div class="guide-section">
-            <div class="role-badge">👨‍🎓 For Students</div>
-            <h2 style="font-size: 2.2rem; margin-bottom: 2.5rem;">Kaise Find Karein Apna Perfect Room?</h2>
-
-            <div class="guide-step">
-                <div class="step-number">1</div>
-                <div class="step-content">
-                    <h4>Search Hostels</h4>
-                    <p>Home page par jaake search bar me apni location enter karein (e.g., "Hostels near LNCT Bhopal"). Aap price range, food, aur room type ke basis par filter bhi kar sakte hain.</p>
+        <!-- Timeline Steps -->
+        <div class="timeline">
+            
+            <!-- STEP 1 -->
+            <div class="timeline-step gs-reveal-step">
+                <div class="timeline-icon">1</div>
+                <div class="timeline-content">
+                    <h3>Register & Identity Verification</h3>
+                    <p>Start by creating your Owner Account. Security is our #1 priority. Before you can list anything, you must complete your profile by uploading a valid Identity Document (Aadhaar or PAN) and waiting for our super admins to officially verify your Owner identity.</p>
+                    <div class="timeline-visual" style="border-left: 4px solid var(--success);">
+                        ✅ <strong>Account Verified:</strong> You are now a trusted partner!
+                    </div>
                 </div>
             </div>
 
-            <div class="guide-step">
-                <div class="step-number">2</div>
-                <div class="step-content">
-                    <h4>View Detailed Insights</h4>
-                    <p>Kisi bhi hostel par click karke aap uski HQ photos, mess menu, room interiors, aur pricing details dekh sakte hain. Sab kuch transparent hai!</p>
+            <!-- STEP 2 -->
+            <div class="timeline-step gs-reveal-step">
+                <div class="timeline-icon">2</div>
+                <div class="timeline-content">
+                    <h3>Create Your Property Listing</h3>
+                    <p>Go to the "Add Hostel" tab and fill out the majestic details of your property. Upload high-definition, beautiful photos of your Building, Rooms, Dining Mess, and Washrooms.</p>
+                    <p>The more details you provide regarding Food availability, rules, and amenities, the higher your conversion rate will be. Don't forget to drop your exact Google Maps URL!</p>
+                    <div class="timeline-visual">
+                        📸 <strong>Pro Tip:</strong> Listings with HD Thumbnail images receive 400% more student clicks.
+                    </div>
                 </div>
             </div>
 
-            <div class="guide-step">
-                <div class="step-number">3</div>
-                <div class="step-content">
-                    <h4>Send Enquiry & Start Chat</h4>
-                    <p>Interest ho toh "Send Enquiry" click karein. Aap directly owner se chat karke availability ya koi bhi specific sawal puch sakte hain.</p>
+            <!-- STEP 3 -->
+            <div class="timeline-step gs-reveal-step">
+                <div class="timeline-icon">3</div>
+                <div class="timeline-content">
+                    <h3>The Razorpay Subscription (₹299/mo)</h3>
+                    <p>HostelBuddy operates on a remarkably affordable fractional subscription model to keep out spam. Once you submit your listing details, you will be prompted with a secure <strong>Razorpay Checkout</strong> overlay.</p>
+                    <p>To broadcast your property across our student discovery hub, simply pay the nominal fee. Once paid, the system instantly activates your property!</p>
+                    <div class="price-badge">₹299 / Month per Property</div>
+                    <div class="timeline-visual" style="margin-top:1.5rem; background:rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.3);">
+                        <span style="color: #B45309;"><strong>Payment Pending:</strong> Your property remains hidden from students until the subscription is cleared securely.</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="guide-step">
-                <div class="step-number">4</div>
-                <div class="step-content">
-                    <h4>Schedule Visit</h4>
-                    <p>Owner aapko reply karega aur aap visit schedule kar sakte hain. Aapki security ke liye platform ensure karta hai ki owners verified hon.</p>
+            <!-- STEP 4 -->
+            <div class="timeline-step gs-reveal-step">
+                <div class="timeline-icon">4</div>
+                <div class="timeline-content">
+                    <h3>Go Live & Receive Enquiries!</h3>
+                    <p>Boom! You are live. You will legally receive an automated Invoice confirming your transaction, delivered straight to your email by our <em>Admin Controller</em>.</p>
+                    <p>Through your dashboad, track live hits and views! When a student drops an enquiry, reply instantly using the chat interface. Build your business seamlessly.</p>
+                    <p style="margin-top: 1rem; font-size: 0.9rem;"><strong>Note:</strong> We've got your back. Expect a renewal reminder email 3 days before your subscription expires so your property never faces unnecessary downtime.</p>
+                    <div class="timeline-visual" style="border-left: 4px solid var(--secondary);">
+                        🎉 <strong>Status: Active</strong> (Visible to thousands of students!)
+                    </div>
                 </div>
             </div>
 
-            <div class="guide-step">
-                <div class="step-number">5</div>
-                <div class="step-content">
-                    <h4>Manage Your Profile</h4>
-                    <p>Apni profile me contact details aur documents add karein taaki owners aapko trust kar sakein aur booking jaldi ho jaye.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Owner Section -->
-        <div class="guide-section owner-theme" style="background: rgba(16, 185, 129, 0.03); padding: 3rem; border-radius: 24px; border: 1px dashed rgba(16, 185, 129, 0.2);">
-            <div class="role-badge">🏠 For Hostel / PG Owners</div>
-            <h2 style="font-size: 2.2rem; margin-bottom: 2.5rem;">Apna Business Kaise Grow Karein?</h2>
-
-            <div class="guide-step">
-                <div class="step-number">1</div>
-                <div class="step-content">
-                    <h4>Register as Owner</h4>
-                    <p>Account create karte waqt "Owner" role choose karein. Aapko apni identity verify karwani hogi premium experience dene ke liye.</p>
-                </div>
-            </div>
-
-            <div class="guide-step">
-                <div class="step-number">2</div>
-                <div class="step-content">
-                    <h4>Add Multiple Properties</h4>
-                    <p>Apna dashboard use karke ek ya ek se zyada hostel add karein. Name, address, aur price accurate rakhein.</p>
-                </div>
-            </div>
-
-            <div class="guide-step">
-                <div class="step-number">3</div>
-                <div class="step-content">
-                    <h4>High-Quality Photos</h4>
-                    <p>Room, Mess, aur Washroom ki clean photos upload karein. Jitni achi photos, utne zyada conversion!</p>
-                </div>
-            </div>
-
-            <div class="guide-step">
-                <div class="step-number">4</div>
-                <div class="step-content">
-                    <h4>Real-time Enquiries</h4>
-                    <p>Students jab enquiry bhejenge toh aapke dashboard me turant dikhegi. Respond karein aur booking confirm karein.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Benefits Summary -->
-        <div style="margin-top: 6rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
-            <div class="glass-panel" style="padding: 1.5rem; text-align: center;">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">⏱️</div>
-                <h5 style="margin-bottom: 0.5rem;">Time Save</h5>
-                <p style="font-size: 0.85rem; color: var(--text-muted);">No need to roam in streets.</p>
-            </div>
-            <div class="glass-panel" style="padding: 1.5rem; text-align: center;">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
-                <h5 style="margin-bottom: 0.5rem;">Verified</h5>
-                <p style="font-size: 0.85rem; color: var(--text-muted);">No fake listings allowed.</p>
-            </div>
-            <div class="glass-panel" style="padding: 1.5rem; text-align: center;">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚖️</div>
-                <h5 style="margin-bottom: 0.5rem;">Comparison</h5>
-                <p style="font-size: 0.85rem; color: var(--text-muted);">Easy comparison of price.</p>
-            </div>
         </div>
 
     </main>
 
-    <footer class="premium-footer">
+    <footer class="premium-footer" style="border-top: 2px solid rgba(16, 185, 129, 0.2);">
         <div class="footer-grid">
             <div class="footer-brand">
                 <a href="index.html" class="logo" style="text-decoration: none;">HostelBuddy</a>
                 <p class="footer-about">
-                    HostelBuddy revolutionizes how students find their perfect stays. High-end, transparent, and built for performance.
+                    India's leading housing connector. Uniting property owners with university students via a highly secure, premium framework.
                 </p>
             </div>
             <div>
-                <h4 class="footer-title">Navigation</h4>
+                <h4 class="footer-title">Owner Resources</h4>
                 <ul class="footer-links">
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="login.html">Login</a></li>
-                    <li><a href="signup.html">Join Us</a></li>
+                    <li><a href="login.html">Partner Dashboard</a></li>
+                    <li><a href="terms.html">Monetization Terms</a></li>
+                    <li><a href="safety.html">Trust & Safety KYC</a></li>
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2026 HostelBuddy. Your premium stay partner.</p>
+            <p>&copy; 2026 HostelBuddy Platforms. Developed by Raunak Sharma.</p>
         </div>
     </footer>
 
+    <!-- JS for specific GSAP ScrollTrigger Animations -->
     <script src="js/main.js"></script>
     <script>
-        gsap.from(".hero-title", { y: 50, opacity: 0, duration: 1, ease: "power3.out" });
+        document.addEventListener("DOMContentLoaded", (event) => {
+            gsap.registerPlugin(ScrollTrigger);
+
+            // Hero Animation
+            gsap.from(".hero-title", { y: 40, opacity: 0, duration: 1, ease: "power4.out" });
+            gsap.from(".hero-subtitle", { y: 40, opacity: 0, duration: 1, delay: 0.2, ease: "power4.out" });
+            gsap.from(".badge", { scale: 0.8, opacity: 0, duration: 0.6, delay: 0.4, ease: "back.out(1.7)" });
+
+            // About HostelBuddy Block Reavel
+            gsap.from(".gs-reveal", {
+                scrollTrigger: {
+                    trigger: ".gs-reveal",
+                    start: "top 80%",
+                    toggleActions: "play none none reverse"
+                },
+                y: 50,
+                opacity: 0,
+                duration: 1,
+                ease: "power3.out"
+            });
+
+            // Timeline Steps Staggered Reveal
+            const steps = gsap.utils.toArray('.gs-reveal-step');
+            steps.forEach((step, i) => {
+                const icon = step.querySelector('.timeline-icon');
+                const content = step.querySelector('.timeline-content');
+                
+                // Animate Icon 
+                gsap.from(icon, {
+                    scrollTrigger: {
+                        trigger: step,
+                        start: "top 85%"
+                    },
+                    scale: 0,
+                    rotation: -180,
+                    opacity: 0,
+                    duration: 0.6,
+                    ease: "back.out(1.5)"
+                });
+
+                // Animate Content Box
+                gsap.from(content, {
+                    scrollTrigger: {
+                        trigger: step,
+                        start: "top 85%"
+                    },
+                    x: 50,
+                    opacity: 0,
+                    duration: 0.8,
+                    delay: 0.2,
+                    ease: "power3.out"
+                });
+            });
+        });
     </script>
 </body>
 </html>
