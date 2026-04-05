@@ -15,13 +15,15 @@ The application is structured around three primary roles, each with a unique das
 
 2. **Hostel / PG Owner**:
    - Profiles with identity verification and contact details.
-   - Can create, edit, and manage multiple property listings.
+   - **Monetization & Subscriptions**: Must pay a ₹299/mo subscription fee via Razorpay to activate property visibility on the platform.
+   - Can create, edit, and manage multiple property listings with real-time UI tracking of expiration dates.
    - Can upload a primary **Thumbnail Image** alongside category-specific photos (building, rooms, mess).
    - Experience fast, parallelized image uploading with a live visual **Progress Bar**.
    - Dedicated enquiry management section to track and respond to student messages.
 
 3. **Admin (Super Administrator)**:
-   - Full system oversight.
+   - Full system oversight and monetization pipeline management.
+   - **Financial Dashboard**: Tracks active subscriptions, expired properties, and real-time revenue pipeline. Can manually "Grant" or "Revoke" listing access.
    - Monitors student behavior and limits suspicious activity.
    - Manages and approves/removes owner listings.
    - **Enquiry Management**: Can view and respond to student enquiries directly.

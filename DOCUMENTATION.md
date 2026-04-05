@@ -57,6 +57,7 @@ Stores property details. Linkable to Owner.
 - **Fields**: `ownerId`, `name`, `description`, `address`, `city`, `state`, `pincode`, `monthlyPrice`, `dailyPrice`, `depositAmount`, `rules`, `googleMapLink`, `keywords` (Array of strings).
 - **Images**: Features a primary `thumbnailImage`, and categorized arrays `buildingPhotos`, `roomPhotos`, `messPhotos`, `washroomPhotos`.
 - **Status/Metrics**: `isApproved` (Boolean, handled by Admin), `views` (Number).
+- **Monetization (Razorpay)**: `subscriptionStatus` (Enum: 'pending', 'active', 'expired'), `subscriptionExpiry` (Date), `lastPaymentId` (String).
 - **Amenities**: `foodAvailability` (Boolean), `foodDetails` (String).
 
 ### Enquiry
@@ -82,10 +83,11 @@ Handles hostel ratings and feedback from students.
 ### 4.2. Property Listing & Approval Flow (Owner -> Admin)
 1. **Verification**: Owners must complete their profile and request verification. 
 2. **Admin Verify**: Admin views pending verifications in `admin-dashboard.html` and approves them. Admin can also send custom notifications to the owner.
-3. **Add Listing**: Verified Owners can upload Hostels.
-4. **Performance Uploads**: Image uploads (Thumbnail, Building, Room, etc.) are batched using XHR to provide a visual progress bar. On the backend, Cloudinary streams are executed concurrently via `Promise.all` to radically reduce upload durations.
-5. **Approval**: Uploaded Hostels default to `isApproved: false`. The Admin reviews and approves them.
-6. **Discovery**: Students only see Hostels where `isApproved` is `true`.
+3. **Add Listing**: Verified Owners can upload Hostels. Upon creation, visually tracks expiration statuses.
+4. **Subscription Payment (Razorpay)**: Creating a new hostel triggers a Razorpay UI popup to enforce a ₹299/mo listing fee. If unpaid, the listing cannot be broadcasted publicly.
+5. **Approval**: Uploaded Hostels default to `isApproved: false`. The Admin safely reviews and approves them.
+6. **Background Automation**: A `node-cron` system runs twice daily (8 AM / 8 PM) executing tasks to identify properties approaching expiration to automatically send HTML branded renewal warnings.
+7. **Discovery**: Students exclusively see Hostels where both `isApproved: true` and `subscriptionStatus: 'active'`.
 
 ### 4.3. Enquiry Loop
 1. Student views a Hostel and clicks "Send Enquiry".
@@ -159,8 +161,13 @@ RESTful conventions used aggressively. Responses standardly structured as `{ suc
 |                    | `/:id/status`                | PUT    | Owner         | Update enquiry lifecycle state               |
 |                    | `/:id`                       | DELETE | Owner/Student | Clear enquiry from dashboard history         |
 | `/api/admin`       | `/analytics`                 | GET    | Admin         | Platform metrics                             |
+|                    | `/subscriptions`             | GET    | Admin         | Financial pipeline and revenue estimations   |
+|                    | `/subscriptions/:id/manage`  | PUT    | Admin         | Manually override/grant access (Cash payment)|
 |                    | `/deactivations/:id`         | PUT    | Admin         | Approve (delete user + cascade) or Reject    |
 |                    | `/notify-owner/:id`          | POST   | Admin         | Dispatch warning/info message to owner       |
+| `/api/payments`    | `/get-key`                   | GET    | Owner         | Fetches active Razorpay ID for frontend      |
+|                    | `/create-order`              | POST   | Owner         | Generates a secure Razorpay transaction      |
+|                    | `/verify`                    | POST   | Owner         | Verifies signature and activates listing     |
 | `/api/reviews`     | `/hostel/:hostelId`          | GET    | Public        | Get all reviews for a property               |
 |                    | `/`                          | POST   | Student       | Submit a new rating and comment              |
 |                    | `/`                          | GET    | Admin         | View all platform reviews                    |
