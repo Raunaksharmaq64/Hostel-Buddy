@@ -240,7 +240,6 @@ function renderHostels(hostels) {
 
     gsap.from('.hostel-card', {
       y: 30,
-      opacity: 0,
       duration: 0.8,
       stagger: 0.1,
       ease: 'power2.out'
@@ -299,7 +298,7 @@ async function loadAllHostels() {
     `).join('')
 
     gsap.from('#allHostelsContainer .hostel-card', {
-      y: 30, opacity: 0, duration: 0.8, stagger: 0.1, ease: 'power2.out'
+      y: 30, duration: 0.8, stagger: 0.1, ease: 'power2.out'
     })
   } catch (error) {
     container.innerHTML = `<p style="color:var(--danger); grid-column:1/-1;">Error loading properties: ${error.message}</p>`

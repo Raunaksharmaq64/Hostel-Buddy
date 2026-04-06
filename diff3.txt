@@ -1,0 +1,494 @@
+﻿commit 892959ac7febd80201438c3ad09c1e258be126e4
+Author: raunaksharmaq64 <raunaksharma88630mt@gmail.com>
+Date:   Mon Apr 6 00:37:55 2026 +0530
+
+    feat: implement owner and student dashboard logic and profile management scripts
+
+diff --git a/frontend/js/owner.js b/frontend/js/owner.js
+index 3f17120..8b27045 100644
+--- a/frontend/js/owner.js
++++ b/frontend/js/owner.js
+@@ -597,7 +597,7 @@ async function loadMyHostels() {
+         notifsContainer.innerHTML = notificationsHtml;
+     }
+ 
+-    gsap.from('#myHostelsContainer > div', { y: 20, opacity: 0, duration: 0.5, stagger: 0.1 })
++    gsap.from('#myHostelsContainer > div', { y: 20, duration: 0.5, stagger: 0.1 })
+   } catch (err) {
+     container.innerHTML = 'Error loading hostels.'
+   }
+
+commit 3345e98f250e10b6b3a406f758fa928fc02d15e3
+Author: raunaksharmaq64 <raunaksharma88630mt@gmail.com>
+Date:   Mon Apr 6 00:18:34 2026 +0530
+
+    feat: implement admin and owner dashboard infrastructure with payment integration and automated email notifications
+
+diff --git a/frontend/js/owner.js b/frontend/js/owner.js
+index 188c585..3f17120 100644
+--- a/frontend/js/owner.js
++++ b/frontend/js/owner.js
+@@ -428,8 +428,10 @@ document.getElementById('hostelForm').addEventListener('submit', async (e) => {
+       showToast('Listing updated successfully!', 'success')
+       cancelHostelEdit()
+     } else {
+-      await xhrWithProgress('/hostels', 'POST', formData)
+-      showToast('Listing created! Awaiting admin approval.', 'success')
++      const res = await xhrWithProgress('/hostels', 'POST', formData)
++      showToast('Listing created! Awaiting payment...', 'info')
++      handleRazorpayCheckout(res.data._id)
++      
+       e.target.reset()
+       Object.keys(selectedImages).forEach(key => selectedImages[key] = []);
+       ['previewThumbnail', 'previewBuilding', 'previewRooms', 'previewMess', 'previewBathrooms'].forEach(id => {
+@@ -523,31 +525,77 @@ async function loadMyHostels() {
+       container.innerHTML = "You haven't listed any hostels yet."
+       return
+     }
++    const now = new Date();
++    let notificationsHtml = '';
++
++    container.innerHTML = hostels.map(h => {
++      let subStatusClass = 'badge-pending';
++      let subText = 'Payment Pending';
++      let renewBtn = '';
++      let isExpiringSoon = false;
++
++      if (h.subscriptionStatus === 'active') {
++          subStatusClass = 'badge-approved';
++          const expiryDate = new Date(h.subscriptionExpiry);
++          subText = 'Active (until ' + expiryDate.toLocaleDateString() + ')';
++          
++          let diffDays = (expiryDate - now) / (1000 * 60 * 60 * 24);
++          if (diffDays > 0 && diffDays <= 3) {
++             isExpiringSoon = true;
++             notificationsHtml += `
++                 <div style="background:var(--warning-light, #fff3cd); border:1px solid var(--warning, #ffc107); padding:1rem; border-radius:var(--radius-md); color:#856404;">
++                     <strong>Action Required:</strong> Subscription for <strong>${h.name}</strong> expires in ${Math.ceil(diffDays)} days! 
++                     <button class="btn btn-sm" style="background:#ffc107; color:#000; margin-left:1rem; border:none; padding:4px 10px;" onclick="handleRazorpayCheckout('${h._id}')">Renew Now</button>
++                 </div>
++             `;
++          }
++      } else if (h.subscriptionStatus === 'expired') {
++          subStatusClass = 'badge-rejected';
++          subText = 'Expired';
++          renewBtn = `<button class="btn btn-primary btn-sm" onclick="handleRazorpayCheckout('${h._id}')" style="margin-left:auto; white-space:nowrap;">Renew Now</button>`;
++      } else {
++          subStatusClass = 'badge-pending';
++          subText = 'Payment Pending';
++          renewBtn = `<button class="btn btn-primary btn-sm" onclick="handleRazorpayCheckout('${h._id}')" style="margin-left:auto; white-space:nowrap;">Pay Now</button>`;
++      }
+ 
+-    container.innerHTML = hostels.map(h => `
++      return `
+             <div class="hostel-manage-card">
+                 <div class="hostel-manage-card-body">
+                     <h3 style="margin-bottom:0.5rem">${h.name}</h3>
+                     <p style="color:var(--text-muted);font-size:0.9rem">≡ƒôì ${h.address}, ${h.city}</p>
+                     <div class="info-box" style="margin:1.25rem 0">
+                         <div style="display:flex;justify-content:space-between;align-items:center;">
+-                            <span style="font-size:0.9rem;font-weight:600">Status:</span>
++                            <span style="font-size:0.9rem;font-weight:600">Admin Approval:</span>
+                             <span class="badge-v2 ${h.isApproved ? 'badge-approved' : 'badge-pending'}" style="font-size:0.75rem">
+                                 ${h.isApproved ? 'Approved' : 'Pending Approval'}
+                             </span>
+                         </div>
++                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem">
++                            <span style="font-size:0.9rem;font-weight:600">Subscription:</span>
++                            <span class="badge-v2 ${subStatusClass}" style="font-size:0.75rem">
++                                ${subText}
++                            </span>
++                        </div>
+                         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem">
+                             <span style="font-size:0.9rem;font-weight:600">Total Views:</span>
+                             <span style="font-weight:700;color:var(--primary)">≡ƒæü∩╕Å ${h.views}</span>
+                         </div>
+                     </div>
+-                    <div class="action-btns">
++                    <div class="action-btns" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                         <button class="btn btn-outline btn-sm" style="flex:1" onclick="editHostel('${h._id}')">Edit Listing</button>
+                         <button class="btn btn-outline btn-sm" style="flex:1;border-color:var(--danger);color:var(--danger)" onclick="deleteHostel('${h._id}')">Delete</button>
++                        ${renewBtn}
+                     </div>
+                 </div>
+             </div>
+-        `).join('')
++        `;
++    }).join('')
++
++    const notifsContainer = document.getElementById('renewalNotifications');
++    if (notifsContainer) {
++        notifsContainer.innerHTML = notificationsHtml;
++    }
+ 
+     gsap.from('#myHostelsContainer > div', { y: 20, opacity: 0, duration: 0.5, stagger: 0.1 })
+   } catch (err) {
+@@ -932,3 +980,53 @@ async function loadPlatformUpdates() {
+     container.innerHTML = '<p style="color:var(--danger)">Failed to load updates.</p>'
+   }
+ }
++
++// ---- RAZORPAY SUBSCRIPTION LOGIC ----
++window.handleRazorpayCheckout = async function(hostelId) {
++  try {
++    const keyRes = await fetchAPI('/payments/get-key', 'GET');
++    const orderRes = await fetchAPI('/payments/create-order', 'POST', { hostelId });
++    const order = orderRes.order;
++
++    const options = {
++      key: keyRes.key, // Fetched dynamically from backend
++
++      amount: order.amount,
++      currency: order.currency,
++      name: "HostelBuddy",
++      description: "Monthly Listing Subscription",
++      image: "https://cdn-icons-png.flaticon.com/512/3030/3030336.png",
++      order_id: order.id,
++      handler: async function (response) {
++        try {
++          const verifyRes = await fetchAPI('/payments/verify', 'POST', {
++            razorpay_order_id: response.razorpay_order_id,
++            razorpay_payment_id: response.razorpay_payment_id,
++            razorpay_signature: response.razorpay_signature,
++            hostelId: hostelId
++          });
++          if (verifyRes.success) {
++            showToast('Payment successful! Subscription active.', 'success');
++            loadMyHostels();
++          }
++        } catch (verifyErr) {
++          showToast('Payment verification failed. Contact support.', 'error');
++        }
++      },
++      prefill: {
++        name: document.getElementById('userNameDisplay').textContent.replace('Hello, ', ''),
++        email: JSON.parse(localStorage.getItem('user'))?.email || '',
++      },
++      theme: { color: "#f97316" }
++    };
++
++    const rzp1 = new window.Razorpay(options);
++    rzp1.on('payment.failed', function (response){
++      showToast('Payment failed! Try again from your dashboard.', 'error');
++      loadMyHostels(); // Refresh to show pending status
++    });
++    rzp1.open();
++  } catch (err) {
++    showToast('Failed to initiate payment: ' + (err.message || 'Unknown error'), 'error');
++  }
++}
+
+commit fa8567a7af2595ddf96558abd763c69772ef165b
+Author: raunaksharmaq64 <raunaksharma88630mt@gmail.com>
+Date:   Wed Apr 1 19:22:19 2026 +0530
+
+    feat: implement core frontend utilities and scaffold owner dashboard architecture
+
+diff --git a/frontend/js/owner.js b/frontend/js/owner.js
+index 244e233..188c585 100644
+--- a/frontend/js/owner.js
++++ b/frontend/js/owner.js
+@@ -27,7 +27,7 @@ function updateSidebarAvatar(user) {
+ }
+ 
+ // Tab Navigation Logic
+-function switchTab (tabId) {
++function switchTab(tabId) {
+   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'))
+   document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'))
+ 
+@@ -51,7 +51,7 @@ function switchTab (tabId) {
+ }
+ 
+ // ---- DASHBOARD STATS LOGIC ----
+-async function loadDashboardStats () {
++async function loadDashboardStats() {
+   try {
+     const [hostelRes, enqRes] = await Promise.all([
+       fetchAPI('/hostels/owner/my-hostels'),
+@@ -66,7 +66,7 @@ async function loadDashboardStats () {
+ }
+ 
+ // ---- PROFILE LOGIC ----
+-async function loadOwnerProfile () {
++async function loadOwnerProfile() {
+   try {
+     const res = await fetchAPI('/auth/me')
+     const user = res.data
+@@ -174,7 +174,7 @@ document.getElementById('ownerProfileForm').addEventListener('submit', async (e)
+   try {
+     const res = await fetchAPI('/profiles/owner', 'PUT', formData, true)
+     showToast('Profile updated successfully!', 'success')
+-    
++
+     // Update local storage so avatar persists
+     if (res.data) {
+       const existingUser = JSON.parse(localStorage.getItem('user'))
+@@ -262,21 +262,21 @@ function compressImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.8) {
+   })
+ }
+ 
+-function handleImagePreviews (inputId, previewContainerId, storeKey) {
++function handleImagePreviews(inputId, previewContainerId, storeKey) {
+   document.getElementById(inputId).addEventListener('change', async function (e) {
+     const container = document.getElementById(previewContainerId)
+ 
+     if (this.files) {
+       // Disable input while processing to prevent duplicate selections
+       this.disabled = true
+-      
++
+       // Keep track of old text for processing UX
+       const fileLabel = this.closest('.form-group') ? this.closest('.form-group').querySelector('label') : null
+       const originalLabelText = fileLabel ? fileLabel.innerText : ''
+       if (fileLabel) fileLabel.innerText = 'Compressing...'
+ 
+       const filesArray = Array.from(this.files)
+-      
++
+       for (const file of filesArray) {
+         // Prevent duplicate files based on name (size will change after compression)
+         if (!selectedImages[storeKey].some(f => f.name === file.name)) {
+@@ -314,7 +314,7 @@ function handleImagePreviews (inputId, previewContainerId, storeKey) {
+           }
+         }
+       }
+-      
++
+       // Restore input and label
+       this.disabled = false
+       if (fileLabel) fileLabel.innerText = originalLabelText
+@@ -385,10 +385,10 @@ document.getElementById('hostelForm').addEventListener('submit', async (e) => {
+     return new Promise((resolve, reject) => {
+       const xhr = new XMLHttpRequest()
+       xhr.open(method, `${API_URL}${urlPath}`, true)
+-      
++
+       const token = localStorage.getItem('token')
+       if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+-      
++
+       xhr.upload.onprogress = (e) => {
+         if (e.lengthComputable) {
+           const percent = Math.round((e.loaded / e.total) * 100)
+@@ -402,7 +402,7 @@ document.getElementById('hostelForm').addEventListener('submit', async (e) => {
+           }
+         }
+       }
+-      
++
+       xhr.onload = () => {
+         try {
+           const res = JSON.parse(xhr.responseText)
+@@ -412,7 +412,7 @@ document.getElementById('hostelForm').addEventListener('submit', async (e) => {
+           reject(new Error('Failed to parse response'))
+         }
+       }
+-      
++
+       xhr.onerror = () => reject(new Error('Network error'))
+       xhr.send(formDataObj)
+     })
+@@ -511,7 +511,7 @@ window.cancelHostelEdit = function () {
+ }
+ 
+ // ---- MY HOSTELS LOGIC ----
+-async function loadMyHostels () {
++async function loadMyHostels() {
+   const container = document.getElementById('myHostelsContainer')
+   container.innerHTML = '<div style="text-align:center;padding:2.5rem;"><div class="spinner-v2"></div></div>'
+ 
+@@ -568,7 +568,7 @@ window.deleteHostel = async function (id) {
+ }
+ 
+ // ---- ENQUIRIES LOGIC ----
+-async function loadOwnerEnquiries () {
++async function loadOwnerEnquiries() {
+   const container = document.getElementById('ownerEnquiriesContainer')
+   container.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="spinner-v2"></div></div>'
+ 
+@@ -627,57 +627,57 @@ async function loadOwnerEnquiries () {
+                 <!-- Conversation Body -->
+                 <div class="chat-body" style="max-height: 350px; overflow-y: auto; padding-bottom: 1rem;">
+                     ${(() => {
+-                        let messagesHtml = '';
+-                        if (eq.messages && eq.messages.length > 0) {
+-                            messagesHtml = eq.messages.map(m => {
+-                                const isMe = m.senderModel === 'Owner';
+-                                const pDate = new Date(m.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour:'2-digit', minute:'2-digit' });
+-                                if (isMe) {
+-                                    return `
++          let messagesHtml = '';
++          if (eq.messages && eq.messages.length > 0) {
++            messagesHtml = eq.messages.map(m => {
++              const isMe = m.senderModel === 'Owner';
++              const pDate = new Date(m.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
++              if (isMe) {
++                return `
+                                         <div style="display:flex;flex-direction:column;align-items:flex-end;">
+                                             <div class="msg-meta"><span>You</span> &middot; <span>${pDate}</span></div>
+                                             <div class="msg-bubble msg-owner">${m.text}</div>
+                                         </div>
+                                     `;
+-                                } else {
+-                                    const senderLabel = m.senderModel === 'Admin' ? 'Γ£à Platform' : `≡ƒæñ ${eq.studentId ? eq.studentId.name : 'Student'}`;
+-                                    return `
++              } else {
++                const senderLabel = m.senderModel === 'Admin' ? 'Γ£à Platform' : `≡ƒæñ ${eq.studentId ? eq.studentId.name : 'Student'}`;
++                return `
+                                         <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                                             <div class="msg-meta"><span>${senderLabel}</span> &middot; <span>${pDate}</span></div>
+                                             <div class="msg-bubble msg-student">${m.text}</div>
+                                         </div>
+                                     `;
+-                                }
+-                            }).join('');
+-                        } else {
+-                            // legacy fallback
+-                            messagesHtml = `
++              }
++            }).join('');
++          } else {
++            // legacy fallback
++            messagesHtml = `
+                                 <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                                     <div class="msg-meta"><span>≡ƒæñ ${eq.studentId ? eq.studentId.name : 'Student'}</span> &middot; <span>${sentDate}</span></div>
+                                     <div class="msg-bubble msg-student">"${eq.message}"</div>
+                                 </div>
+                             `;
+-                            
+-                            if (eq.ownerReply) {
+-                                messagesHtml += `
++
++            if (eq.ownerReply) {
++              messagesHtml += `
+                                     <div style="display:flex;flex-direction:column;align-items:flex-end;">
+                                         <div class="msg-meta">Your Reply</div>
+                                         <div class="msg-bubble msg-owner">${eq.ownerReply}</div>
+                                     </div>
+                                 `;
+-                            }
+-                        }
+-                        
+-                        if (eq.adminResponse) {
+-                            messagesHtml += `
++            }
++          }
++
++          if (eq.adminResponse) {
++            messagesHtml += `
+                                 <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                                     <div class="msg-meta" style="color:var(--success);font-weight:700;text-transform:uppercase">Γ£à Platform Response</div>
+                                     <div class="msg-bubble msg-admin">${eq.adminResponse}</div>
+                                 </div>
+                             `;
+-                        }
+-                        return messagesHtml;
+-                    })()}
++          }
++          return messagesHtml;
++        })()}
+                 </div>
+ 
+                 <!-- Chat Input Footer -->
+@@ -699,14 +699,14 @@ window.submitEnquiryReply = async function (id) {
+   if (!ownerReply) { showToast('Please type a reply.', 'error'); return }
+ 
+   try {
+-    if(replyInput) replyInput.disabled = true;
++    if (replyInput) replyInput.disabled = true;
+     await fetchAPI(`/enquiries/${id}/message`, 'POST', { text: ownerReply })
+     showToast('Reply sent successfully.', 'success')
+     loadOwnerEnquiries()
+   } catch (err) {
+     showToast(err.message, 'error')
+   } finally {
+-    if(replyInput) replyInput.disabled = false;
++    if (replyInput) replyInput.disabled = false;
+   }
+ }
+ 
+@@ -747,7 +747,7 @@ window.clearAllOwnerEnquiries = async function () {
+ }
+ 
+ // ---- NOTIFICATIONS LOGIC ----
+-async function loadNotifications () {
++async function loadNotifications() {
+   const container = document.getElementById('notificationsContainer')
+   if (!container) return
+   try {
+@@ -779,7 +779,7 @@ async function loadNotifications () {
+   }
+ }
+ 
+-async function markNotificationsRead () {
++async function markNotificationsRead() {
+   try {
+     await fetchAPI('/profiles/notifications/read', 'PUT')
+   } catch (err) {
+@@ -828,42 +828,42 @@ window.submitDeactivationRequest = async function () {
+ // ---- PLATFORM FEEDBACK LOGIC ----
+ // ---- PLATFORM FEEDBACK LOGIC ----
+ function setupFeedbackForm() {
+-    document.getElementById('feedbackForm')?.addEventListener('submit', async (e) => {
+-      e.preventDefault();
+-      const btn = e.target.querySelector('button');
+-      const originalText = btn.textContent;
+-      btn.textContent = 'Submitting...';
+-      
+-      const rating = document.getElementById('feedbackRating').value;
+-      const comment = document.getElementById('feedbackComment').value.trim();
+-      
+-      try {
+-        await fetchAPI('/feedback/submit', 'POST', { rating: Number(rating), comment });
+-        showToast('Thank you! Your feedback has been submitted for review.', 'success');
+-        document.getElementById('feedbackComment').value = '';
+-        document.getElementById('feedbackRating').value = '5';
+-      } catch (err) {
+-        showToast(err.message === 'Failed to fetch' ? 'Unable to reach server. Please try again.' : err.message, 'error');
+-      } finally {
+-        btn.textContent = originalText;
+-      }
+-    });
++  document.getElementById('feedbackForm')?.addEventListener('submit', async (e) => {
++    e.preventDefault();
++    const btn = e.target.querySelector('button');
++    const originalText = btn.textContent;
++    btn.textContent = 'Submitting...';
++
++    const rating = document.getElementById('feedbackRating').value;
++    const comment = document.getElementById('feedbackComment').value.trim();
++
++    try {
++      await fetchAPI('/feedback/submit', 'POST', { rating: Number(rating), comment });
++      showToast('Thank you! Your feedback has been submitted for review.', 'success');
++      document.getElementById('feedbackComment').value = '';
++      document.getElementById('feedbackRating').value = '5';
++    } catch (err) {
++      showToast(err.message === 'Failed to fetch' ? 'Unable to reach server. Please try again.' : err.message, 'error');
++    } finally {
++      btn.textContent = originalText;
++    }
++  });
+ }
+ 
+ async function loadCommunityFeedbacks() {
+   const container = document.getElementById('communityFeedbacksContainer');
+   if (!container) return;
+   container.innerHTML = '<div style="text-align:center;padding:2rem;"><div class="spinner"></div></div>';
+-  
++
+   try {
+     const res = await fetchAPI('/feedback/public');
+     const feedbacks = res.data;
+-    
++
+     if (feedbacks.length === 0) {
+       container.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted);background:var(--surface-2);border-radius:var(--radius);border:1px dashed var(--border);">No community reviews yet. Be the first to share your experience!</div>';
+       return;
+     }
+-    
++
+     container.innerHTML = feedbacks.map(f => `
+       <div class="list-item" style="flex-direction:column;align-items:stretch;gap:1.25rem">
+         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
