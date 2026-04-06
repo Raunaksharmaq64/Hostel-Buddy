@@ -26,7 +26,7 @@ exports.createOrder = async (req, res) => {
     }
 
     const options = {
-      amount: 299 * 100, // amount in the smallest currency unit (paise)
+      amount: 1 * 100, // amount in the smallest currency unit (paise) setting at ruppes 1 just for testing after that i will set it mannually
       currency: "INR",
       receipt: `receipt_order_${hostelId}`,
       notes: {
