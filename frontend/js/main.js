@@ -232,3 +232,54 @@ window.addEventListener('resize', () => {
 initTheme()
 document.addEventListener('DOMContentLoaded', setupThemeToggle)
 
+// ---- BADGE POLLING SYSTEM ----
+window._lastSeenEnquiryCount = 0;
+
+window.refreshBadges = async function () {
+  const token = localStorage.getItem('token')
+  if (!token) return
+
+  try {
+    const res = await fetchAPI('/profiles/notifications/unread-count')
+    const { notificationCount, enquiryCount, updatesCount } = res.data
+
+    // Enquiry Badge — only show if count increased since user last viewed
+    const enquiryBadge = document.getElementById('enquiryBadge')
+    if (enquiryBadge) {
+      if (enquiryCount > 0 && enquiryCount > window._lastSeenEnquiryCount) {
+        enquiryBadge.textContent = enquiryCount
+        enquiryBadge.style.display = 'inline-flex'
+      } else {
+        enquiryBadge.style.display = 'none'
+      }
+    }
+
+    // Profile / Notification Badge
+    const profileBadge = document.getElementById('profileBadge')
+    if (profileBadge) {
+      if (notificationCount > 0) {
+        profileBadge.textContent = notificationCount
+        profileBadge.style.display = 'inline-flex'
+      } else {
+        profileBadge.style.display = 'none'
+      }
+    }
+
+    // Updates Dot (megaphone)
+    const updatesBadge = document.getElementById('updatesBadge')
+    if (updatesBadge) {
+      updatesBadge.style.display = updatesCount > 0 ? 'block' : 'none'
+    }
+  } catch (err) {
+    // Silently fail — badges are non-critical
+  }
+}
+
+// Start polling every 30 seconds (only on dashboard pages)
+document.addEventListener('DOMContentLoaded', () => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    window.refreshBadges()
+    setInterval(window.refreshBadges, 30000)
+  }
+})

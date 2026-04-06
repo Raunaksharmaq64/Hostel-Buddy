@@ -4,6 +4,7 @@ const {
   updateOwnerProfile,
   requestVerification,
   requestDeactivation,
+  getUnreadCount,
   getNotifications,
   markNotificationsRead,
   clearNotifications,
@@ -21,6 +22,7 @@ router.post('/owner/request-verification', protect, authorize('Owner'), requestV
 
 // Deactivation & Notifications
 router.post('/request-deactivation', protect, requestDeactivation);
+router.get('/notifications/unread-count', protect, getUnreadCount);
 router.get('/notifications', protect, getNotifications);
 router.put('/notifications/read', protect, markNotificationsRead);
 router.delete('/notifications', protect, clearNotifications);

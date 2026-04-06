@@ -3216,3 +3216,51 @@ h6 {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================
+   NOTIFICATION BADGES
+   ============================================ */
+.badge-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  background: var(--danger);
+  border: 2.5px solid var(--surface);
+  border-radius: 50%;
+  display: none;
+  animation: pulseBadge 2s infinite;
+}
+
+.sidebar-badge {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  margin-left: auto;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+@keyframes pulseBadge {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+}
+
+.closed-banner {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #92400E;
+  padding: 0.6rem 1rem;
+  font-size: 0.82rem;
+  text-align: center;
+  border-radius: 8px;
+  margin: 0.5rem 1rem;
+}

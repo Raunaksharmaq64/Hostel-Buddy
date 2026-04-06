@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Notification = require('../models/Notification');
+const Enquiry = require('../models/Enquiry');
 const PlatformUpdate = require('../models/PlatformUpdate');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
@@ -175,6 +176,38 @@ exports.requestDeactivation = async (req, res) => {
     }
 
     res.status(200).json({ success: true, message: 'Deactivation request submitted successfully.', data: user });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Get Unread Counts for Badges
+// @route   GET /api/profiles/notifications/unread-count
+// @access  Private (Owner/Student)
+exports.getUnreadCount = async (req, res) => {
+  try {
+    const notificationCount = await Notification.countDocuments({
+      recipientId: req.user.id,
+      isRead: false
+    });
+
+    let enquiryCount = 0;
+    if (req.user.role === 'Owner') {
+      enquiryCount = await Enquiry.countDocuments({ ownerId: req.user.id, status: 'Pending' });
+    } else if (req.user.role === 'Student') {
+      enquiryCount = await Enquiry.countDocuments({ studentId: req.user.id, status: 'Responded' });
+    }
+
+    const user = await User.findById(req.user.id);
+    const lastRead = user.lastReadPlatformUpdate || new Date(0);
+    const updatesCount = await PlatformUpdate.countDocuments({
+      createdAt: { $gt: lastRead }
+    });
+
+    res.status(200).json({
+      success: true,
+      data: { notificationCount, enquiryCount, updatesCount }
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

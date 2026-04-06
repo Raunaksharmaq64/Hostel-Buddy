@@ -8,7 +8,12 @@ const platformUpdateSchema = new mongoose.Schema({
     enum: ['All', 'Student', 'Owner'],
     default: 'All'
   },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  expiresAt: { 
+    type: Date, 
+    default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    index: { expires: 0 }
+  }
 });
 
 module.exports = mongoose.model('PlatformUpdate', platformUpdateSchema);

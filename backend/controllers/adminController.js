@@ -91,7 +91,8 @@ exports.approveHostel = async (req, res) => {
       await Notification.create({
         recipientId: owner._id,
         message: `Your hostel listing "${hostel.name}" has been ${isApproved ? 'approved' : 'unapproved'} by the admin.`,
-        type: isApproved ? 'success' : 'warning'
+        type: isApproved ? 'success' : 'warning',
+        targetTab: 'my-hostels'
       });
     }
 
@@ -171,7 +172,8 @@ exports.approveVerification = async (req, res) => {
       await Notification.create({
         recipientId: user._id,
         message: `Your account verification has been ${status}.`,
-        type: status === 'verified' ? 'success' : 'warning'
+        type: status === 'verified' ? 'success' : 'warning',
+        targetTab: 'profile'
       });
     }
 
@@ -235,7 +237,9 @@ exports.respondToEnquiry = async (req, res) => {
       await Notification.create({
         recipientId: student._id,
         message: `An admin has responded to an enquiry you made.`,
-        type: 'info'
+        type: 'info',
+        targetTab: 'enquiries',
+        targetId: enquiry._id
       });
     }
 

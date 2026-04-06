@@ -16,6 +16,14 @@ const notificationSchema = new mongoose.Schema({
     enum: ['info', 'success', 'warning', 'danger'],
     default: 'info'
   },
+  targetTab: {
+    type: String,
+    default: null
+  },
+  targetId: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: null
+  },
   isRead: {
     type: Boolean,
     default: false

@@ -20,6 +20,12 @@ const enquirySchema = new mongoose.Schema({
   adminResponse: { type: String },
   ownerReply: { type: String },
   
+  closedAt: {
+    type: Date,
+    default: null,
+    index: { expires: '30d' }
+  },
+
   createdAt: { type: Date, default: Date.now }
 });
 

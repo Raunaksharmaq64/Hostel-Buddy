@@ -27,26 +27,42 @@ function updateSidebarAvatar(user) {
 }
 
 // Tab Navigation Logic
-function switchTab(tabId) {
+window.switchTab = function(tabId) {
   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'))
-  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'))
+  document.querySelectorAll('.sidebar-item[id^="nav-"]').forEach(item => item.classList.remove('active'))
 
   document.getElementById(tabId).classList.add('active')
-
-  // Only add active to nav item if triggered by an actual click event
-  if (window.event && window.event.currentTarget && window.event.currentTarget.classList) {
-    window.event.currentTarget.classList.add('active')
-  } else {
-    // Fallback for programmatic tab switches
-    const targetNavBtn = Array.from(document.querySelectorAll('.nav-item')).find(btn => btn.getAttribute('onclick') && btn.getAttribute('onclick').includes(`switchTab('${tabId}')`))
-    if (targetNavBtn) targetNavBtn.classList.add('active')
-  }
+  const sidebarBtn = document.getElementById('nav-' + tabId)
+  if (sidebarBtn) sidebarBtn.classList.add('active')
 
   // Load data based on tab
   if (tabId === 'dashboard') loadDashboardStats()
   if (tabId === 'my-hostels') loadMyHostels()
-  if (tabId === 'enquiries') loadOwnerEnquiries()
-  if (tabId === 'profile') loadOwnerProfile()
+  if (tabId === 'enquiries') {
+    // Hide badge immediately and save count so it doesn't reappear until NEW enquiries
+    const badge = document.getElementById('enquiryBadge');
+    if (badge) badge.style.display = 'none';
+    fetchAPI('/profiles/notifications/unread-count').then(res => {
+      window._lastSeenEnquiryCount = res.data.enquiryCount;
+    }).catch(() => {});
+
+    loadOwnerEnquiries().then(() => {
+      if (window.currentTargetId) {
+        const el = document.getElementById(`enquiry-${window.currentTargetId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.style.boxShadow = '0 0 0 3px var(--accent)';
+          setTimeout(() => el.style.boxShadow = '', 3000);
+        }
+        window.currentTargetId = null;
+      }
+    });
+  }
+  if (tabId === 'profile') {
+    loadOwnerProfile()
+    loadNotifications()
+    window.refreshBadges()
+  }
   if (tabId === 'feedback') loadCommunityFeedbacks()
 }
 
@@ -648,7 +664,8 @@ async function loadOwnerEnquiries() {
       if (eq.status === 'Responded') { statusClass = 'badge-approved' }
 
       return `
-            <div class="chat-card" style="margin-bottom:1.25rem">
+            <div class="chat-card" id="enquiry-${eq._id}" style="margin-bottom:1.25rem">
+                ${eq.status === 'Closed' ? '<div class="closed-banner">⚠️ This conversation is closed and will be automatically removed after 30 days.</div>' : ''}
                 <!-- Card Header -->
                 <div class="chat-header">
                     <div style="display:flex;align-items:center;gap:1rem;">
@@ -811,12 +828,15 @@ async function loadNotifications() {
     }
 
     container.innerHTML = notifications.map(n => `
-            <div class="notif-item ${n.type}">
+            <div class="notif-item ${n.type} ${n.targetTab ? 'clickable' : ''}" 
+                 ${n.targetTab ? `onclick="window.currentTargetId='${n.targetId || ''}'; switchTab('${n.targetTab}');"` : ''}
+                 style="cursor: ${n.targetTab ? 'pointer' : 'default'}">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem;">
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">${new Date(n.createdAt).toLocaleString()}</span>
                     ${!n.isRead ? '<span style="background: var(--primary); width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 5px var(--primary)"></span>' : ''}
                 </div>
                 <p style="font-size: 0.95rem; color: var(--text-2); font-weight: 500; line-height: 1.5;">${n.message}</p>
+                ${n.targetTab ? '<div style="font-size:0.75rem;color:var(--primary);margin-top:0.4rem;font-weight:600;">Click to view →</div>' : ''}
             </div>
         `).join('')
 
@@ -830,6 +850,7 @@ async function loadNotifications() {
 async function markNotificationsRead() {
   try {
     await fetchAPI('/profiles/notifications/read', 'PUT')
+    window.refreshBadges()
   } catch (err) {
     console.error('Failed to mark notifications read:', err)
   }
@@ -843,6 +864,7 @@ window.clearNotifications = async function () {
     await fetchAPI('/profiles/notifications', 'DELETE')
     showToast('Notifications cleared successfully.', 'success')
     loadNotifications()
+    window.refreshBadges()
   } catch (err) {
     showToast(err.message, 'error')
   }
@@ -943,9 +965,10 @@ window.openPlatformUpdatesModal = function () {
   document.getElementById('updatesModal').classList.add('active')
   loadPlatformUpdates()
 
-  const dot = document.getElementById('updatesDot');
-  if (dot) dot.remove();
-  fetchAPI('/profiles/updates/read', 'PUT').catch(e => console.error(e));
+  // Hide the badge dot and mark updates as read
+  const badge = document.getElementById('updatesBadge');
+  if (badge) badge.style.display = 'none';
+  fetchAPI('/profiles/updates/read', 'PUT').then(() => window.refreshBadges()).catch(e => console.error(e));
 }
 
 window.closePlatformUpdatesModal = function () {
@@ -966,7 +989,14 @@ async function loadPlatformUpdates() {
       return
     }
 
-    container.innerHTML = updates.map(u => `
+    const dismissBtn = `
+      <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;">
+        <button onclick="dismissAllUpdates()" class="btn btn-outline btn-sm" style="border-color:var(--text-muted);color:var(--text-muted);font-size:0.8rem;">
+          ✕ Dismiss All
+        </button>
+      </div>`
+
+    container.innerHTML = dismissBtn + updates.map(u => `
             <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem; border-left:4px solid var(--accent)">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                     <h4 style="font-size:1.05rem; font-weight:700; margin:0; color:var(--text)">${u.title}</h4>
@@ -978,6 +1008,22 @@ async function loadPlatformUpdates() {
   } catch (err) {
     console.error('Failed to load updates:', err)
     container.innerHTML = '<p style="color:var(--danger)">Failed to load updates.</p>'
+  }
+}
+
+window.dismissAllUpdates = async function () {
+  try {
+    await fetchAPI('/profiles/updates/read', 'PUT')
+    const container = document.getElementById('platformUpdatesContainer')
+    if (container) {
+      container.innerHTML = '<div class="panel" style="text-align:center;color:var(--text-muted);padding:2.5rem">All updates dismissed. New updates will appear here.</div>'
+    }
+    const badge = document.getElementById('updatesBadge')
+    if (badge) badge.style.display = 'none'
+    window.refreshBadges()
+    showToast('Updates dismissed.', 'success')
+  } catch (err) {
+    showToast('Failed to dismiss updates.', 'error')
   }
 }
 

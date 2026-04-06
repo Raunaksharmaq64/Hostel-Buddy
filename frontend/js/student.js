@@ -10,11 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
   loadProfileDetails()
   searchHostels()
   setupFeedbackForm()
-  checkUnreadNotifications() // Check for unread admin notifications for sidebar dot
 })
 
 // Tab Navigation Logic
-function switchTab(tabId) {
+window.switchTab = function(tabId) {
   document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'))
   document.querySelectorAll('.sidebar-item[id^="nav-"]').forEach(item => item.classList.remove('active'))
 
@@ -25,14 +24,30 @@ function switchTab(tabId) {
   // Load data based on tab
   if (tabId === 'discover') searchHostels()
   if (tabId === 'hostels') loadAllHostels()
-  if (tabId === 'enquiries') loadEnquiries()
+  if (tabId === 'enquiries') {
+    // Hide badge immediately and save count so it doesn't reappear until NEW enquiries
+    const badge = document.getElementById('enquiryBadge');
+    if (badge) badge.style.display = 'none';
+    fetchAPI('/profiles/notifications/unread-count').then(res => {
+      window._lastSeenEnquiryCount = res.data.enquiryCount;
+    }).catch(() => {});
+
+    loadEnquiries().then(() => {
+      if (window.currentTargetId) {
+        const el = document.getElementById(`enquiry-${window.currentTargetId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.style.boxShadow = '0 0 0 3px var(--accent)';
+          setTimeout(() => el.style.boxShadow = '', 3000);
+        }
+        window.currentTargetId = null;
+      }
+    });
+  }
   if (tabId === 'profile') {
     loadProfileDetails()
-    loadNotifications() // Load and auto-read only when profile tab is opened
-
-    // Clear sidebar dot if user clicks profile tab
-    const profileDot = document.getElementById('profileDot');
-    if (profileDot) profileDot.remove();
+    loadNotifications()
+    window.refreshBadges()
   }
   if (tabId === 'feedback') loadCommunityFeedbacks()
 }
@@ -52,21 +67,6 @@ async function loadProfileDetails() {
     const res = await fetchAPI('/auth/me')
     const user = res.data
 
-    if (user.hasUnreadPlatformUpdates && document.getElementById('megaphoneIcon')) {
-      const icon = document.getElementById('megaphoneIcon');
-      if (!document.getElementById('updatesDot')) {
-        icon.innerHTML += '<span id="updatesDot" style="position:absolute; top:2px; right:2px; width:10px; height:10px; background:var(--danger, red); border-radius:50%; box-shadow:0 0 0 2px var(--surface), 0 0 6px var(--danger, red); animation: pulseDot 2s infinite;"></span>';
-
-        // Ensure keyframes for pulseDot exist
-        if (!document.getElementById('pulseStyle')) {
-          const style = document.createElement('style');
-          style.id = 'pulseStyle';
-          style.innerHTML = `@keyframes pulseDot { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }`;
-          document.head.appendChild(style);
-        }
-      }
-    }
-
     document.getElementById('profileName').value = user.name || ''
     document.getElementById('profilePhone').value = user.phone || ''
     document.getElementById('collegeName').value = user.collegeName || ''
@@ -75,11 +75,8 @@ async function loadProfileDetails() {
     if (user.profilePhoto) {
       document.getElementById('profilePreview').src = user.profilePhoto
     }
-
-    // Load Notifications
-    // Removed loadNotifications() from here, moved to switchTab('profile') so they aren't auto-read invisibly!
   } catch (err) {
-    console.error(err)
+    console.error('Failed to load profile:', err)
   }
 }
 
@@ -598,7 +595,8 @@ async function loadEnquiries() {
       const sentDate = new Date(eq.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 
       return `
-            <div class="chat-card" style="margin-bottom:1.25rem">
+            <div class="chat-card" id="enquiry-${eq._id}" style="margin-bottom:1.25rem">
+                ${eq.status === 'Closed' ? '<div class="closed-banner">⚠️ This conversation is closed and will be automatically removed after 30 days.</div>' : ''}
                 <!-- Card Header -->
                 <div class="chat-header">
                     <div style="display:flex;align-items:center;gap:1rem;">
@@ -832,12 +830,15 @@ async function loadNotifications() {
     }
 
     container.innerHTML = notifications.map(n => `
-            <div class="notif-item ${n.type}">
+            <div class="notif-item ${n.type} ${n.targetTab ? 'clickable' : ''}" 
+                 ${n.targetTab ? `onclick="window.currentTargetId='${n.targetId || ''}'; switchTab('${n.targetTab}');"` : ''}
+                 style="cursor: ${n.targetTab ? 'pointer' : 'default'}">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem;">
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">${new Date(n.createdAt).toLocaleString()}</span>
                     ${!n.isRead ? '<span style="background: var(--primary); width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 5px var(--primary)"></span>' : ''}
                 </div>
                 <p style="font-size: 0.95rem; color: var(--text-2); font-weight: 500; line-height: 1.5;">${n.message}</p>
+                ${n.targetTab ? '<div style="font-size:0.75rem;color:var(--primary);margin-top:0.4rem;font-weight:600;">Click to view →</div>' : ''}
             </div>
         `).join('')
 
@@ -851,6 +852,7 @@ async function loadNotifications() {
 async function markNotificationsRead() {
   try {
     await fetchAPI('/profiles/notifications/read', 'PUT')
+    window.refreshBadges()
   } catch (err) {
     console.error('Failed to mark notifications read:', err)
   }
@@ -864,6 +866,7 @@ window.clearNotifications = async function () {
     await fetchAPI('/profiles/notifications', 'DELETE')
     showToast('Notifications cleared successfully.', 'success')
     loadNotifications()
+    window.refreshBadges()
   } catch (err) {
     showToast(err.message, 'error')
   }
@@ -874,9 +877,10 @@ window.openPlatformUpdatesModal = function () {
   document.getElementById('updatesModal').classList.add('active')
   loadPlatformUpdates()
 
-  const dot = document.getElementById('updatesDot');
-  if (dot) dot.remove();
-  fetchAPI('/profiles/updates/read', 'PUT').catch(e => console.error(e));
+  // Hide the badge dot and mark updates as read
+  const badge = document.getElementById('updatesBadge');
+  if (badge) badge.style.display = 'none';
+  fetchAPI('/profiles/updates/read', 'PUT').then(() => window.refreshBadges()).catch(e => console.error(e));
 }
 
 window.closePlatformUpdatesModal = function () {
@@ -897,7 +901,14 @@ async function loadPlatformUpdates() {
       return
     }
 
-    container.innerHTML = updates.map(u => `
+    const dismissBtn = `
+      <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;">
+        <button onclick="dismissAllUpdates()" class="btn btn-outline btn-sm" style="border-color:var(--text-muted);color:var(--text-muted);font-size:0.8rem;">
+          ✕ Dismiss All
+        </button>
+      </div>`
+
+    container.innerHTML = dismissBtn + updates.map(u => `
             <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem; border-left:4px solid var(--primary)">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                     <h4 style="font-size:1.05rem; font-weight:700; margin:0; color:var(--text)">${u.title}</h4>
@@ -911,22 +922,19 @@ async function loadPlatformUpdates() {
   }
 }
 
-// Initialize check for unread admin notifications for sidebar
-async function checkUnreadNotifications() {
+window.dismissAllUpdates = async function () {
   try {
-    const res = await fetchAPI('/profiles/notifications');
-    const notifications = res.data || [];
-    const hasUnread = notifications.some(n => !n.isRead);
-
-    if (hasUnread) {
-      const profileTab = document.getElementById('nav-profile');
-      if (profileTab && !document.getElementById('profileDot')) {
-        // Add red dot with pulse
-        profileTab.style.position = 'relative';
-        profileTab.innerHTML += '<span id="profileDot" style="position:absolute; top:8px; right:12px; width:8px; height:8px; background:var(--danger, red); border-radius:50%; box-shadow:0 0 0 2px var(--surface), 0 0 4px var(--danger, red); animation: pulseDot 2s infinite;"></span>';
-      }
+    await fetchAPI('/profiles/updates/read', 'PUT')
+    const container = document.getElementById('platformUpdatesContainer')
+    if (container) {
+      container.innerHTML = '<div class="panel" style="text-align:center;color:var(--text-muted);padding:2.5rem">All updates dismissed. New updates will appear here.</div>'
     }
+    const badge = document.getElementById('updatesBadge')
+    if (badge) badge.style.display = 'none'
+    window.refreshBadges()
+    showToast('Updates dismissed.', 'success')
   } catch (err) {
-    console.error('Failed to check unread admin notifications', err);
+    showToast('Failed to dismiss updates.', 'error')
   }
 }
+

@@ -1,5 +1,6 @@
 const Enquiry = require('../models/Enquiry');
 const Hostel = require('../models/Hostel');
+const Notification = require('../models/Notification');
 
 // @desc    Send an enquiry
 // @route   POST /api/enquiries
@@ -23,6 +24,15 @@ exports.createEnquiry = async (req, res) => {
         senderModel: 'Student',
         text: message
       }]
+    });
+
+    // Notify Owner about new enquiry
+    await Notification.create({
+      recipientId: hostel.ownerId,
+      message: `New enquiry received for "${hostel.name}"`,
+      type: 'info',
+      targetTab: 'enquiries',
+      targetId: enquiry._id
     });
 
     res.status(201).json({ success: true, data: enquiry });
@@ -137,6 +147,17 @@ exports.addMessageToEnquiry = async (req, res) => {
 
     await enquiry.save();
 
+    // Notify the other party about the new message
+    const recipientId = isStudent ? enquiry.ownerId : enquiry.studentId;
+    const senderLabel = isStudent ? 'A student' : 'A hostel owner';
+    await Notification.create({
+      recipientId,
+      message: `${senderLabel} sent you a new message regarding an enquiry.`,
+      type: 'info',
+      targetTab: 'enquiries',
+      targetId: enquiry._id
+    });
+
     res.status(200).json({ success: true, data: enquiry });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error', error: err.message });
@@ -161,6 +182,12 @@ exports.updateEnquiryStatus = async (req, res) => {
     }
 
     enquiry.status = status;
+    // Set or unset closedAt for auto-cleanup
+    if (status === 'Closed') {
+      enquiry.closedAt = new Date();
+    } else {
+      enquiry.closedAt = null;
+    }
     await enquiry.save();
 
     res.status(200).json({ success: true, data: enquiry });
