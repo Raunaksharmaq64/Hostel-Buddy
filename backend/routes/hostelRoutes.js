@@ -6,7 +6,9 @@ const {
   updateHostel,
   deleteHostel,
   getOwnerHostels,
-  getPlatformStats
+  getPlatformStats,
+  toggleSaveHostel,
+  getSavedHostels
 } = require('../controllers/hostelController');
 const { protect, authorize } = require('../middleware/auth');
 const upload = require('../middleware/upload');
@@ -16,6 +18,11 @@ const router = express.Router();
 // Public routes for fetching
 router.get('/', getHostels);
 router.get('/stats', getPlatformStats); // Must be before /:id to prevent "stats" being parsed as an id
+
+// Student saved hostels (must be before /:id)
+router.get('/saved/my-list', protect, authorize('Student'), getSavedHostels);
+router.put('/:id/save', protect, authorize('Student'), toggleSaveHostel);
+
 router.get('/:id', getHostel);
 
 // Owner specific route

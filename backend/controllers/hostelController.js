@@ -297,3 +297,46 @@ exports.getPlatformStats = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
+
+// @desc    Toggle save/unsave hostel for student
+// @route   PUT /api/hostels/:id/save
+// @access  Private (Student)
+exports.toggleSaveHostel = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const hostelId = req.params.id;
+
+    const index = user.savedHostels.indexOf(hostelId);
+    let saved = false;
+
+    if (index === -1) {
+      user.savedHostels.push(hostelId);
+      saved = true;
+    } else {
+      user.savedHostels.splice(index, 1);
+      saved = false;
+    }
+
+    await user.save();
+    res.status(200).json({ success: true, saved, message: saved ? 'Hostel saved' : 'Hostel unsaved' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Get saved hostels for student
+// @route   GET /api/hostels/saved/my-list
+// @access  Private (Student)
+exports.getSavedHostels = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate({
+      path: 'savedHostels',
+      match: { isApproved: true }
+    });
+
+    const hostels = user.savedHostels || [];
+    res.status(200).json({ success: true, count: hostels.length, data: hostels });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};

@@ -233,7 +233,7 @@ initTheme()
 document.addEventListener('DOMContentLoaded', setupThemeToggle)
 
 // ---- BADGE POLLING SYSTEM ----
-window._lastSeenEnquiryCount = 0;
+window._lastSeenEnquiryCount = parseInt(localStorage.getItem('lastSeenEnquiryCount') || '0');
 
 window.refreshBadges = async function () {
   const token = localStorage.getItem('token')

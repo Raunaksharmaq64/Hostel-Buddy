@@ -3264,3 +3264,170 @@ h6 {
   border-radius: 8px;
   margin: 0.5rem 1rem;
 }
+
+/* ======================================================
+   STAR RATINGS
+   ====================================================== */
+.star-rating { display: inline-flex; gap: 2px; }
+.star-rating .star { color: #D1D5DB; font-size: 1.1rem; cursor: default; transition: color 0.15s; }
+.star-rating .star.filled { color: #F59E0B; }
+
+.star-input { display: inline-flex; gap: 4px; cursor: pointer; }
+.star-input .star { font-size: 1.5rem; color: #D1D5DB; transition: color 0.15s, transform 0.15s; cursor: pointer; }
+.star-input .star:hover, .star-input .star.active { color: #F59E0B; transform: scale(1.15); }
+
+/* ======================================================
+   REVIEW CARDS
+   ====================================================== */
+.review-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+.review-card .review-header {
+  display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;
+}
+.review-card .review-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 0.85rem;
+  overflow: hidden;
+}
+.review-card .review-avatar img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.review-card .review-meta { flex: 1; }
+.review-card .review-name { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+.review-card .review-date { font-size: 0.75rem; color: var(--text-muted); }
+.review-card .review-text { font-size: 0.88rem; color: var(--text-2); line-height: 1.5; }
+
+/* ======================================================
+   SAVE / BOOKMARK HEART
+   ====================================================== */
+.save-heart {
+  position: absolute; top: 12px; right: 12px;
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(0,0,0,0.45); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.25s; z-index: 5;
+  border: none; font-size: 1.2rem;
+}
+.save-heart:hover { background: rgba(0,0,0,0.6); transform: scale(1.1); }
+.save-heart.saved { background: rgba(239, 68, 68, 0.85); }
+.save-heart.saved:hover { background: rgba(239, 68, 68, 1); }
+
+/* ======================================================
+   HOSTEL DETAIL MODAL (Full-Screen)
+   ====================================================== */
+.hostel-detail-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; visibility: hidden; transition: all 0.3s;
+}
+.hostel-detail-overlay.active { opacity: 1; visibility: visible; }
+
+.hostel-detail-modal {
+  background: var(--bg);
+  width: 95vw; max-width: 900px;
+  max-height: 90vh; overflow-y: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  position: relative;
+}
+.hostel-detail-modal .detail-close {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; justify-content: flex-end;
+  padding: 1rem 1.25rem 0;
+}
+.hostel-detail-modal .detail-close button {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  font-size: 1.2rem; cursor: pointer; color: var(--text);
+  display: flex; align-items: center; justify-content: center;
+  transition: 0.2s;
+}
+.hostel-detail-modal .detail-close button:hover { background: var(--danger); color: #fff; }
+.hostel-detail-modal .detail-body { padding: 0 1.5rem 1.5rem; }
+
+/* Photo Gallery */
+.photo-gallery { margin-bottom: 1.5rem; }
+.photo-gallery .gallery-main {
+  width: 100%; height: 320px; border-radius: var(--radius-md);
+  overflow: hidden; margin-bottom: 0.75rem;
+}
+.photo-gallery .gallery-main img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.photo-gallery .gallery-tabs {
+  display: flex; gap: 0.5rem; flex-wrap: wrap;
+}
+.photo-gallery .gallery-tab {
+  padding: 0.35rem 0.85rem; border-radius: 20px;
+  font-size: 0.78rem; font-weight: 600;
+  background: var(--surface); border: 1px solid var(--border);
+  cursor: pointer; transition: 0.2s; color: var(--text-muted);
+}
+.photo-gallery .gallery-tab.active,
+.photo-gallery .gallery-tab:hover {
+  background: var(--primary); color: #fff; border-color: var(--primary);
+}
+.photo-gallery .gallery-thumbs {
+  display: flex; gap: 0.5rem; margin-top: 0.5rem;
+  overflow-x: auto; padding-bottom: 0.25rem;
+}
+.photo-gallery .gallery-thumb {
+  width: 70px; height: 50px; border-radius: 8px;
+  overflow: hidden; cursor: pointer;
+  border: 2px solid transparent; transition: 0.2s; flex-shrink: 0;
+}
+.photo-gallery .gallery-thumb.active { border-color: var(--primary); }
+.photo-gallery .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Detail Sections */
+.detail-section { margin-bottom: 1.5rem; }
+.detail-section h3 {
+  font-size: 1rem; font-weight: 700;
+  color: var(--text); margin-bottom: 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid var(--primary);
+  display: inline-block;
+}
+
+/* Amenity Chips */
+.amenity-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.amenity-chip {
+  padding: 0.35rem 0.8rem; border-radius: 20px;
+  font-size: 0.78rem; font-weight: 600;
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary); border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+/* Owner Info */
+.owner-info-card {
+  display: flex; align-items: center; gap: 1rem;
+  background: var(--surface); padding: 1rem;
+  border-radius: var(--radius-md); border: 1px solid var(--border);
+}
+.owner-info-card .owner-avatar {
+  width: 48px; height: 48px; border-radius: 50%; overflow: hidden;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 1.1rem;
+}
+.owner-info-card .owner-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Detail Enquiry Form */
+.detail-enquiry-form textarea {
+  width: 100%; padding: 0.75rem; border-radius: var(--radius-md);
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); font-size: 0.9rem; resize: vertical;
+  min-height: 80px; font-family: inherit;
+}
+.detail-enquiry-form textarea:focus {
+  outline: none; border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}

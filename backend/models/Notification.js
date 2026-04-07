@@ -30,8 +30,12 @@ const notificationSchema = new mongoose.Schema({
   },
   createdAt: {
     type: Date,
-    default: Date.now,
-    index: { expires: '10d' } // TTL index: Automatically deletes after 10 days
+    default: Date.now
+  },
+  expiresAt: {
+    type: Date,
+    default: () => new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from creation
+    index: { expires: 0 } // TTL: MongoDB auto-deletes when expiresAt is reached
   }
 });
 

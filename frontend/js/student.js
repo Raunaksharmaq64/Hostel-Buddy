@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 2. Load Initial Data
   loadProfileDetails()
+  loadSavedHostelIds()
   searchHostels()
   setupFeedbackForm()
 })
@@ -30,6 +31,7 @@ window.switchTab = function(tabId) {
     if (badge) badge.style.display = 'none';
     fetchAPI('/profiles/notifications/unread-count').then(res => {
       window._lastSeenEnquiryCount = res.data.enquiryCount;
+      localStorage.setItem('lastSeenEnquiryCount', res.data.enquiryCount);
     }).catch(() => {});
 
     loadEnquiries().then(() => {
@@ -146,6 +148,46 @@ function updateSidebarAvatar(user) {
   }
 }
 
+// ---- SAVED HOSTELS TRACKING ----
+window._savedHostelIds = new Set();
+
+async function loadSavedHostelIds() {
+  try {
+    const res = await fetchAPI('/hostels/saved/my-list');
+    window._savedHostelIds = new Set(res.data.map(h => h._id));
+  } catch (e) {
+    // Silently fail — save feature is non-critical
+  }
+}
+
+window.toggleSaveHostel = async function (hostelId, event) {
+  if (event) event.stopPropagation();
+  try {
+    const res = await fetchAPI(`/hostels/${hostelId}/save`, 'PUT');
+    const btn = document.querySelector(`[data-save-id="${hostelId}"]`);
+    if (res.saved) {
+      window._savedHostelIds.add(hostelId);
+      if (btn) { btn.classList.add('saved'); btn.textContent = '❤️'; }
+      showToast('Hostel saved!', 'success');
+    } else {
+      window._savedHostelIds.delete(hostelId);
+      if (btn) { btn.classList.remove('saved'); btn.textContent = '🤍'; }
+      showToast('Hostel unsaved.', 'info');
+    }
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+function renderStars(rating, count) {
+  if (!rating || rating === 0) return '';
+  const full = Math.round(rating);
+  return `<span class="star-rating" title="${rating.toFixed(1)} / 5 (${count || 0} reviews)">
+    ${'<span class="star filled">★</span>'.repeat(full)}${'<span class="star">★</span>'.repeat(5 - full)}
+    <span style="font-size:0.75rem;color:var(--text-muted);margin-left:4px">${rating.toFixed(1)}</span>
+  </span>`;
+}
+
 // ---- HOSTEL DISCOVERY LOGIC ----
 let searchTimeout
 async function searchHostels() {
@@ -211,8 +253,9 @@ function renderHostels(hostels) {
   try {
     container.innerHTML = hostels.map(h => `
             <div class="hostel-card">
-                <div class="hostel-card-img">
+                <div class="hostel-card-img" style="position:relative">
                     <img src="${h.thumbnailImage ? getOptimizedUrl(h.thumbnailImage, 600) : (h.buildingPhotos && h.buildingPhotos.length > 0 ? getOptimizedUrl(h.buildingPhotos[0], 600) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')}" alt="Hostel Room" loading="lazy">
+                    <button class="save-heart ${window._savedHostelIds.has(h._id) ? 'saved' : ''}" data-save-id="${h._id}" onclick="toggleSaveHostel('${h._id}', event)">${window._savedHostelIds.has(h._id) ? '❤️' : '🤍'}</button>
                 </div>
                 <div style="padding: 1.25rem;">
                     <h3 class="hostel-title" style="display: flex; justify-content: space-between; align-items: flex-start; gap:.5rem;">
@@ -221,10 +264,11 @@ function renderHostels(hostels) {
                     </h3>
                     <p style="color:var(--text-muted); font-size: 0.9rem; margin-top:.4rem; line-height:1.4;">📍 ${h.city}, ${h.address}</p>
                     
-                    <div style="margin-top: 1rem;">
+                    <div style="margin-top: 1rem; display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
                         <span class="badge-v2 badge-info" style="font-size:.75rem">
                             🍽️ Food: ${h.foodAvailability ? 'Yes' : 'No'}
                         </span>
+                        ${renderStars(h.rating, h.reviewCount)}
                     </div>
                     
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
@@ -270,8 +314,9 @@ async function loadAllHostels() {
 
     container.innerHTML = hostels.map(h => `
         <div class="hostel-card">
-            <div class="hostel-card-img">
+            <div class="hostel-card-img" style="position:relative">
                 <img src="${h.thumbnailImage ? getOptimizedUrl(h.thumbnailImage, 600) : (h.buildingPhotos && h.buildingPhotos.length > 0 ? getOptimizedUrl(h.buildingPhotos[0], 600) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')}" alt="Hostel Room" loading="lazy">
+                <button class="save-heart ${window._savedHostelIds.has(h._id) ? 'saved' : ''}" data-save-id="${h._id}" onclick="toggleSaveHostel('${h._id}', event)">${window._savedHostelIds.has(h._id) ? '❤️' : '🤍'}</button>
             </div>
             <div style="padding: 1.25rem;">
                 <h3 class="hostel-title" style="display: flex; justify-content: space-between; align-items: flex-start; gap:.5rem;">
@@ -280,10 +325,11 @@ async function loadAllHostels() {
                 </h3>
                 <p style="color:var(--text-muted); font-size: 0.9rem; margin-top:.4rem; line-height:1.4;">📍 ${h.city}, ${h.address}</p>
                 
-                <div style="margin-top: 1rem;">
+                <div style="margin-top: 1rem; display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
                     <span class="badge-v2 badge-info" style="font-size:.75rem">
                         🍽️ Food: ${h.foodAvailability ? 'Yes' : 'No'}
                     </span>
+                    ${renderStars(h.rating, h.reviewCount)}
                 </div>
                 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
@@ -305,177 +351,194 @@ async function loadAllHostels() {
 
 // ---- DETAILED VIEW LOGIC ----
 window.openHostelDetails = async function (id) {
-  let modal = document.getElementById('hostelDetailModal')
-  if (!modal) {
-    document.body.insertAdjacentHTML('beforeend', `
-            <div id="hostelDetailModal" class="modal-overlay">
-                <div class="modal">
-                    <div class="modal-header">
-                        <div id="modalHeader"><h2>Loading details...</h2></div>
-                        <button class="modal-close" onclick="closeDetailsModal()">✕</button>
-                    </div>
-                    <div id="modalBody" class="modal-body">
-                        <!-- Content will be injected here -->
-                    </div>
-                </div>
-            </div>
-        `)
-    modal = document.getElementById('hostelDetailModal')
-  }
-
-  modal.classList.add('active')
+  const overlay = document.getElementById('hostelDetailOverlay');
+  const modal = document.getElementById('hostelDetailModal');
+  
+  modal.innerHTML = `<div style="text-align:center;padding:4rem;"><div class="spinner-v2"></div><p style="margin-top:1rem;color:var(--text-muted)">Loading details...</p></div>`;
+  overlay.classList.add('active');
 
   try {
     const [hostelRes, reviewsRes] = await Promise.all([
       fetchAPI(`/hostels/${id}`),
       fetchAPI(`/reviews/hostel/${id}`)
-    ])
-    const h = hostelRes.data
-    const reviews = reviewsRes.data
+    ]);
+    const h = hostelRes.data;
+    const reviews = reviewsRes.data;
+    const isSaved = window._savedHostelIds.has(h._id);
 
-    document.getElementById('modalHeader').innerHTML = `
-            <div style="display: flex; align-items: center; width:100%; gap: 1rem; padding-right:1rem">
-                <h1 style="font-size: 1.35rem; font-weight: 800; color: var(--text); margin:0;">
-                    ${h.name} 
-                    ${h.isVerified ? '<span class="badge-v2 badge-approved" style="font-size:0.7rem; padding: 0.2rem 0.5rem; vertical-align: middle; margin-left: 0.5rem;">Verified</span>' : ''}
-                </h1>
-            </div>
-        `
-
-    document.getElementById('modalBody').innerHTML = `
-        <div style="display:flex; flex-direction:column; gap:2.5rem;">
-            
-            <!-- Top Intro Section (Hero) -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; width:100%; margin-top: -1rem;">
-                <div style="flex: 1; min-width: 280px;">
-                    <p style="color: var(--text-muted); font-size: 1.05rem; margin-bottom: 1.25rem;">
-                        📍 ${h.address}, ${h.city}
-                        ${h.googleMapLink ? `<br><a href="${h.googleMapLink}" target="_blank" style="display:inline-block; margin-top:6px; font-size:0.9rem; font-weight:600; color:var(--primary); text-decoration:none;">🌍 Open in Google Maps ↗</a>` : ''}
-                    </p>
-                    
-                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                        <span class="badge-v2 badge-info" style="text-transform:none; font-size: 0.9rem;">🍽️ Food: ${h.foodAvailability ? 'Available' : 'Not Available'}</span>
-                        <span class="badge-v2 badge-info" style="text-transform:none; font-size: 0.9rem;">📞 Contact Options Inside</span>
-                    </div>
-                </div>
-                
-                <div style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(124, 58, 237, 0.05)); padding: 1.5rem; border-radius: var(--radius-lg); border: 1px solid rgba(14, 165, 233, 0.2); text-align: center; min-width: 240px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 0.3rem;">
-                        <div style="font-size: 2.2rem; font-weight: 900; color: var(--text); font-family: var(--font-head);">₹${h.monthlyPrice}</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform:uppercase; text-align: left; line-height: 1.1;">per<br>month</div>
-                    </div>
-                    <button class="btn btn-primary" style="width:100%; margin-top: 1.25rem; font-size: 1.05rem;" onclick="openBookingModal('${h._id}', '${h.name.replace(/'/g, "\\'")}')">
-                        <span style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                            ✉️ Send Enquiry
-                        </span>
-                    </button>
-                    ${h.ownerId ? `<div style="margin-top: 0.85rem; font-size: 0.85rem; color: var(--text-light); font-weight: 600;">Managed by ${h.ownerId.name}</div>` : ''}
-                </div>
-            </div>
-            <!-- About Section -->
-            <section>
-                <h3 style="font-size:1.2rem; color:var(--text); margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
-                    <span style="width:4px; height:18px; background:var(--primary); border-radius:4px;"></span> Description
-                </h3>
-                <p style="font-size: 1rem; line-height: 1.7; color: var(--text-2); white-space: pre-line; background:var(--surface-2); padding:1.25rem; border-radius:var(--radius); border:1px solid var(--border);">${h.description}</p>
-            </section>
-
-            ${h.rules ? `
-            <section>
-                <h3 style="font-size:1.2rem; color:var(--accent); margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
-                    <span style="width:4px; height:18px; background:var(--accent); border-radius:4px;"></span> Rules & Policies
-                </h3>
-                <div class="msg-bubble-warn" style="font-style:normal; border-radius:var(--radius); border:1px solid rgba(249,115,22,0.2); line-height:1.7;">
-                    ${h.rules}
-                </div>
-            </section>
-            ` : ''}
-
-            <!-- Image Galleries -->
-            <section>
-                <h3 style="font-size:1.2rem; color:var(--text); margin-bottom:1rem;">🏢 Exterior & Surroundings</h3>
-                <div id="galleryBuilding" class="gallery-grid"></div>
-
-                <h3 style="font-size:1.2rem; color:var(--text); margin-bottom:1rem;">🛏️ Rooms & Interiors</h3>
-                <div id="galleryRooms" class="gallery-grid"></div>
-
-                <h3 style="font-size:1.2rem; color:var(--text); margin-bottom:1rem;">🍽️ Dining Area</h3>
-                <div id="galleryMess" class="gallery-grid"></div>
-
-                <h3 style="font-size:1.2rem; color:var(--text); margin-bottom:1rem;">🚿 Washrooms</h3>
-                <div id="galleryBathrooms" class="gallery-grid"></div>
-            </section>
-
-            <!-- Reviews Section -->
-            <section style="border-top: 1px solid var(--border); padding-top:2.5rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap:wrap; gap:1rem;">
-                    <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--text);">⭐ Student Reviews (${reviews.length})</h3>
-                    <button class="btn btn-outline btn-sm" onclick="openReviewModal('${h._id}')">Write a Review</button>
-                </div>
-                ${reviews.length > 0 ? `
-                    <div style="display: grid; gap: 1rem;">
-                        ${reviews.map(r => `
-                            <div class="list-item" style="gap:1rem">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start; width:100%; flex-wrap:wrap; gap:.5rem">
-                                    <div style="display: flex; align-items: center; gap: 1rem;">
-                                        <div class="chat-avatar" style="width:40px;height:40px;font-size:1rem">
-                                            ${r.studentId ? r.studentId.name.charAt(0).toUpperCase() : 'S'}
-                                        </div>
-                                        <div>
-                                            <div style="font-weight: 700; font-size: 1rem; color: var(--text);">${r.studentId ? r.studentId.name : 'Student'}</div>
-                                            <div style="font-size: 0.75rem; color: var(--text-light);">${new Date(r.createdAt).toLocaleDateString()}</div>
-                                        </div>
-                                    </div>
-                                    <div style="color: #F59E0B; font-size: 1.1rem; border:1px solid var(--border); padding:.2rem .5rem; border-radius:12px; background:var(--surface)">
-                                        ${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}
-                                    </div>
-                                </div>
-                                <p class="msg-bubble" style="width:100%; border-radius:var(--radius); background:var(--surface-2); font-style:normal; margin-top:0.5rem">"${r.comment}"</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : '<p style="color: var(--text-muted); font-style: italic; background:var(--surface-3); padding:2rem; text-align:center; border-radius:var(--radius); border:1px dashed var(--border);">No reviews yet. Be the first to share your experience!</p>'}
-            </section>
-        </div>
-    `
-
-    const renderGrid = (containerId, imagesArr, emptyMsg) => {
-      const container = document.getElementById(containerId)
-      if (!imagesArr || imagesArr.length === 0) {
-        container.innerHTML = `<p style="color: var(--text-light); font-style: italic; font-size:.9rem; grid-column:1/-1;">${emptyMsg}</p>`
-        return
-      }
-      container.innerHTML = imagesArr.map(imgSrc => `
-                <div class="gallery-img-wrap">
-                    <img src="${getOptimizedUrl(imgSrc, 800)}" loading="lazy">
-                </div>
-            `).join('')
-    }
-
-    const allBuildingPhotos = h.thumbnailImage && (!h.buildingPhotos || !h.buildingPhotos.includes(h.thumbnailImage))
+    // Collect all photos into categories
+    const photoCategories = [];
+    const allBuilding = h.thumbnailImage && (!h.buildingPhotos || !h.buildingPhotos.includes(h.thumbnailImage))
       ? [h.thumbnailImage, ...(h.buildingPhotos || [])]
-      : h.buildingPhotos;
+      : (h.buildingPhotos || []);
+    if (allBuilding.length > 0) photoCategories.push({ label: '🏢 Building', photos: allBuilding });
+    if (h.roomPhotos && h.roomPhotos.length > 0) photoCategories.push({ label: '🛏️ Rooms', photos: h.roomPhotos });
+    if (h.messPhotos && h.messPhotos.length > 0) photoCategories.push({ label: '🍽️ Mess', photos: h.messPhotos });
+    if (h.washroomPhotos && h.washroomPhotos.length > 0) photoCategories.push({ label: '🚿 Washroom', photos: h.washroomPhotos });
+    
+    const firstPhoto = photoCategories.length > 0 ? photoCategories[0].photos[0] : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=900';
+    const avgRating = h.rating ? h.rating.toFixed(1) : null;
 
-    renderGrid('galleryBuilding', allBuildingPhotos, 'No building photos available.')
-    renderGrid('galleryRooms', h.roomPhotos, 'No room photos available.')
-    renderGrid('galleryMess', h.messPhotos, 'No dining area photos available.')
-    renderGrid('galleryBathrooms', h.washroomPhotos, 'No washroom photos available.')
+    modal.innerHTML = `
+      <div class="detail-close">
+        <button onclick="closeDetailsModal()">✕</button>
+      </div>
+      <div class="detail-body">
+        <!-- Photo Gallery -->
+        <div class="photo-gallery">
+          <div class="gallery-main"><img id="detailMainPhoto" src="${getOptimizedUrl(firstPhoto, 900)}" alt="${h.name}"></div>
+          ${photoCategories.length > 1 ? `
+          <div class="gallery-tabs">
+            ${photoCategories.map((cat, i) => `<button class="gallery-tab ${i === 0 ? 'active' : ''}" onclick="switchDetailGallery(${i})">${cat.label}</button>`).join('')}
+          </div>` : ''}
+          <div class="gallery-thumbs" id="detailThumbs">
+            ${(photoCategories[0]?.photos || []).map((p, i) => `<div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="setDetailPhoto('${getOptimizedUrl(p, 900)}', this)"><img src="${getOptimizedUrl(p, 150)}" alt=""></div>`).join('')}
+          </div>
+        </div>
+
+        <!-- Title + Price Row -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+          <div style="flex:1; min-width:250px;">
+            <h1 style="font-size:1.5rem; font-weight:800; color:var(--text); margin:0; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+              ${h.name}
+              ${h.isVerified ? '<span class="badge-v2 badge-approved" style="font-size:0.7rem;padding:0.2rem 0.5rem;">✓ Verified</span>' : ''}
+            </h1>
+            <p style="color:var(--text-muted); font-size:0.95rem; margin-top:0.35rem;">📍 ${h.address}, ${h.city}</p>
+            ${avgRating ? `<div style="margin-top:0.5rem;">${renderStars(h.rating, reviews.length)} <span style="font-size:0.8rem;color:var(--text-muted)">(${reviews.length} reviews)</span></div>` : ''}
+          </div>
+          <div style="text-align:center; background:linear-gradient(135deg, rgba(99,102,241,0.08), rgba(14,165,233,0.08)); padding:1.25rem 1.75rem; border-radius:var(--radius-lg); border:1px solid rgba(99,102,241,0.15);">
+            <div style="font-size:2rem; font-weight:900; color:var(--text);">₹${h.monthlyPrice}<span style="font-size:0.8rem;color:var(--text-muted);font-weight:500">/mo</span></div>
+            <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
+              <button class="btn btn-primary btn-sm" onclick="openBookingModal('${h._id}', '${h.name.replace(/'/g, "\\\\'")}')">✉️ Send Enquiry</button>
+              <button class="btn btn-outline btn-sm save-heart-btn" onclick="toggleSaveHostel('${h._id}')" data-save-id="${h._id}" style="border-color:${isSaved ? 'var(--danger)' : 'var(--border)'}; color:${isSaved ? 'var(--danger)' : 'var(--text-muted)'}">
+                ${isSaved ? '❤️ Saved' : '🤍 Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        ${h.googleMapLink ? `<a href="${h.googleMapLink}" target="_blank" style="display:inline-flex; align-items:center; gap:0.4rem; font-size:0.9rem; font-weight:600; color:var(--primary); text-decoration:none; margin-bottom:1.25rem;">🌍 Open in Google Maps ↗</a>` : ''}
+
+        <!-- Description -->
+        <div class="detail-section">
+          <h3>📝 Description</h3>
+          <p style="font-size:0.95rem; line-height:1.7; color:var(--text-2); white-space:pre-line; background:var(--surface); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border);">${h.description}</p>
+        </div>
+
+        <!-- Amenities -->
+        ${h.amenities && h.amenities.length > 0 ? `
+        <div class="detail-section">
+          <h3>🏠 Amenities</h3>
+          <div class="amenity-grid">
+            ${h.amenities.map(a => `<span class="amenity-chip">${a}</span>`).join('')}
+          </div>
+        </div>` : ''}
+
+        <!-- Room Types -->
+        ${h.roomTypes && h.roomTypes.length > 0 ? `
+        <div class="detail-section">
+          <h3>🛏️ Room Types</h3>
+          <div class="amenity-grid">
+            ${h.roomTypes.map(r => `<span class="amenity-chip" style="background:rgba(14,165,233,0.1);color:#0ea5e9;border-color:rgba(14,165,233,0.2);">${r}</span>`).join('')}
+          </div>
+        </div>` : ''}
+
+        <!-- Rules -->
+        ${h.rules ? `
+        <div class="detail-section">
+          <h3>📋 Rules & Policies</h3>
+          <div class="msg-bubble-warn" style="font-style:normal; border-radius:var(--radius-md); border:1px solid rgba(249,115,22,0.2); line-height:1.7;">${h.rules}</div>
+        </div>` : ''}
+
+        <!-- Owner Info -->
+        ${h.ownerId ? `
+        <div class="detail-section">
+          <h3>👤 Managed By</h3>
+          <div class="owner-info-card">
+            <div class="owner-avatar">
+              ${h.ownerId.profilePhoto ? `<img src="${h.ownerId.profilePhoto}" alt="${h.ownerId.name}">` : h.ownerId.name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div style="font-weight:700; color:var(--text);">${h.ownerId.name} ${h.ownerId.isVerified ? '<span style="color:#10b981;font-size:0.75rem;">✓ Verified Owner</span>' : ''}</div>
+              ${h.ownerId.phone ? `<div style="font-size:0.85rem; color:var(--text-muted);">📞 ${h.ownerId.phone}</div>` : ''}
+              ${h.ownerId.email ? `<div style="font-size:0.85rem; color:var(--text-muted);">✉️ ${h.ownerId.email}</div>` : ''}
+            </div>
+          </div>
+        </div>` : ''}
+
+        <!-- Reviews -->
+        <div class="detail-section">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.75rem;">
+            <h3 style="margin-bottom:0;">⭐ Student Reviews (${reviews.length})</h3>
+            <button class="btn btn-outline btn-sm" onclick="openReviewModal('${h._id}')">Write a Review</button>
+          </div>
+          ${reviews.length > 0 ? reviews.map(r => `
+            <div class="review-card">
+              <div class="review-header">
+                <div class="review-avatar">
+                  ${r.studentId?.profilePhoto ? `<img src="${r.studentId.profilePhoto}">` : (r.studentId?.name?.charAt(0).toUpperCase() || 'S')}
+                </div>
+                <div class="review-meta">
+                  <div class="review-name">${r.studentId?.name || 'Student'}</div>
+                  <div class="review-date">${new Date(r.createdAt).toLocaleDateString()}</div>
+                </div>
+                <span class="star-rating" style="font-size:0.95rem;">
+                  ${'<span class="star filled">★</span>'.repeat(r.rating)}${'<span class="star">★</span>'.repeat(5 - r.rating)}
+                </span>
+              </div>
+              <p class="review-text">"${r.comment}"</p>
+            </div>
+          `).join('') : '<p style="color:var(--text-muted); font-style:italic; background:var(--surface); padding:1.5rem; text-align:center; border-radius:var(--radius-md); border:1px dashed var(--border);">No reviews yet. Be the first to share your experience!</p>'}
+        </div>
+      </div>
+    `;
+
+    // Store photo categories for gallery tab switching
+    window._detailPhotoCategories = photoCategories;
+
   } catch (err) {
-    document.getElementById('modalHeader').innerHTML = `<p style="color:var(--danger)">Failed to load details: ${err.message}</p>`
+    modal.innerHTML = `<div style="padding:2rem;text-align:center;"><p style="color:var(--danger)">Failed to load details: ${err.message}</p><button class="btn btn-outline btn-sm" onclick="closeDetailsModal()" style="margin-top:1rem;">Close</button></div>`;
   }
 }
 
 window.closeDetailsModal = function () {
-  const m = document.getElementById('hostelDetailModal')
-  if (m) m.classList.remove('active')
+  const overlay = document.getElementById('hostelDetailOverlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
+// Gallery tab switching
+window.switchDetailGallery = function (catIndex) {
+  const cats = window._detailPhotoCategories;
+  if (!cats || !cats[catIndex]) return;
+  
+  // Update tab active state
+  document.querySelectorAll('.gallery-tab').forEach((t, i) => {
+    t.classList.toggle('active', i === catIndex);
+  });
+  
+  // Update thumbs
+  const thumbsContainer = document.getElementById('detailThumbs');
+  const photos = cats[catIndex].photos;
+  thumbsContainer.innerHTML = photos.map((p, i) => 
+    `<div class="gallery-thumb ${i === 0 ? 'active' : ''}" onclick="setDetailPhoto('${getOptimizedUrl(p, 900)}', this)"><img src="${getOptimizedUrl(p, 150)}" alt=""></div>`
+  ).join('');
+  
+  // Show first photo of category
+  document.getElementById('detailMainPhoto').src = getOptimizedUrl(photos[0], 900);
+}
+
+window.setDetailPhoto = function (url, thumbEl) {
+  document.getElementById('detailMainPhoto').src = url;
+  document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+  if (thumbEl) thumbEl.classList.add('active');
 }
 
 window.openBookingModal = function (id, name) {
   document.getElementById('bookingHostelName').textContent = name
   document.getElementById('bookingMessage').dataset.hostelId = id
   const modal = document.getElementById('bookingModal')
-  // OVERRIDE default modal-overlay z-index (2100) and push OVER hostelDetailModal
-  modal.style.zIndex = '3000';
+  // OVERRIDE z-index to push OVER hostelDetailOverlay (z-index 9999)
+  modal.style.zIndex = '10001';
   modal.classList.add('active')
 }
 
@@ -489,7 +552,7 @@ window.openReviewModal = function (hostelId) {
   let reviewModal = document.getElementById('reviewModal')
   if (!reviewModal) {
     document.body.insertAdjacentHTML('beforeend', `
-            <div id="reviewModal" class="modal-overlay">
+            <div id="reviewModal" class="modal-overlay" style="z-index:10001">
                 <div class="modal" style="max-width: 500px;">
                     <div class="modal-header">
                         <h2 class="modal-title">Write a Review</h2>

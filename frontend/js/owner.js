@@ -44,6 +44,7 @@ window.switchTab = function(tabId) {
     if (badge) badge.style.display = 'none';
     fetchAPI('/profiles/notifications/unread-count').then(res => {
       window._lastSeenEnquiryCount = res.data.enquiryCount;
+      localStorage.setItem('lastSeenEnquiryCount', res.data.enquiryCount);
     }).catch(() => {});
 
     loadOwnerEnquiries().then(() => {

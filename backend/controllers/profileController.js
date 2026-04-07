@@ -265,10 +265,13 @@ exports.getPlatformUpdates = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Fetch updates that match 'All' or the user's specific role
-    const updates = await PlatformUpdate.find({
-      targetRole: { $in: ['All', user.role] }
-    }).sort({ createdAt: -1 });
+    // Build query — only show updates newer than lastRead (if user has dismissed before)
+    const query = { targetRole: { $in: ['All', user.role] } };
+    if (user.lastReadPlatformUpdate) {
+      query.createdAt = { $gt: user.lastReadPlatformUpdate };
+    }
+
+    const updates = await PlatformUpdate.find(query).sort({ createdAt: -1 });
 
     res.status(200).json({ success: true, count: updates.length, data: updates });
   } catch (error) {
