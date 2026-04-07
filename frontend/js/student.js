@@ -51,6 +51,7 @@ window.switchTab = function(tabId) {
     loadNotifications()
     window.refreshBadges()
   }
+  if (tabId === 'saved') loadSavedHostels()
   if (tabId === 'feedback') loadCommunityFeedbacks()
 }
 
@@ -154,9 +155,125 @@ window._savedHostelIds = new Set();
 async function loadSavedHostelIds() {
   try {
     const res = await fetchAPI('/hostels/saved/my-list');
-    window._savedHostelIds = new Set(res.data.map(h => h._id));
+    const hostels = res.data.filter(h => h !== null);
+    window._savedHostelIds = new Set(hostels.map(h => h._id));
+    // Update saved badge in sidebar
+    const badge = document.getElementById('savedBadge');
+    if (badge && hostels.length > 0) {
+      badge.textContent = hostels.length;
+      badge.style.display = 'inline-flex';
+    }
   } catch (e) {
     // Silently fail — save feature is non-critical
+  }
+}
+
+async function loadSavedHostels() {
+  const container = document.getElementById('savedHostelsContainer');
+  if (!container) return;
+  container.innerHTML = `
+    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; color: var(--text-muted);">
+      <div class="spinner-v2"></div>
+      <p style="margin-top: 1.25rem; font-weight: 600;">Loading saved hostels...</p>
+    </div>
+  `;
+  try {
+    const res = await fetchAPI('/hostels/saved/my-list');
+    const hostels = res.data.filter(h => h !== null); // filter any deleted hostels
+    window._savedHostelIds = new Set(hostels.map(h => h._id));
+
+    // Update badge
+    const badge = document.getElementById('savedBadge');
+    if (badge) {
+      if (hostels.length > 0) {
+        badge.textContent = hostels.length;
+        badge.style.display = 'inline-flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    if (hostels.length === 0) {
+      container.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted); background: var(--surface); border-radius: var(--radius-lg); border: 1px dashed var(--border);">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">🤍</div>
+          <h3 style="margin-bottom: 0.5rem; color: var(--text);">No saved hostels yet</h3>
+          <p>Browse hostels and tap the ❤️ heart button to save them here for quick access.</p>
+          <button class="btn btn-primary btn-sm" style="margin-top: 1rem;" onclick="switchTab('discover')">Discover Hostels</button>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = hostels.map(h => `
+      <div class="hostel-card" id="saved-card-${h._id}">
+        <div class="hostel-card-img" style="position:relative">
+          <img src="${h.thumbnailImage ? getOptimizedUrl(h.thumbnailImage, 600) : (h.buildingPhotos && h.buildingPhotos.length > 0 ? getOptimizedUrl(h.buildingPhotos[0], 600) : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80')}" alt="${h.name}" loading="lazy">
+          <button class="save-heart saved" data-save-id="${h._id}" onclick="unsaveFromList('${h._id}', event)">❤️</button>
+        </div>
+        <div style="padding: 1.25rem;">
+          <h3 class="hostel-title" style="display: flex; justify-content: space-between; align-items: flex-start; gap:.5rem;">
+            ${h.name}
+            ${h.isVerified ? '<span class="badge-v2 badge-approved" style="font-size:.7rem;padding:.2rem .5rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg> Verified</span>' : ''}
+          </h3>
+          <p style="color:var(--text-muted); font-size: 0.9rem; margin-top:.4rem; line-height:1.4;">📍 ${h.city}, ${h.address}</p>
+          <div style="margin-top: 1rem; display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+            <span class="badge-v2 badge-info" style="font-size:.75rem">🍽️ Food: ${h.foodAvailability ? 'Yes' : 'No'}</span>
+            ${renderStars(h.rating, h.reviewCount)}
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+            <span class="hostel-price">₹${h.monthlyPrice}<span style="font-size: 0.9rem; color:var(--text-muted); font-weight:500;">/mo</span></span>
+            <button class="btn btn-outline btn-sm" onclick="openHostelDetails('${h._id}')">Details &rarr;</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    gsap.from('#savedHostelsContainer .hostel-card', {
+      y: 30, duration: 0.8, stagger: 0.1, ease: 'power2.out'
+    });
+  } catch (error) {
+    container.innerHTML = `<p style="color:var(--danger); grid-column:1/-1;">Error loading saved hostels: ${error.message}</p>`;
+  }
+}
+
+// Unsave from the saved list (removes card with animation)
+window.unsaveFromList = async function (hostelId, event) {
+  if (event) event.stopPropagation();
+  try {
+    await fetchAPI(`/hostels/${hostelId}/save`, 'PUT');
+    window._savedHostelIds.delete(hostelId);
+    
+    // Animate card removal
+    const card = document.getElementById(`saved-card-${hostelId}`);
+    if (card) {
+      card.style.transition = 'all 0.3s ease';
+      card.style.opacity = '0';
+      card.style.transform = 'scale(0.9)';
+      setTimeout(() => {
+        card.remove();
+        // Check if list is now empty
+        const container = document.getElementById('savedHostelsContainer');
+        if (container && container.children.length === 0) {
+          loadSavedHostels(); // Reload to show empty state
+        }
+        // Update badge
+        const badge = document.getElementById('savedBadge');
+        const count = window._savedHostelIds.size;
+        if (badge) {
+          if (count > 0) { badge.textContent = count; badge.style.display = 'inline-flex'; }
+          else { badge.style.display = 'none'; }
+        }
+      }, 300);
+    }
+    
+    // Also update heart on other tabs
+    const otherBtn = document.querySelector(`.hostel-card:not([id^="saved-card"]) [data-save-id="${hostelId}"]`);
+    if (otherBtn) { otherBtn.classList.remove('saved'); otherBtn.textContent = '🤍'; }
+    
+    showToast('Hostel removed from saved list.', 'info');
+  } catch (err) {
+    showToast(err.message, 'error');
   }
 }
 
@@ -173,6 +290,13 @@ window.toggleSaveHostel = async function (hostelId, event) {
       window._savedHostelIds.delete(hostelId);
       if (btn) { btn.classList.remove('saved'); btn.textContent = '🤍'; }
       showToast('Hostel unsaved.', 'info');
+    }
+    // Update saved badge count
+    const badge = document.getElementById('savedBadge');
+    const count = window._savedHostelIds.size;
+    if (badge) {
+      if (count > 0) { badge.textContent = count; badge.style.display = 'inline-flex'; }
+      else { badge.style.display = 'none'; }
     }
   } catch (err) {
     showToast(err.message, 'error');
