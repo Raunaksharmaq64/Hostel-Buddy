@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: { type: String, required: true, select: false },
   role: { 
     type: String, 
     enum: ['Student', 'Owner', 'Admin'], 
@@ -46,20 +46,8 @@ const userSchema = new mongoose.Schema({
   resetPasswordOtpExpiry: { type: Date },
   isEmailVerified: { type: Boolean, default: false },
   emailVerificationOtp: { type: String },
-  /**
-   * @deprecated 
-   * Notifications are now stored in a separate 'Notification' collection for 
-   * performance and scalability (TTL auto-cleanup).
-   * This field is kept for backward compatibility but is no longer being updated.
-   */
-  notifications: [
-    {
-      message: { type: String, required: true },
-      type: { type: String, default: 'info' },
-      isRead: { type: Boolean, default: false },
-      createdAt: { type: Date, default: Date.now }
-    }
-  ],
+  emailVerificationOtpExpiry: { type: Date },
+
   lastReadPlatformUpdate: { type: Date, default: null },
 
   createdAt: { type: Date, default: Date.now }

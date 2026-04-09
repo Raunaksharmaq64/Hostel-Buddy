@@ -7,6 +7,15 @@ const Hostel = require('../models/Hostel');
 exports.createReview = async (req, res) => {
   try {
     const { hostelId, rating, comment } = req.body;
+
+    // Validate rating
+    const numRating = Number(rating);
+    if (!hostelId || isNaN(numRating) || numRating < 1 || numRating > 5) {
+      return res.status(400).json({ success: false, message: 'Rating must be between 1 and 5' });
+    }
+    if (!comment || comment.trim().length === 0) {
+      return res.status(400).json({ success: false, message: 'Comment is required' });
+    }
     
     // Check if student already reviewed
     const existingReview = await Review.findOne({ studentId: req.user.id, hostelId });

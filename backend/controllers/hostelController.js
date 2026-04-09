@@ -110,9 +110,12 @@ exports.getHostel = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Hostel not found' });
     }
     
-    // Increment views
-    hostel.views += 1;
-    await hostel.save();
+    // Increment views atomically — exclude the owner viewing their own listing
+    const isOwner = req.headers.authorization && req.user && hostel.ownerId && hostel.ownerId._id.toString() === req.user.id;
+    if (!isOwner) {
+      await Hostel.updateOne({ _id: hostel._id }, { $inc: { views: 1 } });
+      hostel.views += 1; // Update local copy for the response
+    }
 
     res.status(200).json({ success: true, data: hostel });
   } catch (error) {
@@ -303,22 +306,22 @@ exports.getPlatformStats = async (req, res) => {
 // @access  Private (Student)
 exports.toggleSaveHostel = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
     const hostelId = req.params.id;
+    const userId = req.user.id;
 
-    const index = user.savedHostels.indexOf(hostelId);
-    let saved = false;
+    // Check if already saved
+    const user = await User.findById(userId).select('savedHostels');
+    const isSaved = user.savedHostels.some(id => id.toString() === hostelId);
 
-    if (index === -1) {
-      user.savedHostels.push(hostelId);
-      saved = true;
+    if (isSaved) {
+      // Atomic remove
+      await User.updateOne({ _id: userId }, { $pull: { savedHostels: hostelId } });
+      return res.status(200).json({ success: true, saved: false, message: 'Hostel unsaved' });
     } else {
-      user.savedHostels.splice(index, 1);
-      saved = false;
+      // Atomic add (prevents duplicates)
+      await User.updateOne({ _id: userId }, { $addToSet: { savedHostels: hostelId } });
+      return res.status(200).json({ success: true, saved: true, message: 'Hostel saved' });
     }
-
-    await user.save();
-    res.status(200).json({ success: true, saved, message: saved ? 'Hostel saved' : 'Hostel unsaved' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

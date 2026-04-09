@@ -50,7 +50,8 @@ exports.register = async (req, res) => {
       role,
       phone,
       isEmailVerified: false,
-      emailVerificationOtp: otp
+      emailVerificationOtp: otp,
+      emailVerificationOtpExpiry: Date.now() + 10 * 60 * 1000 // 10 minutes
     });
 
     // Send email
@@ -94,7 +95,7 @@ exports.login = async (req, res) => {
     }
 
     // Check for user 
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email, role }).select('+password');
     if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
@@ -244,7 +245,7 @@ exports.resetPassword = async (req, res) => {
       email,
       resetPasswordOtp: otp,
       resetPasswordOtpExpiry: { $gt: Date.now() }
-    });
+    }).select('+password');
 
     if (!user) {
       return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
@@ -275,7 +276,8 @@ exports.verifyEmail = async (req, res) => {
 
     const user = await User.findOne({ 
       email,
-      emailVerificationOtp: otp
+      emailVerificationOtp: otp,
+      emailVerificationOtpExpiry: { $gt: Date.now() }
     });
 
     if (!user) {
@@ -311,6 +313,7 @@ exports.resendVerification = async (req, res) => {
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     user.emailVerificationOtp = otp;
+    user.emailVerificationOtpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save({ validateBeforeSave: false });
 
     // Send email

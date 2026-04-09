@@ -23,10 +23,10 @@ router.get('/stats', getPlatformStats); // Must be before /:id to prevent "stats
 router.get('/saved/my-list', protect, authorize('Student'), getSavedHostels);
 router.put('/:id/save', protect, authorize('Student'), toggleSaveHostel);
 
-router.get('/:id', getHostel);
-
-// Owner specific route
+// Owner specific route (must be before /:id)
 router.get('/owner/my-hostels', protect, authorize('Owner'), getOwnerHostels);
+
+router.get('/:id', getHostel);
 
 // Protected routes (Create, Update, Delete)
 router.post(

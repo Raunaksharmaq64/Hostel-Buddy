@@ -31,7 +31,7 @@ exports.deleteUser = async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    // Also delete associated Hostels and Enquiries (Mock cascade delete)
+    // Also delete associated Hostels and Enquiries (cascade delete)
     if (user.role === 'Owner') {
       const ownerHostels = await Hostel.find({ ownerId: user._id }, '_id');
       const hostelIds = ownerHostels.map(h => h._id);
@@ -44,10 +44,21 @@ exports.deleteUser = async (req, res) => {
           { role: 'Student' },
           { $pull: { savedHostels: { $in: hostelIds } } }
         );
+        // Clean up reviews for deleted hostels
+        const Review = require('../models/Review');
+        await Review.deleteMany({ hostelId: { $in: hostelIds } });
       }
     } else if (user.role === 'Student') {
       await Enquiry.deleteMany({ studentId: user._id });
+      // Clean up student's reviews
+      const Review = require('../models/Review');
+      await Review.deleteMany({ studentId: user._id });
     }
+
+    // Clean up notifications and feedback for any role
+    await Notification.deleteMany({ recipientId: user._id });
+    const PlatformFeedback = require('../models/PlatformFeedback');
+    await PlatformFeedback.deleteMany({ userId: user._id });
 
     await user.deleteOne();
     res.status(200).json({ success: true, data: {} });

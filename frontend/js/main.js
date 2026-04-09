@@ -1,7 +1,19 @@
-// Global Configuration & API Base URL
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:5000/api'
   : '/api'
+
+// ---- XSS PROTECTION ----
+window.escapeHtml = function(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
+// ---- LUCIDE ICONS HELPER ----
+window.icon = function(name, size = 16, cls = '') {
+  return `<i data-lucide="${name}" style="width:${size}px;height:${size}px;" class="lucide-icon ${cls}"></i>`;
+}
 
 // Utility to handle API calls
 async function fetchAPI(endpoint, method = 'GET', body = null, isFormData = false) {
@@ -51,7 +63,6 @@ function checkAuth(roleRequired = null) {
   }
 
   if (roleRequired && currentUser.role !== roleRequired) {
-    // Redirect to appropriate dashboard
     switch (currentUser.role) {
       case 'Admin': window.location.href = 'admin-dashboard.html'; break
       case 'Student': window.location.href = 'student-dashboard.html'; break
@@ -70,13 +81,11 @@ function logout() {
   window.location.href = 'login.html'
 }
 
-// Handle Hero Search execution
+// Handle Hero Search — redirect to student dashboard with query
 function performSearch() {
   const val = document.getElementById('heroSearch').value
-  if (val) {
-    // Normally we'd redirect to a search page
-    // window.location.href = `student-dashboard.html?search=${encodeURIComponent(val)}`;
-    showToast('Search functionality will be integrated with Student Dashboard!', 'info')
+  if (val && val.trim()) {
+    window.location.href = `student-dashboard.html?search=${encodeURIComponent(val.trim())}`
   }
 }
 
@@ -86,7 +95,7 @@ window.showToast = function (message, type = 'success') {
   toast.className = `custom-toast toast-${type}`
   toast.innerHTML = `
         <div class="toast-content">
-            <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+            <span>${type === 'success' ? icon('check-circle', 18) : type === 'error' ? icon('x-circle', 18) : icon('info', 18)}</span>
             <p>${message}</p>
         </div>
     `
@@ -132,7 +141,7 @@ window.customConfirm = function (message) {
     modal.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
 
     modal.innerHTML = `
-            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⚠️</div>
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">${icon('alert-triangle', 40)}</div>
             <h3 style="margin-bottom: 0.75rem; color: var(--text); font-size: 1.4rem; font-weight: 800;">Confirm Action</h3>
             <p style="color: var(--text-2); margin-bottom: 2rem; font-size: 0.95rem; line-height: 1.5;">${message}</p>
             <div style="display: flex; gap: 1rem; justify-content: center;">
@@ -281,5 +290,20 @@ document.addEventListener('DOMContentLoaded', () => {
   if (token) {
     window.refreshBadges()
     setInterval(window.refreshBadges, 30000)
+  }
+
+  // ---- LUCIDE ICON INITIALIZATION ----
+  if (typeof window.lucide !== 'undefined') {
+    window.lucide.createIcons();
+
+    // Auto-initialize icons when DOM changes (dynamic content)
+    const observer = new MutationObserver((mutations) => {
+      let shouldInit = false;
+      mutations.forEach(m => {
+        if (m.addedNodes && m.addedNodes.length > 0) shouldInit = true;
+      });
+      if (shouldInit) window.lucide.createIcons();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 })
