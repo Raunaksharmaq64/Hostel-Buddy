@@ -52,12 +52,11 @@ flowchart TD
     E -->|Results| G[3D Glassmorphism Cards]
     
     G --> H[Hostel Detail Modal]
-    H --> I[Amenities & Rules Engine]
-    H --> J[Room/Washroom/Mess Image Gallery]
-    
-    %% Interactions
-    H --> K[Atomic `$inc` View Counter Trigger]
-    H --> L[Save/Bookmark Toggle ❤️]
+    H --> I(View Amenities & Rules)
+    H --> J(Categorized Image Gallery: Room, Mess, Washroom)
+    H --> GM(Google Maps Integration 🌍)
+    H --> K[Like / Save Property to 'My Hostels']
+    H --> L[Write Review & Give Star Rating]
     H --> M[Star Rating & Comment Engine]
     M -.->|Recalculates| N[MongoDB Average Rating Auto-Update]
     
