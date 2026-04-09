@@ -4,13 +4,14 @@
 Hostel Buddy is a full-stack web application designed to connect Students searching for accommodation with Hostel/PG Owners. The platform also includes a comprehensive Admin panel to manage users, approve properties, and handle system requests.
 
 - **Stack**: 
-  - **Frontend**: HTML5, CSS3, Vanilla JavaScript, GSAP for animations, Cloudflare icons.
+  - **Frontend**: HTML5, CSS3, Vanilla JavaScript, GSAP for animations, Lucide SVG Icons.
   - **Backend**: Node.js, Express.js.
-  - **Database**: MongoDB (Mongoose Schema).
+  - **Database**: MongoDB (Mongoose Schema) with atomic `$inc` and TTL indexes.
   - **Cloud Storage**: Cloudinary (for image uploads).
   - **Authentication**: JSON Web Tokens (JWT) & bcryptjs for password hashing.
+  - **Security**: Strict zero-trust XSS prevention architecture via global `escapeHtml()` injection sanitization.
   
-- **Design Philosophy**: Modern glassmorphism UI with smooth, fast, and responsive user experience. 
+- **Design Philosophy**: Modern glassmorphism UI with smooth, fast, responsive UX, and optimized bulk-processing workflows.
 
 ## 2. Folder Structure
 
@@ -65,6 +66,8 @@ Manages messages between Students and Owners.
 - **Fields**: `studentId`, `ownerId`, `hostelId`, `message`.
 - **Status Tracking**: `status` (Enum: 'Pending', 'Responded', 'Closed').
 - **Admin Response**: `adminResponse` (Admin can leave official replies on enquiries).
+- **Badge Tracking**: `isReadByOwner` (Boolean), `isReadByStudent` (Boolean) - powers flawless real-time, 1-to-1 unread badge synchronization across dashboards.
+- **Auto-Cleanup**: `closedAt` (Date mapped to a MongoDB TTL index for automatic 30-day deletion of closed conversations).
 
 ### Review
 Handles hostel ratings and feedback from students.
@@ -89,10 +92,12 @@ Handles hostel ratings and feedback from students.
 6. **Background Automation**: A `node-cron` system runs twice daily (8 AM / 8 PM) executing tasks to identify properties approaching expiration to automatically send HTML branded renewal warnings.
 7. **Discovery**: Students exclusively see Hostels where both `isApproved: true` and `subscriptionStatus: 'active'`.
 
-### 4.3. Enquiry Loop
+### 4.3. Enquiry & Messaging Loop
 1. Student views a Hostel and clicks "Send Enquiry".
-2. Owner receives the enquiry, reads the context, and marks it as "Responded" or "Closed".
-3. Admin can view all enquiries globally and intervene by providing an `adminResponse` on the platform.
+2. System sets `isReadByOwner = false`, instantly triggering an unread badge counter on the Owner's "Enquiries" tab via a 30s background poll.
+3. Owner navigates to Enquiries. A single fast `PUT /api/enquiries/mark-read` call accurately clears the badge. Owner replies or closes the thread.
+4. Backend flips `isReadByStudent = false`, triggering the Student's badge and sending a formal `Notification` string ("The owner has responded to your enquiry for XYZ.")
+5. Owners can use an optimized "Bulk Delete" endpoint to clear hundreds of messages with one API call, significantly boosting dashboard performance.
 
 ### 4.4. Review & Rating Flow
 1. Student stays at or visits a hostel and submits a rating/comment.
@@ -159,7 +164,9 @@ RESTful conventions used aggressively. Responses standardly structured as `{ suc
 |                    | `/`                          | POST   | Owner         | Submit new hostel listing                    |
 | `/api/enquiries`   | `/`                          | POST   | Student       | Start a conversation about a property        |
 |                    | `/:id/status`                | PUT    | Owner         | Update enquiry lifecycle state               |
-|                    | `/:id`                       | DELETE | Owner/Student | Clear enquiry from dashboard history         |
+|                    | `/mark-read`                 | PUT    | Owner/Student | Flawless multi-document unread tracking clear|
+|                    | `/owner/bulk`                | DELETE | Owner         | Optimized clearing of all owner enquiries    |
+|                    | `/:id`                       | DELETE | Owner/Student | Clear specific enquiry from dashboard history|
 | `/api/admin`       | `/analytics`                 | GET    | Admin         | Platform metrics                             |
 |                    | `/subscriptions`             | GET    | Admin         | Financial pipeline and revenue estimations   |
 |                    | `/subscriptions/:id/manage`  | PUT    | Admin         | Manually override/grant access (Cash payment)|

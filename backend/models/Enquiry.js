@@ -19,6 +19,8 @@ const enquirySchema = new mongoose.Schema({
   },
   adminResponse: { type: String },
   ownerReply: { type: String },
+  isReadByOwner: { type: Boolean, default: false },
+  isReadByStudent: { type: Boolean, default: true },
   
   closedAt: {
     type: Date,

@@ -193,9 +193,9 @@ exports.getUnreadCount = async (req, res) => {
 
     let enquiryCount = 0;
     if (req.user.role === 'Owner') {
-      enquiryCount = await Enquiry.countDocuments({ ownerId: req.user.id, status: 'Pending' });
+      enquiryCount = await Enquiry.countDocuments({ ownerId: req.user.id, isReadByOwner: false });
     } else if (req.user.role === 'Student') {
-      enquiryCount = await Enquiry.countDocuments({ studentId: req.user.id, status: 'Responded' });
+      enquiryCount = await Enquiry.countDocuments({ studentId: req.user.id, isReadByStudent: false });
     }
 
     const user = await User.findById(req.user.id);

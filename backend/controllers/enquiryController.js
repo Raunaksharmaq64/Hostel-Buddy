@@ -90,7 +90,7 @@ exports.getOwnerEnquiries = async (req, res) => {
 exports.replyToEnquiry = async (req, res) => {
   try {
     const { ownerReply } = req.body;
-    let enquiry = await Enquiry.findById(req.params.id);
+    let enquiry = await Enquiry.findById(req.params.id).populate('hostelId', 'name');
 
     if (!enquiry) {
       return res.status(404).json({ success: false, message: 'Enquiry not found' });
@@ -102,7 +102,19 @@ exports.replyToEnquiry = async (req, res) => {
 
     enquiry.ownerReply = ownerReply;
     enquiry.status = 'Responded';
+    enquiry.isReadByStudent = false; // Mark unread for student
+    enquiry.isReadByOwner = true; // Owner has read it since they replied
     await enquiry.save();
+
+    // Notify student about the reply
+    const hostelName = enquiry.hostelId?.name || 'a hostel';
+    await Notification.create({
+      recipientId: enquiry.studentId,
+      message: `The owner of "${hostelName}" has replied to your enquiry.`,
+      type: 'info',
+      targetTab: 'enquiries',
+      targetId: enquiry._id
+    });
 
     res.status(200).json({ success: true, data: enquiry });
   } catch (err) {
@@ -143,6 +155,11 @@ exports.addMessageToEnquiry = async (req, res) => {
     if (isOwner) {
       enquiry.status = 'Responded';
       enquiry.ownerReply = text; // Keep legacy field updated for single-reply backward compatibility
+      enquiry.isReadByStudent = false;
+      enquiry.isReadByOwner = true;
+    } else {
+      enquiry.isReadByOwner = false;
+      enquiry.isReadByStudent = true;
     }
 
     await enquiry.save();
@@ -171,7 +188,7 @@ exports.updateEnquiryStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
-    let enquiry = await Enquiry.findById(req.params.id);
+    let enquiry = await Enquiry.findById(req.params.id).populate('hostelId', 'name');
 
     if (!enquiry) {
       return res.status(404).json({ success: false, message: 'Enquiry not found' });
@@ -185,10 +202,32 @@ exports.updateEnquiryStatus = async (req, res) => {
     // Set or unset closedAt for auto-cleanup
     if (status === 'Closed') {
       enquiry.closedAt = new Date();
+      enquiry.isReadByStudent = false;
+      enquiry.isReadByOwner = true;
     } else {
       enquiry.closedAt = null;
     }
     await enquiry.save();
+
+    // Notify student about status change
+    const hostelName = enquiry.hostelId?.name || 'a hostel';
+    if (status === 'Closed') {
+      await Notification.create({
+        recipientId: enquiry.studentId,
+        message: `Your enquiry for "${hostelName}" has been closed by the owner.`,
+        type: 'warning',
+        targetTab: 'enquiries',
+        targetId: enquiry._id
+      });
+    } else if (status === 'Responded') {
+      await Notification.create({
+        recipientId: enquiry.studentId,
+        message: `The owner has responded to your enquiry for "${hostelName}".`,
+        type: 'success',
+        targetTab: 'enquiries',
+        targetId: enquiry._id
+      });
+    }
 
     res.status(200).json({ success: true, data: enquiry });
   } catch (error) {
@@ -222,3 +261,30 @@ exports.deleteEnquiry = async (req, res) => {
   }
 };
 
+// @desc    Bulk delete all enquiries for the logged-in owner
+// @route   DELETE /api/enquiries/owner/bulk
+// @access  Private (Owner)
+exports.bulkDeleteOwnerEnquiries = async (req, res) => {
+  try {
+    const result = await Enquiry.deleteMany({ ownerId: req.user.id });
+    res.status(200).json({ success: true, message: `${result.deletedCount} enquiries deleted` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Mark enquiries as read
+// @route   PUT /api/enquiries/mark-read
+// @access  Private (Student/Owner)
+exports.markEnquiriesRead = async (req, res) => {
+  try {
+    if (req.user.role === 'Owner') {
+      await Enquiry.updateMany({ ownerId: req.user.id, isReadByOwner: false }, { $set: { isReadByOwner: true } });
+    } else if (req.user.role === 'Student') {
+      await Enquiry.updateMany({ studentId: req.user.id, isReadByStudent: false }, { $set: { isReadByStudent: true } });
+    }
+    res.status(200).json({ success: true, message: 'Enquiries marked as read' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+};

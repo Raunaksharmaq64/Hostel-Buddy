@@ -6,7 +6,15 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('userNameDisplay').textContent = `Hello, ${user.name}`
   updateSidebarAvatar(user)
 
-  // 2. Load Initial Data
+  // 2. Check for search param from homepage redirect
+  const urlParams = new URLSearchParams(window.location.search);
+  const searchQuery = urlParams.get('search');
+  if (searchQuery) {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = searchQuery;
+  }
+
+  // 3. Load Initial Data
   loadProfileDetails()
   loadSavedHostelIds()
   searchHostels()
@@ -26,13 +34,10 @@ window.switchTab = function(tabId) {
   if (tabId === 'discover') searchHostels()
   if (tabId === 'hostels') loadAllHostels()
   if (tabId === 'enquiries') {
-    // Hide badge immediately and save count so it doesn't reappear until NEW enquiries
+    // Hide badge immediately and mark enquiries read on backend
     const badge = document.getElementById('enquiryBadge');
     if (badge) badge.style.display = 'none';
-    fetchAPI('/profiles/notifications/unread-count').then(res => {
-      window._lastSeenEnquiryCount = res.data.enquiryCount;
-      localStorage.setItem('lastSeenEnquiryCount', res.data.enquiryCount);
-    }).catch(() => {});
+    fetchAPI('/enquiries/mark-read', 'PUT').catch(() => {});
 
     loadEnquiries().then(() => {
       if (window.currentTargetId) {
@@ -213,12 +218,12 @@ async function loadSavedHostels() {
         </div>
         <div style="padding: 1.25rem;">
           <h3 class="hostel-title" style="display: flex; justify-content: space-between; align-items: flex-start; gap:.5rem;">
-            ${h.name}
+            ${escapeHtml(h.name)}
             ${h.isVerified ? '<span class="badge-v2 badge-approved" style="font-size:.7rem;padding:.2rem .5rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg> Verified</span>' : ''}
           </h3>
-          <p style="color:var(--text-muted); font-size: 0.9rem; margin-top:.4rem; line-height:1.4;">📍 ${h.city}, ${h.address}</p>
+          <p style="color:var(--text-muted); font-size: 0.9rem; margin-top:.4rem; line-height:1.4;">${icon('map-pin', 14)} ${escapeHtml(h.city)}, ${escapeHtml(h.address)}</p>
           <div style="margin-top: 1rem; display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
-            <span class="badge-v2 badge-info" style="font-size:.75rem">🍽️ Food: ${h.foodAvailability ? 'Yes' : 'No'}</span>
+            <span class="badge-v2 badge-info" style="font-size:.75rem">${icon('utensils', 13)} Food: ${h.foodAvailability ? 'Yes' : 'No'}</span>
             ${renderStars(h.rating, h.reviewCount)}
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
@@ -322,6 +327,8 @@ async function searchHostels() {
     const maxPrice = document.getElementById('maxPrice').value
     const verifiedOnly = document.getElementById('verifiedOnly').checked
     const foodIncluded = document.getElementById('foodIncluded').checked
+    const sortSelect = document.getElementById('sortSelect')
+    const sort = sortSelect ? sortSelect.value : '-createdAt'
 
     const facilities = Array.from(document.querySelectorAll('.facility-filter:checked')).map(cb => cb.value)
 
@@ -332,6 +339,7 @@ async function searchHostels() {
     if (verifiedOnly) params.append('isVerified', 'true')
     if (foodIncluded) params.append('foodAvailability', 'true')
     if (facilities.length > 0) params.append('facilities', facilities.join(','))
+    if (sort) params.append('sort', sort)
 
     document.getElementById('hostelsContainer').innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 4rem; color: var(--text-muted);">
@@ -342,13 +350,29 @@ async function searchHostels() {
 
     try {
       const res = await fetchAPI(`/hostels?${params.toString()}`)
+      
+      // Update result count
+      const countEl = document.getElementById('resultCount')
+      if (countEl) {
+        if (query) {
+          countEl.textContent = `Found ${res.data.length} ${res.data.length === 1 ? 'property' : 'properties'} for "${query}"`
+        } else {
+          countEl.textContent = `Showing ${res.data.length} ${res.data.length === 1 ? 'property' : 'properties'}`
+        }
+      }
+
       renderHostels(res.data)
       if (res.data.length === 0) {
+        const popularCities = ['Delhi', 'Mumbai', 'Bangalore', 'Pune', 'Hyderabad', 'Jaipur', 'Lucknow', 'Chandigarh']
         document.getElementById('hostelsContainer').innerHTML = `
                     <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted); background: var(--surface-3); border-radius: var(--radius-lg); border: 1px dashed var(--border-strong);">
+                        <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">${icon('search-x', 48)}</div>
                         <h3 style="margin-bottom: 0.5rem; color: var(--text);">No properties found</h3>
-                        <p>Try adjusting your search filters.</p>
-                        <button class="btn btn-outline" style="margin-top: 1rem;" onclick="resetFilters()">Clear Filters</button>
+                        <p>Try adjusting your search filters or explore popular cities:</p>
+                        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;margin-top:1rem;">
+                          ${popularCities.map(c => `<button class="btn btn-outline btn-sm" onclick="document.getElementById('searchInput').value='${c}';searchHostels()">${c}</button>`).join('')}
+                        </div>
+                        <button class="btn btn-outline" style="margin-top: 1.25rem;" onclick="resetFilters()">Clear All Filters</button>
                     </div>
                 `
       }
@@ -365,6 +389,8 @@ window.resetFilters = function () {
   document.getElementById('maxPrice').value = ''
   document.getElementById('verifiedOnly').checked = false
   document.getElementById('foodIncluded').checked = false
+  const sortSelect = document.getElementById('sortSelect')
+  if (sortSelect) sortSelect.value = '-createdAt'
   document.querySelectorAll('.facility-filter').forEach(cb => cb.checked = false)
   searchHostels()
 }
@@ -383,14 +409,14 @@ function renderHostels(hostels) {
                 </div>
                 <div style="padding: 1.25rem;">
                     <h3 class="hostel-title" style="display: flex; justify-content: space-between; align-items: flex-start; gap:.5rem;">
-                        ${h.name} 
+                        ${escapeHtml(h.name)} 
                         ${h.isVerified ? '<span class="badge-v2 badge-approved" style="font-size:.7rem;padding:.2rem .5rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg> Verified</span>' : ''}
                     </h3>
-                    <p style="color:var(--text-muted); font-size: 0.9rem; margin-top:.4rem; line-height:1.4;">📍 ${h.city}, ${h.address}</p>
+                    <p style="color:var(--text-muted); font-size: 0.9rem; margin-top:.4rem; line-height:1.4;">${icon('map-pin', 14)} ${escapeHtml(h.city)}, ${escapeHtml(h.address)}</p>
                     
                     <div style="margin-top: 1rem; display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
                         <span class="badge-v2 badge-info" style="font-size:.75rem">
-                            🍽️ Food: ${h.foodAvailability ? 'Yes' : 'No'}
+                            ${icon('utensils', 13)} Food: ${h.foodAvailability ? 'Yes' : 'No'}
                         </span>
                         ${renderStars(h.rating, h.reviewCount)}
                     </div>
@@ -444,14 +470,14 @@ async function loadAllHostels() {
             </div>
             <div style="padding: 1.25rem;">
                 <h3 class="hostel-title" style="display: flex; justify-content: space-between; align-items: flex-start; gap:.5rem;">
-                    ${h.name} 
+                    ${escapeHtml(h.name)} 
                     ${h.isVerified ? '<span class="badge-v2 badge-approved" style="font-size:.7rem;padding:.2rem .5rem;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg> Verified</span>' : ''}
                 </h3>
-                <p style="color:var(--text-muted); font-size: 0.9rem; margin-top:.4rem; line-height:1.4;">📍 ${h.city}, ${h.address}</p>
+                <p style="color:var(--text-muted); font-size: 0.9rem; margin-top:.4rem; line-height:1.4;">${icon('map-pin', 14)} ${escapeHtml(h.city)}, ${escapeHtml(h.address)}</p>
                 
                 <div style="margin-top: 1rem; display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
                     <span class="badge-v2 badge-info" style="font-size:.75rem">
-                        🍽️ Food: ${h.foodAvailability ? 'Yes' : 'No'}
+                        ${icon('utensils', 13)} Food: ${h.foodAvailability ? 'Yes' : 'No'}
                     </span>
                     ${renderStars(h.rating, h.reviewCount)}
                 </div>
@@ -495,10 +521,10 @@ window.openHostelDetails = async function (id) {
     const allBuilding = h.thumbnailImage && (!h.buildingPhotos || !h.buildingPhotos.includes(h.thumbnailImage))
       ? [h.thumbnailImage, ...(h.buildingPhotos || [])]
       : (h.buildingPhotos || []);
-    if (allBuilding.length > 0) photoCategories.push({ label: '🏢 Building', photos: allBuilding });
-    if (h.roomPhotos && h.roomPhotos.length > 0) photoCategories.push({ label: '🛏️ Rooms', photos: h.roomPhotos });
-    if (h.messPhotos && h.messPhotos.length > 0) photoCategories.push({ label: '🍽️ Mess', photos: h.messPhotos });
-    if (h.washroomPhotos && h.washroomPhotos.length > 0) photoCategories.push({ label: '🚿 Washroom', photos: h.washroomPhotos });
+    if (allBuilding.length > 0) photoCategories.push({ label: `${icon('building', 14)} Building`, photos: allBuilding });
+    if (h.roomPhotos && h.roomPhotos.length > 0) photoCategories.push({ label: `${icon('bed', 14)} Rooms`, photos: h.roomPhotos });
+    if (h.messPhotos && h.messPhotos.length > 0) photoCategories.push({ label: `${icon('utensils', 14)} Mess`, photos: h.messPhotos });
+    if (h.washroomPhotos && h.washroomPhotos.length > 0) photoCategories.push({ label: `${icon('shower-head', 14)} Washroom`, photos: h.washroomPhotos });
     
     const firstPhoto = photoCategories.length > 0 ? photoCategories[0].photos[0] : 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=900';
     const avgRating = h.rating ? h.rating.toFixed(1) : null;
@@ -524,16 +550,16 @@ window.openHostelDetails = async function (id) {
         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
           <div style="flex:1; min-width:250px;">
             <h1 style="font-size:1.5rem; font-weight:800; color:var(--text); margin:0; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-              ${h.name}
+              ${escapeHtml(h.name)}
               ${h.isVerified ? '<span class="badge-v2 badge-approved" style="font-size:0.7rem;padding:0.2rem 0.5rem;">✓ Verified</span>' : ''}
             </h1>
-            <p style="color:var(--text-muted); font-size:0.95rem; margin-top:0.35rem;">📍 ${h.address}, ${h.city}</p>
+            <p style="color:var(--text-muted); font-size:0.95rem; margin-top:0.35rem;">${icon('map-pin', 14)} ${escapeHtml(h.address)}, ${escapeHtml(h.city)}</p>
             ${avgRating ? `<div style="margin-top:0.5rem;">${renderStars(h.rating, reviews.length)} <span style="font-size:0.8rem;color:var(--text-muted)">(${reviews.length} reviews)</span></div>` : ''}
           </div>
           <div style="text-align:center; background:linear-gradient(135deg, rgba(99,102,241,0.08), rgba(14,165,233,0.08)); padding:1.25rem 1.75rem; border-radius:var(--radius-lg); border:1px solid rgba(99,102,241,0.15);">
             <div style="font-size:2rem; font-weight:900; color:var(--text);">₹${h.monthlyPrice}<span style="font-size:0.8rem;color:var(--text-muted);font-weight:500">/mo</span></div>
             <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
-              <button class="btn btn-primary btn-sm" onclick="openBookingModal('${h._id}', '${h.name.replace(/'/g, "\\\\'")}')">✉️ Send Enquiry</button>
+              <button class="btn btn-primary btn-sm" onclick="openBookingModal('${h._id}', '${escapeHtml(h.name).replace(/'/g, "\\\\'")}')"> ${icon('mail', 14)} Send Enquiry</button>
               <button class="btn btn-outline btn-sm save-heart-btn" onclick="toggleSaveHostel('${h._id}')" data-save-id="${h._id}" style="border-color:${isSaved ? 'var(--danger)' : 'var(--border)'}; color:${isSaved ? 'var(--danger)' : 'var(--text-muted)'}">
                 ${isSaved ? '❤️ Saved' : '🤍 Save'}
               </button>
@@ -541,51 +567,51 @@ window.openHostelDetails = async function (id) {
           </div>
         </div>
 
-        ${h.googleMapLink ? `<a href="${h.googleMapLink}" target="_blank" style="display:inline-flex; align-items:center; gap:0.4rem; font-size:0.9rem; font-weight:600; color:var(--primary); text-decoration:none; margin-bottom:1.25rem;">🌍 Open in Google Maps ↗</a>` : ''}
+        ${h.googleMapLink ? `<a href="${h.googleMapLink}" target="_blank" style="display:inline-flex; align-items:center; gap:0.4rem; font-size:0.9rem; font-weight:600; color:var(--primary); text-decoration:none; margin-bottom:1.25rem;">${icon('globe', 14)} Open in Google Maps ↗</a>` : ''}
 
         <!-- Description -->
         <div class="detail-section">
-          <h3>📝 Description</h3>
-          <p style="font-size:0.95rem; line-height:1.7; color:var(--text-2); white-space:pre-line; background:var(--surface); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border);">${h.description}</p>
+          <h3>${icon('file-text', 16)} Description</h3>
+          <p style="font-size:0.95rem; line-height:1.7; color:var(--text-2); white-space:pre-line; background:var(--surface); padding:1rem; border-radius:var(--radius-md); border:1px solid var(--border);">${escapeHtml(h.description)}</p>
         </div>
 
         <!-- Amenities -->
         ${h.amenities && h.amenities.length > 0 ? `
         <div class="detail-section">
-          <h3>🏠 Amenities</h3>
+          <h3>${icon('home', 16)} Amenities</h3>
           <div class="amenity-grid">
-            ${h.amenities.map(a => `<span class="amenity-chip">${a}</span>`).join('')}
+            ${h.amenities.map(a => `<span class="amenity-chip">${escapeHtml(a)}</span>`).join('')}
           </div>
         </div>` : ''}
 
         <!-- Room Types -->
         ${h.roomTypes && h.roomTypes.length > 0 ? `
         <div class="detail-section">
-          <h3>🛏️ Room Types</h3>
+          <h3>${icon('bed', 16)} Room Types</h3>
           <div class="amenity-grid">
-            ${h.roomTypes.map(r => `<span class="amenity-chip" style="background:rgba(14,165,233,0.1);color:#0ea5e9;border-color:rgba(14,165,233,0.2);">${r}</span>`).join('')}
+            ${h.roomTypes.map(r => `<span class="amenity-chip" style="background:rgba(14,165,233,0.1);color:#0ea5e9;border-color:rgba(14,165,233,0.2);">${escapeHtml(r)}</span>`).join('')}
           </div>
         </div>` : ''}
 
         <!-- Rules -->
         ${h.rules ? `
         <div class="detail-section">
-          <h3>📋 Rules & Policies</h3>
-          <div class="msg-bubble-warn" style="font-style:normal; border-radius:var(--radius-md); border:1px solid rgba(249,115,22,0.2); line-height:1.7;">${h.rules}</div>
+          <h3>${icon('clipboard-list', 16)} Rules & Policies</h3>
+          <div class="msg-bubble-warn" style="font-style:normal; border-radius:var(--radius-md); border:1px solid rgba(249,115,22,0.2); line-height:1.7;">${escapeHtml(h.rules)}</div>
         </div>` : ''}
 
         <!-- Owner Info -->
         ${h.ownerId ? `
         <div class="detail-section">
-          <h3>👤 Managed By</h3>
+          <h3>${icon('user', 16)} Managed By</h3>
           <div class="owner-info-card">
             <div class="owner-avatar">
-              ${h.ownerId.profilePhoto ? `<img src="${h.ownerId.profilePhoto}" alt="${h.ownerId.name}">` : h.ownerId.name.charAt(0).toUpperCase()}
+              ${h.ownerId.profilePhoto ? `<img src="${h.ownerId.profilePhoto}" alt="${escapeHtml(h.ownerId.name)}">` : escapeHtml(h.ownerId.name).charAt(0).toUpperCase()}
             </div>
             <div>
-              <div style="font-weight:700; color:var(--text);">${h.ownerId.name} ${h.ownerId.isVerified ? '<span style="color:#10b981;font-size:0.75rem;">✓ Verified Owner</span>' : ''}</div>
-              ${h.ownerId.phone ? `<div style="font-size:0.85rem; color:var(--text-muted);">📞 ${h.ownerId.phone}</div>` : ''}
-              ${h.ownerId.email ? `<div style="font-size:0.85rem; color:var(--text-muted);">✉️ ${h.ownerId.email}</div>` : ''}
+              <div style="font-weight:700; color:var(--text);">${escapeHtml(h.ownerId.name)} ${h.ownerId.isVerified ? '<span style="color:#10b981;font-size:0.75rem;">✓ Verified Owner</span>' : ''}</div>
+              ${h.ownerId.phone ? `<div style="font-size:0.85rem; color:var(--text-muted);">${icon('phone', 13)} ${h.ownerId.phone}</div>` : ''}
+              ${h.ownerId.email ? `<div style="font-size:0.85rem; color:var(--text-muted);">${icon('mail', 13)} ${h.ownerId.email}</div>` : ''}
             </div>
           </div>
         </div>` : ''}
@@ -593,7 +619,7 @@ window.openHostelDetails = async function (id) {
         <!-- Reviews -->
         <div class="detail-section">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.75rem;">
-            <h3 style="margin-bottom:0;">⭐ Student Reviews (${reviews.length})</h3>
+            <h3 style="margin-bottom:0;">${icon('star', 16)} Student Reviews (${reviews.length})</h3>
             <button class="btn btn-outline btn-sm" onclick="openReviewModal('${h._id}')">Write a Review</button>
           </div>
           ${reviews.length > 0 ? reviews.map(r => `
@@ -603,14 +629,14 @@ window.openHostelDetails = async function (id) {
                   ${r.studentId?.profilePhoto ? `<img src="${r.studentId.profilePhoto}">` : (r.studentId?.name?.charAt(0).toUpperCase() || 'S')}
                 </div>
                 <div class="review-meta">
-                  <div class="review-name">${r.studentId?.name || 'Student'}</div>
+                  <div class="review-name">${escapeHtml(r.studentId?.name || 'Student')}</div>
                   <div class="review-date">${new Date(r.createdAt).toLocaleDateString()}</div>
                 </div>
                 <span class="star-rating" style="font-size:0.95rem;">
                   ${'<span class="star filled">★</span>'.repeat(r.rating)}${'<span class="star">★</span>'.repeat(5 - r.rating)}
                 </span>
               </div>
-              <p class="review-text">"${r.comment}"</p>
+              <p class="review-text">"${escapeHtml(r.comment)}"</p>
             </div>
           `).join('') : '<p style="color:var(--text-muted); font-style:italic; background:var(--surface); padding:1.5rem; text-align:center; border-radius:var(--radius-md); border:1px dashed var(--border);">No reviews yet. Be the first to share your experience!</p>'}
         </div>
@@ -768,7 +794,7 @@ async function loadEnquiries() {
     if (enquiries.length === 0) {
       container.innerHTML = `
                 <div style="text-align:center;padding:4rem 2rem;color:var(--text-muted);">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">${icon('inbox', 48)}</div>
                     <p style="font-size: 1.1rem; font-weight: 600; color: var(--text);">No enquiries yet</p>
                     <p style="font-size: 0.9rem; margin-top: 0.4rem;">Browse hostels and send your first enquiry!</p>
                 </div>`
@@ -783,14 +809,14 @@ async function loadEnquiries() {
 
       return `
             <div class="chat-card" id="enquiry-${eq._id}" style="margin-bottom:1.25rem">
-                ${eq.status === 'Closed' ? '<div class="closed-banner">⚠️ This conversation is closed and will be automatically removed after 30 days.</div>' : ''}
+                ${eq.status === 'Closed' ? `<div class="closed-banner">${icon('alert-triangle', 14)} This conversation is closed and will be automatically removed after 30 days.</div>` : ''}
                 <!-- Card Header -->
                 <div class="chat-header">
                     <div style="display:flex;align-items:center;gap:1rem;">
-                        <div class="chat-avatar">🏠</div>
+                        <div class="chat-avatar">${icon('building', 18)}</div>
                         <div>
-                            <div style="font-weight:700;font-size:1.05rem;color:var(--text);">${eq.hostelId ? eq.hostelId.name : 'Unknown Property'}</div>
-                            <div style="font-size:0.8rem;color:var(--text-muted);">Sent on ${sentDate}</div>
+                            <div style="font-weight:700;font-size:1.05rem;color:var(--text);">${eq.hostelId ? escapeHtml(eq.hostelId.name) : 'Unknown Property'}</div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);">Sent on ${sentDate}</div>
                         </div>
                     </div>
                     <div style="display:flex;align-items:center;gap:0.75rem;">
@@ -813,15 +839,15 @@ async function loadEnquiries() {
                 return `
                                         <div style="display:flex;flex-direction:column;align-items:flex-end;">
                                             <div class="msg-meta"><span>You</span> &middot; <span>${pDate}</span></div>
-                                            <div class="msg-bubble msg-owner">${m.text}</div>
+                                            <div class="msg-bubble msg-owner">${escapeHtml(m.text)}</div>
                                         </div>
                                     `;
               } else {
-                const senderLabel = m.senderModel === 'Admin' ? '✅ Platform' : '🏠 Host';
+                const senderLabel = m.senderModel === 'Admin' ? `${icon('shield-check', 13)} Platform` : `${icon('building', 13)} Host`;
                 return `
                                         <div style="display:flex;flex-direction:column;align-items:flex-start;">
                                             <div class="msg-meta"><span>${senderLabel}</span> &middot; <span>${pDate}</span></div>
-                                            <div class="msg-bubble msg-student">${m.text}</div>
+                                            <div class="msg-bubble msg-student">${escapeHtml(m.text)}</div>
                                         </div>
                                     `;
               }
@@ -831,20 +857,20 @@ async function loadEnquiries() {
             messagesHtml = `
                                 <div style="display:flex;flex-direction:column;align-items:flex-end;">
                                     <div class="msg-meta"><span>You</span> &middot; <span>${sentDate}</span></div>
-                                    <div class="msg-bubble msg-owner">"${eq.message}"</div>
+                                    <div class="msg-bubble msg-owner">"${escapeHtml(eq.message)}"</div>
                                 </div>
                             `;
             if (eq.ownerReply) {
               messagesHtml += `
                                     <div style="display:flex;flex-direction:column;align-items:flex-start;">
                                         <div class="msg-meta"><span>🏠 Owner Reply</span></div>
-                                        <div class="msg-bubble msg-student">${eq.ownerReply}</div>
+                                        <div class="msg-bubble msg-student">${escapeHtml(eq.ownerReply)}</div>
                                     </div>
                                 `;
             } else {
               messagesHtml += `
                                     <div style="text-align:center;padding:1.25rem;border-radius:var(--radius);background:var(--surface-3);border:1px dashed var(--border);color:var(--text-muted);font-size:0.9rem;">
-                                        ⏳ Waiting for the owner to reply...
+                                        ${icon('clock', 16)} Waiting for the owner to reply...
                                     </div>
                                 `;
             }
@@ -853,8 +879,8 @@ async function loadEnquiries() {
           if (eq.adminResponse) {
             messagesHtml += `
                                 <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                                    <div class="msg-meta" style="color:var(--success);font-weight:700;text-transform:uppercase">✅ Platform Response</div>
-                                    <div class="msg-bubble msg-admin">${eq.adminResponse}</div>
+                                    <div class="msg-meta" style="color:var(--success);font-weight:700;text-transform:uppercase">${icon('shield-check', 13)} Platform Response</div>
+                                    <div class="msg-bubble msg-admin">${escapeHtml(eq.adminResponse)}</div>
                                 </div>
                             `;
           }
@@ -870,7 +896,7 @@ async function loadEnquiries() {
 
                 <!-- footer info -->
                 <div style="padding:0.6rem 1.25rem;background:var(--surface-2);border-top:1px solid var(--border);font-size:0.8rem;color:var(--text-muted);display:flex;justify-content:space-between;">
-                    <span>📞 Owner Contact: <strong>${eq.ownerId ? eq.ownerId.phone : 'N/A'}</strong></span>
+                    <span>${icon('phone', 13)} Owner Contact: <strong>${eq.ownerId ? eq.ownerId.phone : 'N/A'}</strong></span>
                 </div>
             </div>
             `
@@ -981,7 +1007,7 @@ async function loadCommunityFeedbacks() {
             <img src="${f.userId?.profilePhoto || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'}" 
                  style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--border);">
             <div>
-              <div style="font-weight:700;font-size:1.05rem;color:var(--text);">${f.userId?.name || 'User'}</div>
+              <div style="font-weight:700;font-size:1.05rem;color:var(--text);">${escapeHtml(f.userId?.name || 'User')}</div>
               <div class="badge-v2 badge-info" style="font-size:0.75rem;margin-top:0.2rem">${f.role}</div>
             </div>
           </div>
@@ -989,7 +1015,7 @@ async function loadCommunityFeedbacks() {
             ${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}
           </div>
         </div>
-        <p class="msg-bubble" style="font-style:italic;max-width:100%;background:var(--surface-2)">"${f.comment}"</p>
+        <p class="msg-bubble" style="font-style:italic;max-width:100%;background:var(--surface-2)">"${escapeHtml(f.comment)}"</p>
         <div style="font-size:0.8rem;color:var(--text-light);text-align:right;">
           Submitted: ${new Date(f.createdAt).toLocaleDateString()}
         </div>
@@ -1024,7 +1050,7 @@ async function loadNotifications() {
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">${new Date(n.createdAt).toLocaleString()}</span>
                     ${!n.isRead ? '<span style="background: var(--primary); width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 5px var(--primary)"></span>' : ''}
                 </div>
-                <p style="font-size: 0.95rem; color: var(--text-2); font-weight: 500; line-height: 1.5;">${n.message}</p>
+                <p style="font-size: 0.95rem; color: var(--text-2); font-weight: 500; line-height: 1.5;">${escapeHtml(n.message)}</p>
                 ${n.targetTab ? '<div style="font-size:0.75rem;color:var(--primary);margin-top:0.4rem;font-weight:600;">Click to view →</div>' : ''}
             </div>
         `).join('')
@@ -1098,10 +1124,10 @@ async function loadPlatformUpdates() {
     container.innerHTML = dismissBtn + updates.map(u => `
             <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem; border-left:4px solid var(--primary)">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                    <h4 style="font-size:1.05rem; font-weight:700; margin:0; color:var(--text)">${u.title}</h4>
+                    <h4 style="font-size:1.05rem; font-weight:700; margin:0; color:var(--text)">${escapeHtml(u.title)}</h4>
                     <span style="font-size:0.75rem; color:var(--text-muted); white-space:nowrap; margin-left:1rem;">${new Date(u.createdAt).toLocaleDateString()}</span>
                 </div>
-                <div style="font-size:0.9rem; color:var(--text-2); margin-top:0.6rem; white-space:pre-wrap; line-height:1.5">${u.message}</div>
+                <div style="font-size:0.9rem; color:var(--text-2); margin-top:0.6rem; white-space:pre-wrap; line-height:1.5">${escapeHtml(u.message)}</div>
             </div>
         `).join('')
   } catch (err) {

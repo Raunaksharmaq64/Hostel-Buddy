@@ -247,6 +247,20 @@
 
                     <!-- Results Area -->
                     <div style="flex: 1; min-width: 300px;">
+                        <!-- Sort Bar + Result Count -->
+                        <div id="searchResultsBar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.75rem;">
+                            <div id="resultCount" style="font-size:0.9rem;font-weight:600;color:var(--text-muted);"></div>
+                            <div style="display:flex;align-items:center;gap:0.5rem;">
+                                <label for="sortSelect" style="font-size:0.85rem;font-weight:600;color:var(--text-muted);white-space:nowrap;">Sort by:</label>
+                                <select id="sortSelect" class="form-input" style="padding:0.4rem 0.75rem;font-size:0.85rem;min-width:160px;margin-bottom:0;cursor:pointer;" onchange="searchHostels()">
+                                    <option value="-createdAt">Newest First</option>
+                                    <option value="monthlyPrice">Price: Low → High</option>
+                                    <option value="-monthlyPrice">Price: High → Low</option>
+                                    <option value="-rating">Top Rated</option>
+                                    <option value="-views">Most Viewed</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="hostels-grid" id="hostelsContainer">
                             <div
                                 style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--text-muted);">

@@ -39,13 +39,10 @@ window.switchTab = function(tabId) {
   if (tabId === 'dashboard') loadDashboardStats()
   if (tabId === 'my-hostels') loadMyHostels()
   if (tabId === 'enquiries') {
-    // Hide badge immediately and save count so it doesn't reappear until NEW enquiries
+    // Hide badge immediately and mark enquiries read on backend
     const badge = document.getElementById('enquiryBadge');
     if (badge) badge.style.display = 'none';
-    fetchAPI('/profiles/notifications/unread-count').then(res => {
-      window._lastSeenEnquiryCount = res.data.enquiryCount;
-      localStorage.setItem('lastSeenEnquiryCount', res.data.enquiryCount);
-    }).catch(() => {});
+    fetchAPI('/enquiries/mark-read', 'PUT').catch(() => {});
 
     loadOwnerEnquiries().then(() => {
       if (window.currentTargetId) {
@@ -134,7 +131,7 @@ async function loadOwnerProfile() {
     // Display Verified Badge next to name if verified
     const nameDisplay = document.getElementById('userNameDisplay')
     if (user.isVerified && !nameDisplay.innerHTML.includes('verified-badge')) {
-      nameDisplay.innerHTML = `Hello, ${user.name} <span class="verified-badge" title="Verified Owner"><svg class="verified-icon-svg" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg> Verified</span>`
+      nameDisplay.innerHTML = `Hello, ${escapeHtml(user.name)} <span class="verified-badge" title="Verified Owner"><svg class="verified-icon-svg" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path></svg> Verified</span>`
     }
   } catch (err) {
     console.error(err)
@@ -561,7 +558,7 @@ async function loadMyHostels() {
              isExpiringSoon = true;
              notificationsHtml += `
                  <div style="background:var(--warning-light, #fff3cd); border:1px solid var(--warning, #ffc107); padding:1rem; border-radius:var(--radius-md); color:#856404;">
-                     <strong>Action Required:</strong> Subscription for <strong>${h.name}</strong> expires in ${Math.ceil(diffDays)} days! 
+                     <strong>Action Required:</strong> Subscription for <strong>${escapeHtml(h.name)}</strong> expires in ${Math.ceil(diffDays)} days! 
                      <button class="btn btn-sm" style="background:#ffc107; color:#000; margin-left:1rem; border:none; padding:4px 10px;" onclick="handleRazorpayCheckout('${h._id}')">Renew Now</button>
                  </div>
              `;
@@ -579,8 +576,8 @@ async function loadMyHostels() {
       return `
             <div class="hostel-manage-card">
                 <div class="hostel-manage-card-body">
-                    <h3 style="margin-bottom:0.5rem">${h.name}</h3>
-                    <p style="color:var(--text-muted);font-size:0.9rem">📍 ${h.address}, ${h.city}</p>
+                    <h3 style="margin-bottom:0.5rem">${escapeHtml(h.name)}</h3>
+                    <p style="color:var(--text-muted);font-size:0.9rem">${icon('map-pin', 14)} ${escapeHtml(h.address)}, ${escapeHtml(h.city)}</p>
                     <div class="info-box" style="margin:1.25rem 0">
                         <div style="display:flex;justify-content:space-between;align-items:center;">
                             <span style="font-size:0.9rem;font-weight:600">Admin Approval:</span>
@@ -644,7 +641,7 @@ async function loadOwnerEnquiries() {
     if (enquiries.length === 0) {
       container.innerHTML = `
                 <div style="text-align:center;padding:4rem 2rem;color:var(--text-muted);">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">📭</div>
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">${icon('inbox', 48)}</div>
                     <p style="font-size: 1.1rem; font-weight: 600; color: var(--text);">No enquiries yet</p>
                     <p style="font-size: 0.9rem; margin-top: 0.4rem;">When students enquire about your hostels, they'll appear here.</p>
                 </div>`
@@ -666,19 +663,19 @@ async function loadOwnerEnquiries() {
 
       return `
             <div class="chat-card" id="enquiry-${eq._id}" style="margin-bottom:1.25rem">
-                ${eq.status === 'Closed' ? '<div class="closed-banner">⚠️ This conversation is closed and will be automatically removed after 30 days.</div>' : ''}
+                ${eq.status === 'Closed' ? `<div class="closed-banner">${icon('alert-triangle', 14)} This conversation is closed and will be automatically removed after 30 days.</div>` : ''}
                 <!-- Card Header -->
                 <div class="chat-header">
                     <div style="display:flex;align-items:center;gap:1rem;">
                         <div class="chat-avatar">
-                            ${eq.studentId ? eq.studentId.name.charAt(0).toUpperCase() : 'S'}
+                            ${eq.studentId ? escapeHtml(eq.studentId.name).charAt(0).toUpperCase() : 'S'}
                         </div>
                         <div>
-                            <div style="font-weight:700;font-size:1.05rem;color:var(--text);">${eq.studentId ? eq.studentId.name : 'Unknown Student'}</div>
+                            <div style="font-weight:700;font-size:1.05rem;color:var(--text);">${eq.studentId ? escapeHtml(eq.studentId.name) : 'Unknown Student'}</div>
                             <div style="font-size:0.8rem;color:var(--text-muted);display:flex;gap:0.75rem;align-items:center;">
-                                <span>📞 ${eq.studentId ? eq.studentId.phone : 'N/A'}</span>
+                                <span>${icon('phone', 13)} ${eq.studentId ? eq.studentId.phone : 'N/A'}</span>
                                 <span style="opacity:0.5">|</span>
-                                <span style="color:var(--primary);font-weight:600">🏠 ${eq.hostelId ? eq.hostelId.name : 'N/A'}</span>
+                                <span style="color:var(--primary);font-weight:600">${icon('building', 13)} ${eq.hostelId ? escapeHtml(eq.hostelId.name) : 'N/A'}</span>
                             </div>
                         </div>
                     </div>
@@ -702,15 +699,15 @@ async function loadOwnerEnquiries() {
                 return `
                                         <div style="display:flex;flex-direction:column;align-items:flex-end;">
                                             <div class="msg-meta"><span>You</span> &middot; <span>${pDate}</span></div>
-                                            <div class="msg-bubble msg-owner">${m.text}</div>
+                                            <div class="msg-bubble msg-owner">${escapeHtml(m.text)}</div>
                                         </div>
                                     `;
               } else {
-                const senderLabel = m.senderModel === 'Admin' ? '✅ Platform' : `👤 ${eq.studentId ? eq.studentId.name : 'Student'}`;
+                const senderLabel = m.senderModel === 'Admin' ? `${icon('shield-check', 13)} Platform` : `${icon('user', 13)} ${eq.studentId ? escapeHtml(eq.studentId.name) : 'Student'}`;
                 return `
                                         <div style="display:flex;flex-direction:column;align-items:flex-start;">
                                             <div class="msg-meta"><span>${senderLabel}</span> &middot; <span>${pDate}</span></div>
-                                            <div class="msg-bubble msg-student">${m.text}</div>
+                                            <div class="msg-bubble msg-student">${escapeHtml(m.text)}</div>
                                         </div>
                                     `;
               }
@@ -719,8 +716,8 @@ async function loadOwnerEnquiries() {
             // legacy fallback
             messagesHtml = `
                                 <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                                    <div class="msg-meta"><span>👤 ${eq.studentId ? eq.studentId.name : 'Student'}</span> &middot; <span>${sentDate}</span></div>
-                                    <div class="msg-bubble msg-student">"${eq.message}"</div>
+                                    <div class="msg-meta"><span>${icon('user', 13)} ${eq.studentId ? escapeHtml(eq.studentId.name) : 'Student'}</span> &middot; <span>${sentDate}</span></div>
+                                    <div class="msg-bubble msg-student">"${escapeHtml(eq.message)}"</div>
                                 </div>
                             `;
 
@@ -728,7 +725,7 @@ async function loadOwnerEnquiries() {
               messagesHtml += `
                                     <div style="display:flex;flex-direction:column;align-items:flex-end;">
                                         <div class="msg-meta">Your Reply</div>
-                                        <div class="msg-bubble msg-owner">${eq.ownerReply}</div>
+                                        <div class="msg-bubble msg-owner">${escapeHtml(eq.ownerReply)}</div>
                                     </div>
                                 `;
             }
@@ -737,8 +734,8 @@ async function loadOwnerEnquiries() {
           if (eq.adminResponse) {
             messagesHtml += `
                                 <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                                    <div class="msg-meta" style="color:var(--success);font-weight:700;text-transform:uppercase">✅ Platform Response</div>
-                                    <div class="msg-bubble msg-admin">${eq.adminResponse}</div>
+                                    <div class="msg-meta" style="color:var(--success);font-weight:700;text-transform:uppercase">${icon('shield-check', 13)} Platform Response</div>
+                                    <div class="msg-bubble msg-admin">${escapeHtml(eq.adminResponse)}</div>
                                 </div>
                             `;
           }
@@ -802,10 +799,8 @@ window.clearAllOwnerEnquiries = async function () {
   const isConfirmed = await customConfirm('Are you sure you want to clear ALL enquiries? This cannot be undone.')
   if (!isConfirmed) return
   try {
-    const res = await fetchAPI('/enquiries/owner')
-    const enquiries = res.data
-    await Promise.all(enquiries.map(eq => fetchAPI(`/enquiries/${eq._id}`, 'DELETE')))
-    showToast(`All ${enquiries.length} enquiries cleared.`, 'success')
+    const res = await fetchAPI('/enquiries/owner/bulk', 'DELETE')
+    showToast(res.message || 'All enquiries cleared.', 'success')
     loadOwnerEnquiries()
   } catch (err) {
     showToast('Failed to clear all enquiries: ' + err.message, 'error')
@@ -836,7 +831,7 @@ async function loadNotifications() {
                     <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">${new Date(n.createdAt).toLocaleString()}</span>
                     ${!n.isRead ? '<span style="background: var(--primary); width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 5px var(--primary)"></span>' : ''}
                 </div>
-                <p style="font-size: 0.95rem; color: var(--text-2); font-weight: 500; line-height: 1.5;">${n.message}</p>
+                <p style="font-size: 0.95rem; color: var(--text-2); font-weight: 500; line-height: 1.5;">${escapeHtml(n.message)}</p>
                 ${n.targetTab ? '<div style="font-size:0.75rem;color:var(--primary);margin-top:0.4rem;font-weight:600;">Click to view →</div>' : ''}
             </div>
         `).join('')
@@ -942,7 +937,7 @@ async function loadCommunityFeedbacks() {
             <img src="${f.userId?.profilePhoto || 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'}" 
                  style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--primary-light);">
             <div>
-              <div style="font-weight:700;font-size:1.05rem;color:var(--text);">${f.userId?.name || 'User'}</div>
+              <div style="font-weight:700;font-size:1.05rem;color:var(--text);">${escapeHtml(f.userId?.name || 'User')}</div>
               <div class="badge-v2 badge-info" style="font-size:0.7rem;margin-top:0.2rem">${f.role}</div>
             </div>
           </div>
@@ -950,7 +945,7 @@ async function loadCommunityFeedbacks() {
             ${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}
           </div>
         </div>
-        <p class="msg-bubble" style="font-style:italic;max-width:100%;background:var(--surface-2)">"${f.comment}"</p>
+        <p class="msg-bubble" style="font-style:italic;max-width:100%;background:var(--surface-2)">"${escapeHtml(f.comment)}"</p>
         <div style="font-size:0.8rem;color:var(--text-light);text-align:right;">
           Submitted: ${new Date(f.createdAt).toLocaleDateString()}
         </div>
@@ -1000,10 +995,10 @@ async function loadPlatformUpdates() {
     container.innerHTML = dismissBtn + updates.map(u => `
             <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem; border-left:4px solid var(--accent)">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                    <h4 style="font-size:1.05rem; font-weight:700; margin:0; color:var(--text)">${u.title}</h4>
+                    <h4 style="font-size:1.05rem; font-weight:700; margin:0; color:var(--text)">${escapeHtml(u.title)}</h4>
                     <span style="font-size:0.75rem; color:var(--text-muted); white-space:nowrap; margin-left:1rem;">${new Date(u.createdAt).toLocaleDateString()}</span>
                 </div>
-                <div style="font-size:0.9rem; color:var(--text-2); margin-top:0.6rem; white-space:pre-wrap; line-height:1.5">${u.message}</div>
+                <div style="font-size:0.9rem; color:var(--text-2); margin-top:0.6rem; white-space:pre-wrap; line-height:1.5">${escapeHtml(u.message)}</div>
             </div>
         `).join('')
   } catch (err) {

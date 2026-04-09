@@ -110,12 +110,9 @@ exports.getHostel = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Hostel not found' });
     }
     
-    // Increment views atomically — exclude the owner viewing their own listing
-    const isOwner = req.headers.authorization && req.user && hostel.ownerId && hostel.ownerId._id.toString() === req.user.id;
-    if (!isOwner) {
-      await Hostel.updateOne({ _id: hostel._id }, { $inc: { views: 1 } });
-      hostel.views += 1; // Update local copy for the response
-    }
+    // Increment views atomically
+    await Hostel.updateOne({ _id: hostel._id }, { $inc: { views: 1 } });
+    hostel.views += 1;
 
     res.status(200).json({ success: true, data: hostel });
   } catch (error) {

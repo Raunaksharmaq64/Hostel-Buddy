@@ -242,8 +242,6 @@ initTheme()
 document.addEventListener('DOMContentLoaded', setupThemeToggle)
 
 // ---- BADGE POLLING SYSTEM ----
-window._lastSeenEnquiryCount = parseInt(localStorage.getItem('lastSeenEnquiryCount') || '0');
-
 window.refreshBadges = async function () {
   const token = localStorage.getItem('token')
   if (!token) return
@@ -252,10 +250,10 @@ window.refreshBadges = async function () {
     const res = await fetchAPI('/profiles/notifications/unread-count')
     const { notificationCount, enquiryCount, updatesCount } = res.data
 
-    // Enquiry Badge — only show if count increased since user last viewed
+    // Enquiry Badge — perfect 1-to-1 sync with backend
     const enquiryBadge = document.getElementById('enquiryBadge')
     if (enquiryBadge) {
-      if (enquiryCount > 0 && enquiryCount > window._lastSeenEnquiryCount) {
+      if (enquiryCount > 0) {
         enquiryBadge.textContent = enquiryCount
         enquiryBadge.style.display = 'inline-flex'
       } else {

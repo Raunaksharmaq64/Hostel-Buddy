@@ -63,7 +63,7 @@ async function loadAnalytics () {
                     <div style="display:flex; align-items:center; gap: 1.25rem;">
                         <span style="font-size: 1.5rem; font-weight: 900; color: var(--text-light); width: 40px; text-align: center;">#${i + 1}</span>
                         <div>
-                            <h4>${h.name}</h4>
+                            <h4>${escapeHtml(h.name)}</h4>
                             <p>Total Views: <strong style="color: var(--primary);">${h.views}</strong></p>
                         </div>
                     </div>
@@ -96,7 +96,7 @@ async function loadVerifications () {
             <div class="list-item" style="border-left-color:var(--success)">
                 <div style="flex:1;">
                     <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.4rem">
-                        <h4>${u.name}</h4>
+                        <h4>${escapeHtml(u.name)}</h4>
                         <span class="badge-v2 badge-info">Owner</span>
                     </div>
                     <p>✉️ ${u.email} &nbsp;|&nbsp; 📞 ${u.phone}</p>
@@ -164,7 +164,7 @@ async function loadUsers (role) {
                         style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2.5px solid var(--border);flex-shrink:0" loading="lazy">
                     <div>
                         <h4 style="display:flex;align-items:center;gap:.6rem">
-                            ${u.name}
+                            ${escapeHtml(u.name)}
                             ${u.isVerified ? '<span class="badge-v2 badge-approved" style="font-size:.7rem">✔ Verified</span>' : ''}
                         </h4>
                         <p>✉️ ${u.email} &nbsp;|&nbsp; 📞 ${u.phone}</p>
@@ -210,7 +210,7 @@ async function loadListings () {
             <div class="list-item" style="border-left-color:${h.isApproved ? 'var(--success)' : '#F59E0B'}">
                 <div style="flex:1;">
                     <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.4rem">
-                        <h4>${h.name}</h4>
+                        <h4>${escapeHtml(h.name)}</h4>
                         ${h.isApproved
                             ? '<span class="badge-v2 badge-approved">✅ Approved</span>'
                             : '<span class="badge-v2 badge-pending">⏳ Pending</span>'
@@ -226,7 +226,7 @@ async function loadListings () {
 ? `
                     <div class="info-box" style="background: rgba(249, 115, 22, 0.05); border-color: rgba(249, 115, 22, 0.2);">
                         <small style="color: var(--accent);">Hostel Rules</small>
-                        <div style="font-size:0.92rem;color:var(--text-2);white-space:pre-wrap;margin-top:0.4rem;">${h.rules}</div>
+                        <div style="font-size:0.92rem;color:var(--text-2);white-space:pre-wrap;margin-top:0.4rem;">${escapeHtml(h.rules)}</div>
                     </div>
                     `
 : ''}
@@ -306,7 +306,7 @@ async function loadSubscriptions() {
         <div class="list-item" style="border-left-color: ${h.subscriptionStatus === 'active' ? 'var(--success)' : (h.subscriptionStatus === 'expired' ? 'var(--danger)' : '#F59E0B')}">
             <div style="flex:1;">
                 <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.4rem">
-                    <h4>${h.name}</h4>
+                    <h4>${escapeHtml(h.name)}</h4>
                     <span class="badge-v2 ${statusClass}">${statusText}</span>
                 </div>
                 <p>📍 ${h.city}</p>
@@ -371,13 +371,13 @@ async function loadEnquiries () {
                     <span class="badge-v2 ${e.status === 'Pending' ? 'badge-pending' : 'badge-approved'}">${e.status}</span>
                 </div>
 
-                <div class="msg-bubble" style="margin-top:1rem">"${e.message}"</div>
+                <div class="msg-bubble" style="margin-top:1rem">"${escapeHtml(e.message)}"</div>
 
                 ${e.adminResponse
 ? `
                     <div class="msg-bubble msg-bubble-success" style="margin-top:0.75rem">
                         <p style="font-size:0.8rem;font-weight:700;color:var(--success);margin-bottom:0.4rem;text-transform:uppercase;">Platform Response:</p>
-                        <p>${e.adminResponse}</p>
+                        <p>${escapeHtml(e.adminResponse)}</p>
                     </div>
                 `
 : `
@@ -439,7 +439,7 @@ async function loadReviews () {
                     </div>
                 </div>
 
-                <div class="msg-bubble" style="margin-top:1rem">"${r.comment}"</div>
+                <div class="msg-bubble" style="margin-top:1rem">"${escapeHtml(r.comment)}"</div>
 
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem;flex-wrap:wrap;gap:1rem;">
                     <div style="font-size:0.8rem;color:var(--text-light)">
@@ -485,7 +485,7 @@ async function loadDeactivations () {
             <div class="list-item" style="border-left-color:var(--danger)">
                 <div style="flex:1">
                     <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.4rem">
-                        <h4>${r.name}</h4>
+                        <h4>${escapeHtml(r.name)}</h4>
                         <span class="badge-v2 badge-info">${r.role}</span>
                     </div>
                     <p>✉️ ${r.email} &nbsp;|&nbsp; 📞 ${r.phone}</p>
@@ -550,7 +550,7 @@ async function loadPlatformFeedbacks() {
               </span>
           </div>
 
-          <div class="msg-bubble" style="margin-top:1rem">"${f.comment}"</div>
+          <div class="msg-bubble" style="margin-top:1rem">"${escapeHtml(f.comment)}"</div>
 
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem;flex-wrap:wrap;gap:1rem;">
               <div style="font-size:0.8rem;color:var(--text-light)">
@@ -639,11 +639,11 @@ async function loadPlatformUpdates() {
     container.innerHTML = updates.map(u => `
       <div class="list-item" style="flex-direction:column;align-items:stretch;border-left-color:var(--primary)">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem">
-              <h4 style="font-size:1.05rem;font-weight:700;">${u.title}</h4>
+              <h4 style="font-size:1.05rem;font-weight:700;">${escapeHtml(u.title)}</h4>
               <span class="badge-v2 badge-info" style="font-size:0.75rem">Target: ${u.targetRole}</span>
           </div>
 
-          <div class="msg-bubble" style="margin-top:1rem;background:var(--surface-2);white-space:pre-wrap;">${u.message}</div>
+          <div class="msg-bubble" style="margin-top:1rem;background:var(--surface-2);white-space:pre-wrap;">${escapeHtml(u.message)}</div>
 
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem;flex-wrap:wrap;gap:1rem;">
               <div style="font-size:0.8rem;color:var(--text-light)">
