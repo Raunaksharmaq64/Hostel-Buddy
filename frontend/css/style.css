@@ -3511,3 +3511,123 @@ h6 {
     max-height: 250px !important;
   }
 }
+
+/* ============================================
+   ANDROID APP INTEGRATION
+   ============================================ */
+.btn-android {
+  background: linear-gradient(135deg, #10B981, #059669); /* Android Green */
+  color: #fff;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+
+.btn-android:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 12px 35px rgba(16, 185, 129, 0.4);
+  color: #fff;
+}
+
+.btn-android:active {
+  transform: translateY(-1px);
+}
+
+/* App Download Banner (Sticky Mobile-First) */
+.app-download-banner {
+  position: fixed;
+  bottom: -100px; /* Hidden initially */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 500px;
+  background: linear-gradient(135deg, var(--surface), var(--surface-2));
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 0.8rem 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 9999;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+[data-theme="dark"] .app-download-banner {
+  background: linear-gradient(135deg, var(--surface-2), var(--bg));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.app-download-banner.show {
+  bottom: 20px;
+  opacity: 1;
+}
+
+.app-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-banner-icon {
+  width: 42px;
+  height: 42px;
+  background: var(--success-light);
+  color: var(--success);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.app-banner-text h4 {
+  color: var(--text);
+}
+
+.app-banner-text p {
+  color: var(--text-muted);
+}
+
+.app-banner-close:hover {
+  opacity: 1 !important;
+  color: var(--danger) !important;
+}
+
+@media (max-width: 480px) {
+  .app-download-banner {
+    width: 95%;
+    padding: 0.6rem 0.8rem;
+    bottom: -120px;
+  }
+  
+  .app-download-banner.show {
+    bottom: 10px;
+  }
+
+  .app-banner-content {
+    gap: 0.75rem;
+  }
+
+  .app-banner-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .app-banner-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .app-banner-text h4 {
+    font-size: 0.9rem !important;
+  }
+
+  .app-banner-text p {
+    font-size: 0.75rem !important;
+  }
+
+  .app-download-banner .btn-android {
+    padding: 0.4rem 0.8rem !important;
+    font-size: 0.8rem !important;
+  }
+}

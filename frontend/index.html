@@ -74,6 +74,14 @@
         <button class="btn btn-primary" onclick="performSearch()" style="white-space:nowrap;">Search Hubs</button>
       </div>
 
+      <!-- App Download CTA in Hero -->
+      <div class="hero-app-cta reveal reveal-delay-2" style="margin-top: 1.5rem; display: flex; justify-content: center; align-items: center; gap: 1rem; width: 100%;">
+        <a href="hostelbuddy.apk" download class="btn btn-android" style="display: flex; align-items: center; justify-content: center; width: 100%; max-width: 320px;">
+          <svg viewBox="0 0 576 512" width="24" height="24" fill="currentColor" style="margin-right: 0.75rem;"><path d="M420.55,301.93a24,24,0,1,1,24-24,24,24,0,0,1-24,24m-265.1,0a24,24,0,1,1,24-24,24,24,0,0,1-24,24m273.7-144.48,47.94-83a10,10,0,1,0-17.27-10h0l-48.54,84.07a301.25,301.25,0,0,0-246.56,0L116.18,64.45a10,10,0,1,0-17.27,10h0l48,83.17C64.93,202.22,8.08,285.35,0,384H576c-8.08-98.65-64.93-181.78-146.85-226.55"/></svg>
+          Get the Android App
+        </a>
+      </div>
+
       <div class="hero-stats" id="heroStats">
         <div class="stat-chip">
           <span style="font-size:1.3rem">🏨</span>
@@ -267,6 +275,7 @@
         <h4 class="footer-title">For Students</h4>
         <ul class="footer-links">
           <li><a href="signup.html">Find a Hostel</a></li>
+          <li><a href="hostelbuddy.apk" download style="display: flex; align-items: center; gap: 0.5rem; justify-content: flex-start;">📱 Download Android App <span style="background:var(--primary);color:#fff;font-size:0.65rem;font-weight:600;padding:2px 8px;border-radius:20px;">NEW</span></a></li>
           <li><a href="#">Student Resources</a></li>
           <li><a href="safety.html">Safety Guidelines</a></li>
           <li><a href="guide.html">How It Works</a></li>
@@ -291,8 +300,45 @@
     </div>
   </footer>
 
+  <!-- ========== SMART APP BANNER ========== -->
+  <div class="app-download-banner" id="appBanner">
+    <div class="app-banner-content">
+      <div class="app-banner-icon">
+        <svg viewBox="0 0 576 512" width="24" height="24" fill="currentColor"><path d="M420.55,301.93a24,24,0,1,1,24-24,24,24,0,0,1-24,24m-265.1,0a24,24,0,1,1,24-24,24,24,0,0,1-24,24m273.7-144.48,47.94-83a10,10,0,1,0-17.27-10h0l-48.54,84.07a301.25,301.25,0,0,0-246.56,0L116.18,64.45a10,10,0,1,0-17.27,10h0l48,83.17C64.93,202.22,8.08,285.35,0,384H576c-8.08-98.65-64.93-181.78-146.85-226.55"/></svg>
+      </div>
+      <div class="app-banner-text">
+        <h4 style="margin:0; font-size: 1rem; color: #fff; font-weight: 600;">Get HostelBuddy App</h4>
+        <p style="margin:0; font-size: 0.85rem; color: rgba(255,255,255,0.85);">Faster, smoother, direct bookings.</p>
+      </div>
+    </div>
+    <div class="app-banner-actions" style="display:flex; align-items:center; gap:0.5rem">
+      <a href="hostelbuddy.apk" download class="btn btn-android" style="padding: 0.5rem 1rem; border-radius: var(--radius-full); font-size: 0.9rem; min-height: 0;">Install</a>
+      <button class="app-banner-close" onclick="closeAppBanner()" aria-label="Close" style="background:transparent; border:none; color:white; font-size:1.2rem; cursor:pointer; padding:0.5rem; display:flex; align-items:center; justify-content:center; opacity:0.8; transition:0.2s; margin-left: 0.2rem;">✕</button>
+    </div>
+  </div>
+
   <script src="js/main.js"></script>
   <script>
+    // App Banner Logic
+    const appBanner = document.getElementById('appBanner');
+    function closeAppBanner() {
+      appBanner.classList.remove('show');
+      sessionStorage.setItem('hostelbuddy_app_banner_dismissed', 'true');
+    }
+
+    if (!sessionStorage.getItem('hostelbuddy_app_banner_dismissed')) {
+      setTimeout(() => {
+        appBanner.classList.add('show');
+        
+        // Auto hide after 8 seconds so it is not irritating
+        setTimeout(() => {
+          if (appBanner.classList.contains('show')) {
+            appBanner.classList.remove('show');
+          }
+        }, 8000);
+      }, 2500);
+    }
+
     // Navbar scroll
     const navbar = document.getElementById('navbar');
     window.addEventListener('scroll', () => {
