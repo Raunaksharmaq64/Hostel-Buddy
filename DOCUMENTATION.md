@@ -10,6 +10,7 @@ Hostel Buddy is a full-stack web application designed to connect Students search
   - **Cloud Storage**: Cloudinary (for image uploads).
   - **Authentication**: JSON Web Tokens (JWT) & bcryptjs for password hashing.
   - **Security**: Strict zero-trust XSS prevention architecture via global `escapeHtml()` injection sanitization.
+  - **Mobile App**: Direct Android APK distribution hosted natively via the web frontend.
   
 - **Design Philosophy**: Modern glassmorphism UI with smooth, fast, responsive UX, and optimized bulk-processing workflows.
 
@@ -37,7 +38,8 @@ Hostel Buddy is a full-stack web application designed to connect Students search
 │   ├── signup.html        # Authentication UI (Registration)
 │   ├── student-dashboard.html # Protected route HTML for Students
 │   ├── owner-dashboard.html   # Protected route HTML for Owners
-│   └── admin-dashboard.html   # Protected route HTML for Admin
+│   ├── admin-dashboard.html   # Protected route HTML for Admin
+│   └── hostelbuddy.apk        # Downloadable Android application release
 └── DOCUMENTATION.md       # This system documentation
 ```
 

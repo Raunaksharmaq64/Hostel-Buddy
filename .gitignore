@@ -36,3 +36,7 @@ AGENTS.md
 # Testing & Scratch files
 tmp-*.js
 test_*.js
+
+# Android Builds
+*.apk
+!frontend/hostelbuddy.apk

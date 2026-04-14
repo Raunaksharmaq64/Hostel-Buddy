@@ -1,7 +1,7 @@
 # Your Hostel Buddy - Full Stack Web Application
 
 ## Overview
-**Your Hostel Buddy** is a comprehensive platform designed to bridge the gap between students looking for accommodation and hostel/PG owners looking to list their properties. It provides a seamless discovery, filtering, enquiry, and dynamic notification system with built-in role-based access control.
+**Your Hostel Buddy** is a comprehensive platform designed to bridge the gap between students looking for accommodation and hostel/PG owners looking to list their properties. It provides a seamless discovery, filtering, enquiry, and dynamic notification system with built-in role-based access control. The platform also offers a dedicated **Android Application (APK)** for an enhanced native mobile experience.
 
 ## User Roles
 The application is structured around three primary roles, each with a unique dashboard and feature set:
@@ -44,7 +44,7 @@ The application is structured around three primary roles, each with a unique das
 4. **Cloudinary** stores images securely and returns URLs to be saved in MongoDB.
 
 ## Project Structure
-- `frontend/` - Contains all HTML pages, CSS styles, Icons, and JS logic files.
+- `frontend/` - Contains all HTML pages, CSS styles, Icons, JS logic files, and the `hostelbuddy.apk` Android application download release.
 - `backend/` - Contains the Express server, Razorpay config, Mongoose models, mailers, routing logic, and controllers.
 
 ---
