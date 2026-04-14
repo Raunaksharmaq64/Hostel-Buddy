@@ -286,6 +286,7 @@ exports.verifyEmail = async (req, res) => {
 
     user.isEmailVerified = true;
     user.emailVerificationOtp = undefined;
+    user.emailVerificationOtpExpiry = undefined;
     await user.save();
 
     sendTokenResponse(user, 200, res);

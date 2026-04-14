@@ -319,17 +319,10 @@
 
   <script src="js/main.js"></script>
   <script>
-    // Auto-redirect to dashboard if already logged in (App-like experience)
+    // Auto-redirect to dashboard if already logged in (with JWT expiry check)
     (function() {
-      const token = localStorage.getItem('token');
-      const userStr = localStorage.getItem('user');
-      if (token && userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          if (user.role === 'Student') window.location.href = 'student-dashboard.html';
-          else if (user.role === 'Owner') window.location.href = 'owner-dashboard.html';
-          else window.location.href = 'admin-dashboard.html';
-        } catch(e) {}
+      if (typeof isTokenValid === 'function' && isTokenValid()) {
+        window.location.href = getDashboardUrl();
       }
     })();
 

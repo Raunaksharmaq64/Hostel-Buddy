@@ -10,6 +10,40 @@ window.escapeHtml = function(str) {
   return div.innerHTML;
 }
 
+// ---- TOKEN VALIDATION ----
+// Decode JWT payload and check if token is expired client-side
+window.isTokenValid = function() {
+  const token = localStorage.getItem('token');
+  const user = localStorage.getItem('user');
+  if (!token || !user) return false;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      // Token expired — clean up stale session
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      return false;
+    }
+    return true;
+  } catch(e) {
+    // Malformed token — clean up
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    return false;
+  }
+}
+
+// Returns the user's dashboard URL based on their role
+window.getDashboardUrl = function() {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user.role === 'Student') return 'student-dashboard.html';
+    if (user.role === 'Owner') return 'owner-dashboard.html';
+    if (user.role === 'Admin') return 'admin-dashboard.html';
+  } catch(e) {}
+  return 'login.html';
+}
+
 // ---- LUCIDE ICONS HELPER ----
 window.icon = function(name, size = 16, cls = '') {
   return `<i data-lucide="${name}" style="width:${size}px;height:${size}px;" class="lucide-icon ${cls}"></i>`;
@@ -54,13 +88,13 @@ async function fetchAPI(endpoint, method = 'GET', body = null, isFormData = fals
 
 // Ensure auth redirects
 function checkAuth(roleRequired = null) {
-  const token = localStorage.getItem('token')
-  const currentUser = JSON.parse(localStorage.getItem('user'))
-
-  if (!token || !currentUser) {
+  // Use client-side JWT expiry check first
+  if (!isTokenValid()) {
     window.location.href = 'login.html'
     return false
   }
+
+  const currentUser = JSON.parse(localStorage.getItem('user'))
 
   if (roleRequired && currentUser.role !== roleRequired) {
     switch (currentUser.role) {
@@ -71,6 +105,15 @@ function checkAuth(roleRequired = null) {
     }
     return false
   }
+
+  // Background server-side validation (silent, non-blocking)
+  // Catches cases where user was deleted by admin but token hasn't expired yet
+  fetchAPI('/auth/me').catch(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+  });
+
   return true
 }
 

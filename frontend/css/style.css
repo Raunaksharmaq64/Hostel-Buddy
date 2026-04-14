@@ -1785,6 +1785,7 @@ h6 {
   overflow: hidden;
   transition: var(--transition);
   cursor: pointer;
+  opacity: 1 !important; /* GSAP fallback: ensures cards are visible even if animation CDN fails */
 }
 
 .hostel-card:hover {

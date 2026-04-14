@@ -238,7 +238,8 @@ exports.respondToEnquiry = async (req, res) => {
       req.params.id,
       {
         adminResponse: responseText,
-        status: 'Responded'
+        status: 'Responded',
+        isReadByStudent: false
       },
       { returnDocument: 'after' }
     );
@@ -298,10 +299,22 @@ exports.handleDeactivationRequest = async (req, res) => {
             { role: 'Student' },
             { $pull: { savedHostels: { $in: hostelIds } } }
           );
+          // Clean up reviews for deleted hostels
+          const Review = require('../models/Review');
+          await Review.deleteMany({ hostelId: { $in: hostelIds } });
         }
       } else if (user.role === 'Student') {
         await Enquiry.deleteMany({ studentId: user._id });
+        // Clean up student's reviews
+        const Review = require('../models/Review');
+        await Review.deleteMany({ studentId: user._id });
       }
+
+      // Clean up notifications and feedback for any role
+      await Notification.deleteMany({ recipientId: user._id });
+      const PlatformFeedback = require('../models/PlatformFeedback');
+      await PlatformFeedback.deleteMany({ userId: user._id });
+
       await user.deleteOne();
       return res.status(200).json({ success: true, message: 'User account deactivated and deleted.' });
     } else {
