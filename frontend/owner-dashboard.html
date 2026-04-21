@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/style.css?v=5">
     <link rel="stylesheet" href="css/tour.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
 </head>
 
 <body class="dashboard-body">
@@ -180,14 +181,61 @@
                         <div class="dash-sub">Quick stats about your properties and activity.</div>
                     </div>
                 </div>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.25rem">
-                    <div class="stat-card-v2" onclick="switchTab('my-hostels')" style="cursor: pointer;">
-                        <h3>Total Hostels Listed</h3>
+
+                <!-- Stat Cards Row -->
+                <div class="analytics-stat-row">
+                    <div class="stat-card-v2" onclick="switchTab('my-hostels')" style="cursor:pointer;">
+                        <div class="stat-icon-wrap stat-icon--accent">🏠</div>
+                        <h3>Total Listings</h3>
                         <h1 style="color:var(--accent)" id="stat-hostels">0</h1>
                     </div>
-                    <div class="stat-card-v2" onclick="switchTab('enquiries')" style="cursor: pointer;">
+                    <div class="stat-card-v2" onclick="switchTab('enquiries')" style="cursor:pointer;">
+                        <div class="stat-icon-wrap stat-icon--primary">💬</div>
                         <h3>Total Enquiries</h3>
                         <h1 style="color:var(--primary)" id="stat-enquiries">0</h1>
+                    </div>
+                    <div class="stat-card-v2">
+                        <div class="stat-icon-wrap stat-icon--success">👁️</div>
+                        <h3>Total Views</h3>
+                        <h1 style="color:var(--success)" id="stat-views">0</h1>
+                    </div>
+                    <div class="stat-card-v2">
+                        <div class="stat-icon-wrap stat-icon--violet">📊</div>
+                        <h3>Avg. Response</h3>
+                        <h1 style="color:var(--violet)" id="stat-response-rate">—</h1>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="analytics-charts-row">
+                    <div class="analytics-chart-card">
+                        <div class="analytics-chart-header">
+                            <h3>Enquiry Trends</h3>
+                            <span class="analytics-chart-subtitle">Last 7 days activity</span>
+                        </div>
+                        <div class="analytics-chart-body">
+                            <canvas id="enquiryBarChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="analytics-chart-card">
+                        <div class="analytics-chart-header">
+                            <h3>Property Engagement</h3>
+                            <span class="analytics-chart-subtitle">Enquiries per listing</span>
+                        </div>
+                        <div class="analytics-chart-body">
+                            <canvas id="propertyDoughnutChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="analytics-chart-card" style="margin-top:1.25rem;margin-bottom:3rem;">
+                    <div class="analytics-chart-header">
+                        <h3>Recent Enquiries</h3>
+                        <button class="btn btn-ghost btn-sm" onclick="switchTab('enquiries')">View All →</button>
+                    </div>
+                    <div id="recentActivityList" style="display:flex;flex-direction:column;gap:0;">
+                        <p style="color:var(--text-muted);padding:1.5rem;text-align:center;font-size:0.9rem;">Loading...</p>
                     </div>
                 </div>
             </div>
@@ -420,6 +468,10 @@
                         <div class="dash-title">Student Enquiries</div>
                         <div class="dash-sub">Respond to interested students quickly to close more leads.</div>
                     </div>
+                    <button class="btn btn-ghost btn-sm" id="exportCsvBtn" onclick="exportEnquiriesToCSV()" style="display:none;" title="Download enquiries as spreadsheet">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Export CSV
+                    </button>
                 </div>
                 <div id="ownerEnquiriesContainer" class="panel">
                     <div style="text-align:center;padding:2rem;color:var(--text-muted)">
@@ -720,6 +772,362 @@
                 ]
             });
         });
+    </script>
+
+    <!-- ═══════════════ ANALYTICS ENGINE ═══════════════ -->
+    <script>
+    (function() {
+      'use strict';
+
+      // ── Shared color helpers ──
+      function getCSSVar(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      }
+
+      function getThemeColors() {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        return {
+          text: getCSSVar('--text'),
+          textMuted: getCSSVar('--text-muted'),
+          border: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(15,23,42,0.06)',
+          primary: getCSSVar('--primary'),
+          accent: getCSSVar('--accent'),
+          violet: getCSSVar('--violet'),
+          success: getCSSVar('--success'),
+          surface: getCSSVar('--surface'),
+          isDark
+        };
+      }
+
+      // Chart palette – brand harmonious, not random
+      const CHART_PALETTE = ['#0EA5E9', '#F97316', '#8B5CF6', '#10B981', '#F43F5E', '#FBBF24', '#EC4899'];
+
+      // ── Chart instances ──
+      let barChart = null;
+      let doughnutChart = null;
+
+      // ── Cached data ──
+      let _cachedHostels = null;
+      let _cachedEnquiries = null;
+
+      // ── Build the bar chart ──
+      function renderBarChart(enquiries) {
+        const ctx = document.getElementById('enquiryBarChart');
+        if (!ctx) return;
+        const colors = getThemeColors();
+
+        // Group enquiries by day for last 7 days
+        const days = [];
+        const counts = [];
+        const today = new Date();
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(today);
+          d.setDate(today.getDate() - i);
+          const key = d.toISOString().split('T')[0];
+          const label = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+          days.push(label);
+          counts.push(enquiries.filter(e => {
+            const eDate = new Date(e.createdAt).toISOString().split('T')[0];
+            return eDate === key;
+          }).length);
+        }
+
+        if (barChart) barChart.destroy();
+
+        barChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: days,
+            datasets: [{
+              label: 'Enquiries',
+              data: counts,
+              backgroundColor: colors.isDark
+                ? 'rgba(14,165,233,0.45)'
+                : 'rgba(14,165,233,0.65)',
+              hoverBackgroundColor: colors.primary,
+              borderRadius: 8,
+              borderSkipped: false,
+              maxBarThickness: 38
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: colors.isDark ? '#1E293B' : '#0F172A',
+                titleColor: '#F8FAFC',
+                bodyColor: '#CBD5E1',
+                cornerRadius: 10,
+                padding: 10,
+                displayColors: false,
+                callbacks: {
+                  label: function(context) {
+                    const v = context.parsed.y;
+                    return v === 1 ? '1 enquiry' : v + ' enquiries';
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                ticks: {
+                  color: colors.textMuted,
+                  font: { family: "'Inter', sans-serif", size: 11, weight: '500' },
+                  maxRotation: 0
+                },
+                border: { display: false }
+              },
+              y: {
+                beginAtZero: true,
+                grid: { color: colors.border, drawBorder: false },
+                ticks: {
+                  color: colors.textMuted,
+                  font: { family: "'Inter', sans-serif", size: 11 },
+                  stepSize: 1,
+                  precision: 0
+                },
+                border: { display: false }
+              }
+            },
+            animation: {
+              duration: 800,
+              easing: 'easeOutQuart'
+            }
+          }
+        });
+      }
+
+      // ── Build the doughnut chart ──
+      function renderDoughnutChart(enquiries, hostels) {
+        const ctx = document.getElementById('propertyDoughnutChart');
+        if (!ctx) return;
+        const colors = getThemeColors();
+
+        // Count enquiries per hostel
+        const hostelMap = {};
+        hostels.forEach(h => { hostelMap[h._id] = { name: h.name, count: 0 }; });
+        enquiries.forEach(e => {
+          const hId = e.hostelId ? (e.hostelId._id || e.hostelId) : null;
+          if (hId && hostelMap[hId]) hostelMap[hId].count++;
+        });
+
+        const entries = Object.values(hostelMap).filter(h => h.count > 0);
+
+        // If no data, show a placeholder
+        let labels, data, bgColors;
+        if (entries.length === 0) {
+          labels = hostels.length > 0 ? hostels.map(h => h.name) : ['No Data'];
+          data = hostels.length > 0 ? hostels.map(() => 1) : [1];
+          bgColors = hostels.length > 0
+            ? hostels.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length] + '40')
+            : [colors.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(15,23,42,0.08)'];
+        } else {
+          // Sort desc by count and take top 6
+          entries.sort((a, b) => b.count - a.count);
+          const top = entries.slice(0, 6);
+          labels = top.map(t => t.name.length > 18 ? t.name.substring(0, 16) + '…' : t.name);
+          data = top.map(t => t.count);
+          bgColors = top.map((_, i) => CHART_PALETTE[i % CHART_PALETTE.length]);
+        }
+
+        if (doughnutChart) doughnutChart.destroy();
+
+        doughnutChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: data,
+              backgroundColor: bgColors,
+              hoverBackgroundColor: bgColors.map(c => c.replace(/[0-9.]+\)$/, '1)')),
+              borderWidth: 0,
+              spacing: 3,
+              borderRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '62%',
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  color: colors.textMuted,
+                  font: { family: "'Inter', sans-serif", size: 11, weight: '500' },
+                  padding: 14,
+                  usePointStyle: true,
+                  pointStyleWidth: 10,
+                  boxWidth: 10
+                }
+              },
+              tooltip: {
+                backgroundColor: colors.isDark ? '#1E293B' : '#0F172A',
+                titleColor: '#F8FAFC',
+                bodyColor: '#CBD5E1',
+                cornerRadius: 10,
+                padding: 10,
+                displayColors: true,
+                callbacks: {
+                  label: function(context) {
+                    const v = context.parsed;
+                    return ' ' + v + (v === 1 ? ' enquiry' : ' enquiries');
+                  }
+                }
+              }
+            },
+            animation: {
+              duration: 900,
+              easing: 'easeOutQuart'
+            }
+          }
+        });
+      }
+
+      // ── Recent Activity List ──
+      function renderRecentActivity(enquiries) {
+        const container = document.getElementById('recentActivityList');
+        if (!container) return;
+
+        if (!enquiries || enquiries.length === 0) {
+          container.innerHTML = '<p style="color:var(--text-muted);padding:1.5rem;text-align:center;font-size:0.9rem;">No enquiries yet. Once students reach out, their messages appear here.</p>';
+          return;
+        }
+
+        // Show latest 5
+        const recent = enquiries.slice(0, 5);
+        container.innerHTML = recent.map(eq => {
+          const name = eq.studentId ? escapeHtml(eq.studentId.name) : 'Student';
+          const hostel = eq.hostelId ? escapeHtml(eq.hostelId.name) : 'N/A';
+          const date = new Date(eq.createdAt);
+          const timeStr = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+          const initial = name.charAt(0).toUpperCase();
+          const statusColor = eq.status === 'Responded' ? 'var(--success)' : eq.status === 'Closed' ? 'var(--text-muted)' : 'var(--accent)';
+          return `
+            <div class="analytics-activity-item">
+              <div class="analytics-activity-avatar">${initial}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-weight:600;font-size:0.92rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>
+                <div style="font-size:0.8rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">enquired about ${hostel}</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0;">
+                <div style="font-size:0.75rem;color:var(--text-light);">${timeStr}</div>
+                <div style="font-size:0.7rem;font-weight:600;color:${statusColor};margin-top:2px;">${eq.status || 'New'}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // ── Compute stats ──
+      function computeAndRenderStats(hostels, enquiries) {
+        // Total views across all hostels
+        const totalViews = hostels.reduce((sum, h) => sum + (h.views || 0), 0);
+        const viewsEl = document.getElementById('stat-views');
+        if (viewsEl) viewsEl.textContent = totalViews;
+
+        // Response rate: % of enquiries that have been responded to
+        const respondedCount = enquiries.filter(e => e.status === 'Responded' || e.ownerReply || (e.messages && e.messages.some(m => m.senderModel === 'Owner'))).length;
+        const rateEl = document.getElementById('stat-response-rate');
+        if (rateEl) {
+          if (enquiries.length > 0) {
+            const pct = Math.round((respondedCount / enquiries.length) * 100);
+            rateEl.textContent = pct + '%';
+          } else {
+            rateEl.textContent = '—';
+          }
+        }
+      }
+
+      // ── Master init ──
+      window._initAnalytics = async function() {
+        try {
+          const [hostelRes, enqRes] = await Promise.all([
+            fetchAPI('/hostels/owner/my-hostels'),
+            fetchAPI('/enquiries/owner')
+          ]);
+
+          const hostels = hostelRes.data || [];
+          const enquiries = enqRes.data || [];
+
+          _cachedHostels = hostels;
+          _cachedEnquiries = enquiries;
+
+          // Update stat numbers
+          document.getElementById('stat-hostels').textContent = hostelRes.count || hostels.length;
+          document.getElementById('stat-enquiries').textContent = enqRes.count || enquiries.length;
+
+          computeAndRenderStats(hostels, enquiries);
+          renderBarChart(enquiries);
+          renderDoughnutChart(enquiries, hostels);
+          renderRecentActivity(enquiries);
+
+          // Animate stat numbers
+          document.querySelectorAll('.analytics-stat-row .stat-card-v2').forEach((card, i) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(16px)';
+            setTimeout(() => {
+              card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+              card.style.opacity = '1';
+              card.style.transform = 'translateY(0)';
+            }, i * 80);
+          });
+
+        } catch (err) {
+          console.error('Analytics load error:', err);
+        }
+      };
+
+      // ── Dark mode listener — re-render charts on theme switch ──
+      const themeObserver = new MutationObserver(() => {
+        if (_cachedEnquiries && _cachedHostels) {
+          renderBarChart(_cachedEnquiries);
+          renderDoughnutChart(_cachedEnquiries, _cachedHostels);
+        }
+      });
+      themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+      // ── CSV Export ──
+      window.exportEnquiriesToCSV = function() {
+        if (!_cachedEnquiries || _cachedEnquiries.length === 0) {
+          showToast('No enquiries to export.', 'error');
+          return;
+        }
+
+        const headers = ['Student Name', 'Phone', 'Hostel', 'Message', 'Status', 'Date'];
+        const rows = _cachedEnquiries.map(eq => {
+          const name = eq.studentId ? eq.studentId.name : 'Unknown';
+          const phone = eq.studentId ? eq.studentId.phone : 'N/A';
+          const hostel = eq.hostelId ? eq.hostelId.name : 'N/A';
+          let msg = eq.message || '';
+          if (eq.messages && eq.messages.length > 0) {
+            const studentMsg = eq.messages.find(m => m.senderModel !== 'Owner');
+            if (studentMsg) msg = studentMsg.text;
+          }
+          const status = eq.status || 'New';
+          const date = new Date(eq.createdAt).toLocaleDateString('en-IN');
+          // Escape double quotes in CSV
+          const escape = (s) => '"' + String(s).replace(/"/g, '""') + '"';
+          return [escape(name), escape(phone), escape(hostel), escape(msg), escape(status), escape(date)].join(',');
+        });
+
+        const csv = [headers.join(','), ...rows].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'enquiries_' + new Date().toISOString().split('T')[0] + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Enquiries exported successfully!', 'success');
+      };
+
+    })();
     </script>
 </body>
 

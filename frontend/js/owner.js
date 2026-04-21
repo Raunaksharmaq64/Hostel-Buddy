@@ -66,16 +66,21 @@ window.switchTab = function(tabId) {
 
 // ---- DASHBOARD STATS LOGIC ----
 async function loadDashboardStats() {
-  try {
-    const [hostelRes, enqRes] = await Promise.all([
-      fetchAPI('/hostels/owner/my-hostels'),
-      fetchAPI('/enquiries/owner')
-    ])
-
-    document.getElementById('stat-hostels').textContent = hostelRes.count
-    document.getElementById('stat-enquiries').textContent = enqRes.count
-  } catch (err) {
-    console.error('Failed loading stats:', err)
+  // Delegate to the analytics engine defined in the HTML
+  if (typeof window._initAnalytics === 'function') {
+    await window._initAnalytics();
+  } else {
+    // Fallback if analytics script hasn't loaded yet
+    try {
+      const [hostelRes, enqRes] = await Promise.all([
+        fetchAPI('/hostels/owner/my-hostels'),
+        fetchAPI('/enquiries/owner')
+      ])
+      document.getElementById('stat-hostels').textContent = hostelRes.count
+      document.getElementById('stat-enquiries').textContent = enqRes.count
+    } catch (err) {
+      console.error('Failed loading stats:', err)
+    }
   }
 }
 
@@ -645,8 +650,15 @@ async function loadOwnerEnquiries() {
                     <p style="font-size: 1.1rem; font-weight: 600; color: var(--text);">No enquiries yet</p>
                     <p style="font-size: 0.9rem; margin-top: 0.4rem;">When students enquire about your hostels, they'll appear here.</p>
                 </div>`
+      // Hide CSV export button
+      const csvBtn = document.getElementById('exportCsvBtn');
+      if (csvBtn) csvBtn.style.display = 'none';
       return
     }
+
+    // Show CSV export button
+    const csvBtn = document.getElementById('exportCsvBtn');
+    if (csvBtn) csvBtn.style.display = '';
 
     // Clear All button banner
     const clearAllBanner = `

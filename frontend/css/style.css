@@ -3632,3 +3632,204 @@ h6 {
     font-size: 0.8rem !important;
   }
 }
+
+/* ============================================
+   OWNER ANALYTICS DASHBOARD
+   ============================================ */
+
+/* Stat cards row */
+.analytics-stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.analytics-stat-row .stat-card-v2 {
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  margin: 0 auto 0.65rem;
+}
+
+/* Icon color variants — light mode */
+.stat-icon--accent  { background: var(--accent-light);  color: var(--accent); }
+.stat-icon--primary { background: var(--primary-light); color: var(--primary); }
+.stat-icon--success { background: var(--success-light); color: var(--success); }
+.stat-icon--violet  { background: var(--violet-light);  color: var(--violet); }
+
+/* Icon color variants — dark mode (subtle translucent tints) */
+[data-theme="dark"] .stat-icon--accent  { background: rgba(249, 115, 22, 0.12); color: #FB923C; }
+[data-theme="dark"] .stat-icon--primary { background: rgba(14, 165, 233, 0.12); color: #38BDF8; }
+[data-theme="dark"] .stat-icon--success { background: rgba(16, 185, 129, 0.12); color: #34D399; }
+[data-theme="dark"] .stat-icon--violet  { background: rgba(139, 92, 246, 0.12); color: #A78BFA; }
+
+/* Charts row */
+.analytics-charts-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.25rem;
+}
+
+.analytics-chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.analytics-chart-card:hover {
+  box-shadow: var(--shadow);
+  border-color: var(--border-strong);
+}
+
+.analytics-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.15rem 1.35rem 0;
+}
+
+.analytics-chart-header h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.analytics-chart-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.analytics-chart-body {
+  padding: 0.75rem 1rem 1rem;
+  position: relative;
+  height: 240px;
+  width: 100%;
+}
+
+/* Recent activity items */
+.analytics-activity-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.2s ease;
+}
+
+.analytics-activity-item:last-child {
+  border-bottom: none;
+}
+
+.analytics-activity-item:hover {
+  background: var(--surface-2);
+}
+
+.analytics-activity-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--violet));
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+/* ── Analytics Responsive ── */
+@media (max-width: 1024px) {
+  .analytics-stat-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .analytics-charts-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .analytics-stat-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .analytics-stat-row .stat-card-v2 {
+    padding: 1rem 0.75rem;
+  }
+
+  .analytics-stat-row .stat-card-v2 h1 {
+    font-size: 1.6rem;
+  }
+
+  .analytics-stat-row .stat-card-v2 h3 {
+    font-size: 0.72rem;
+  }
+
+  .stat-icon-wrap {
+    width: 32px;
+    height: 32px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    margin-bottom: 0.4rem;
+  }
+
+  .analytics-charts-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .analytics-chart-body {
+    height: 200px;
+    padding: 0.5rem 0.65rem 0.75rem;
+  }
+
+  .analytics-chart-header {
+    padding: 0.85rem 1rem 0;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .analytics-chart-header h3 {
+    font-size: 0.92rem;
+  }
+
+  .analytics-activity-item {
+    padding: 0.7rem 0.85rem;
+    gap: 0.65rem;
+  }
+
+  .analytics-activity-avatar {
+    width: 30px;
+    height: 30px;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .analytics-stat-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .analytics-stat-row .stat-card-v2 h1 {
+    font-size: 1.35rem;
+  }
+}
