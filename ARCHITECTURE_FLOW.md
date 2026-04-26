@@ -62,6 +62,7 @@ flowchart TD
     
     H --> O[Send Direct Enquiry]
     O --> P[Database sets `isReadByOwner: false`]
+    P --> PE[📧 Email: New Enquiry → Owner Inbox]
     
     B -->|My Profile| Q[Update Personal/Parent Info]
     B -->|Saved Hostels| R[View & Unsave Bookmarks]
@@ -69,10 +70,11 @@ flowchart TD
     
     T -->|Auto-triggers| U[API `mark-read`]
     U --> V[View Owner/Admin Replies]
+    V --> VE[📧 Replies also arrive via Email]
     
     B --> W[Leave Global Platform Feedback]
 ```
-**Covered Features:** Advanced Sorting & Searching, Empty States, Glassmorphism UI, Save/Bookmark, Dynamic Ratings Calculation, Real-Time Badges, Full Photo Galleries, Feedback Engine, Profile Management, Atomic View Counting.
+**Covered Features:** Advanced Sorting & Searching, Empty States, Glassmorphism UI, Save/Bookmark, Dynamic Ratings Calculation, Real-Time Badges, Full Photo Galleries, Feedback Engine, Profile Management, Atomic View Counting, Email Notifications for Enquiry Replies & Status Changes.
 
 ---
 
@@ -108,8 +110,9 @@ flowchart TD
     S --> T[Mass Operations: Bulk Delete 🗑️]
     S --> U[Granular: Reply to Student]
     U --> V[Backend sets `isReadByStudent: false`]
+    V --> VE[📧 Email: Reply/Message → Student Inbox]
 ```
-**Covered Features:** Aadhaar KYC Verification, Parallel Cloudinary Uploads with UI Progress, Razorpay ₹259/mo Gateway, Crypto-Signature Validation, Dynamic Expiration Badging, Bulk-Delete Enquiries, Live Responsive Chat Replier.
+**Covered Features:** Aadhaar KYC Verification, Parallel Cloudinary Uploads with UI Progress, Razorpay ₹259/mo Gateway, Crypto-Signature Validation, Dynamic Expiration Badging, Bulk-Delete Enquiries, Live Responsive Chat Replier, Email Notifications for Enquiry Messages.
 
 ---
 
@@ -132,17 +135,20 @@ flowchart TD
     
     A -->|3. Listing Approval| H[Review New Hostel Uploads]
     H -->|Approve| I[Listing Goes Public]
+    I --> IE[📧 Email: Approval Status → Owner Inbox]
     
     A -->|4. Surveillance| J[Monitor Global Enquiries]
     J --> K[Inject Official 'Platform Response']
+    K --> KE[📧 Email: Admin Response → Student Inbox]
     
     A -->|5. Broadcasts| L[Create Platform Updates]
     L --> M[Push Megaphone Badge to Target Role]
     
     A -->|6. Review Moderation| N[Moderate/Delete Hostel Reviews]
     A -->|7. Local Alerts| O[Issue Custom Warnings to Specific Owners]
+    O --> OE[📧 Email: Admin Alert → Owner Inbox]
 ```
-**Covered Features:** Comprehensive Cascade Deletions, Financial Real-Time Tracking, Manual Subscription Overrides, KYC Moderation, Listing Approval Pipeline, Global Enquiry Sniffing & Intervention, Platform-wide Updates Broadcast, Granular Target Notifications, Review Moderation.
+**Covered Features:** Comprehensive Cascade Deletions, Financial Real-Time Tracking, Manual Subscription Overrides, KYC Moderation, Listing Approval Pipeline with Email, Global Enquiry Sniffing & Intervention with Email, Platform-wide Updates Broadcast, Granular Target Notifications with Email, Review Moderation.
 
 ---
 
@@ -162,8 +168,12 @@ flowchart LR
     F --> G{Is Hostel Expiring in ≤ 3 Days?}
     G -->|Yes| H[Auto-Dispatch Warning Email to Owner]
     G -->|Expired| I[Auto-Demote Listing Visibility]
+    
+    SYS --> J[📧 Transactional Email Engine]
+    J -.->|9 Branded Templates| K[Enquiry/Reply/Chat/Status/Admin/Approval/Verification]
+    K -.->|escapeHtml XSS-Safe| L[Non-Blocking Background Delivery]
 ```
-**Covered Features:** MongoDB Native TTL Document Purging (Self-cleaning database), Node-Cron Automated Job Scheduling, Auto-Warning Dispatches, and Memory/Storage Optimization without external load.
+**Covered Features:** MongoDB Native TTL Document Purging (Self-cleaning database), Node-Cron Automated Job Scheduling, Auto-Warning Dispatches, 9-Template Email Notification Engine with XSS-safe rendering, Non-blocking email delivery, and Memory/Storage Optimization without external load.
 
 ---
 > *Platform Architecture completely modeled and realized under the vision of **Raunak Sharma**.* 🚀

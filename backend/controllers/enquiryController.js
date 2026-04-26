@@ -1,6 +1,14 @@
 const Enquiry = require('../models/Enquiry');
 const Hostel = require('../models/Hostel');
+const User = require('../models/User');
 const Notification = require('../models/Notification');
+const sendEmail = require('../utils/sendEmail');
+const {
+  getNewEnquiryEmailContent,
+  getEnquiryReplyEmailContent,
+  getNewChatMessageEmailContent,
+  getEnquiryStatusChangeEmailContent
+} = require('../utils/emailTemplates');
 
 // @desc    Send an enquiry
 // @route   POST /api/enquiries
@@ -35,7 +43,29 @@ exports.createEnquiry = async (req, res) => {
       targetId: enquiry._id
     });
 
+    // Send response immediately — don't wait for email
     res.status(201).json({ success: true, data: enquiry });
+
+    // Send email to owner (background, non-blocking)
+    try {
+      const owner = await User.findById(hostel.ownerId);
+      const student = await User.findById(req.user.id);
+      if (owner && owner.email) {
+        const htmlContent = getNewEnquiryEmailContent(
+          owner.name || 'Hostel Owner',
+          student?.name || 'A Student',
+          hostel.name,
+          message
+        );
+        sendEmail({
+          email: owner.email,
+          subject: `📩 New Enquiry for "${hostel.name}" — HostelBuddy`,
+          html: htmlContent
+        }).catch(err => console.error('Failed to send new enquiry email to owner:', err.message));
+      }
+    } catch (emailErr) {
+      console.error('Error preparing enquiry email:', emailErr.message);
+    }
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -116,7 +146,27 @@ exports.replyToEnquiry = async (req, res) => {
       targetId: enquiry._id
     });
 
+    // Send response immediately — don't wait for email
     res.status(200).json({ success: true, data: enquiry });
+
+    // Send email to student (background, non-blocking)
+    try {
+      const student = await User.findById(enquiry.studentId);
+      if (student && student.email) {
+        const htmlContent = getEnquiryReplyEmailContent(
+          student.name || 'Student',
+          hostelName,
+          ownerReply
+        );
+        sendEmail({
+          email: student.email,
+          subject: `💬 Reply to Your Enquiry for "${hostelName}" — HostelBuddy`,
+          html: htmlContent
+        }).catch(err => console.error('Failed to send enquiry reply email to student:', err.message));
+      }
+    } catch (emailErr) {
+      console.error('Error preparing reply email:', emailErr.message);
+    }
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error', error: err.message });
   }
@@ -128,7 +178,7 @@ exports.replyToEnquiry = async (req, res) => {
 exports.addMessageToEnquiry = async (req, res) => {
   try {
     const { text } = req.body;
-    let enquiry = await Enquiry.findById(req.params.id);
+    let enquiry = await Enquiry.findById(req.params.id).populate('hostelId', 'name');
 
     if (!enquiry) {
       return res.status(404).json({ success: false, message: 'Enquiry not found' });
@@ -175,7 +225,33 @@ exports.addMessageToEnquiry = async (req, res) => {
       targetId: enquiry._id
     });
 
+    // Send response immediately — don't wait for email
     res.status(200).json({ success: true, data: enquiry });
+
+    // Send email to the other party (background, non-blocking)
+    try {
+      const sender = await User.findById(req.user.id);
+      const recipient = await User.findById(recipientId);
+      const hostelName = enquiry.hostelId?.name || 'a hostel';
+      
+      if (recipient && recipient.email) {
+        const senderRole = isStudent ? 'Student' : 'Owner';
+        const htmlContent = getNewChatMessageEmailContent(
+          recipient.name || 'User',
+          senderRole,
+          sender?.name || senderLabel,
+          hostelName,
+          text
+        );
+        sendEmail({
+          email: recipient.email,
+          subject: `💬 New Message in Enquiry for "${hostelName}" — HostelBuddy`,
+          html: htmlContent
+        }).catch(err => console.error('Failed to send chat message email:', err.message));
+      }
+    } catch (emailErr) {
+      console.error('Error preparing chat email:', emailErr.message);
+    }
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error', error: err.message });
   }
@@ -229,7 +305,27 @@ exports.updateEnquiryStatus = async (req, res) => {
       });
     }
 
+    // Send response immediately — don't wait for email
     res.status(200).json({ success: true, data: enquiry });
+
+    // Send status change email to student (background, non-blocking)
+    try {
+      const student = await User.findById(enquiry.studentId);
+      if (student && student.email && (status === 'Closed' || status === 'Responded')) {
+        const htmlContent = getEnquiryStatusChangeEmailContent(
+          student.name || 'Student',
+          hostelName,
+          status
+        );
+        sendEmail({
+          email: student.email,
+          subject: `${status === 'Closed' ? '🔒' : '✅'} Enquiry ${status} for "${hostelName}" — HostelBuddy`,
+          html: htmlContent
+        }).catch(err => console.error('Failed to send enquiry status email:', err.message));
+      }
+    } catch (emailErr) {
+      console.error('Error preparing status email:', emailErr.message);
+    }
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

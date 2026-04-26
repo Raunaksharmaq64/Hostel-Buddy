@@ -3,6 +3,12 @@ const Hostel = require('../models/Hostel');
 const Enquiry = require('../models/Enquiry');
 const Notification = require('../models/Notification');
 const PlatformUpdate = require('../models/PlatformUpdate');
+const sendEmail = require('../utils/sendEmail');
+const {
+  getHostelApprovalEmailContent,
+  getVerificationEmailContent,
+  getAdminNotificationEmailContent
+} = require('../utils/emailTemplates');
 
 // @desc    Get all users based on role
 // @route   GET /api/admin/users
@@ -105,6 +111,20 @@ exports.approveHostel = async (req, res) => {
         type: isApproved ? 'success' : 'warning',
         targetTab: 'my-hostels'
       });
+
+      // Send email to owner (background, non-blocking)
+      if (owner.email) {
+        const htmlContent = getHostelApprovalEmailContent(
+          owner.name || 'Hostel Owner',
+          hostel.name,
+          isApproved
+        );
+        sendEmail({
+          email: owner.email,
+          subject: `${isApproved ? '✅' : '❌'} Hostel "${hostel.name}" ${isApproved ? 'Approved' : 'Unapproved'} — HostelBuddy`,
+          html: htmlContent
+        }).catch(err => console.error('Failed to send hostel approval email:', err.message));
+      }
     }
 
     res.status(200).json({ success: true, data: hostel });
@@ -186,6 +206,19 @@ exports.approveVerification = async (req, res) => {
         type: status === 'verified' ? 'success' : 'warning',
         targetTab: 'profile'
       });
+
+      // Send verification email to owner (background, non-blocking)
+      if (user.email) {
+        const htmlContent = getVerificationEmailContent(
+          user.name || 'Hostel Owner',
+          status
+        );
+        sendEmail({
+          email: user.email,
+          subject: `${status === 'verified' ? '🛡️' : '❌'} Account Verification ${status === 'verified' ? 'Approved' : 'Rejected'} — HostelBuddy`,
+          html: htmlContent
+        }).catch(err => console.error('Failed to send verification email:', err.message));
+      }
     }
 
     // Optionally update all their hostels to verified as well
@@ -253,6 +286,20 @@ exports.respondToEnquiry = async (req, res) => {
         targetTab: 'enquiries',
         targetId: enquiry._id
       });
+
+      // Send email to student about admin response (background, non-blocking)
+      if (student.email) {
+        const htmlContent = getAdminNotificationEmailContent(
+          student.name || 'Student',
+          responseText,
+          'info'
+        );
+        sendEmail({
+          email: student.email,
+          subject: `📢 Admin Response to Your Enquiry — HostelBuddy`,
+          html: htmlContent
+        }).catch(err => console.error('Failed to send admin enquiry response email:', err.message));
+      }
     }
 
     res.status(200).json({ success: true, data: enquiry });
@@ -345,6 +392,21 @@ exports.notifyOwner = async (req, res) => {
       message,
       type: type || 'warning'
     });
+
+    // Send email to owner (background, non-blocking)
+    if (user.email) {
+      const htmlContent = getAdminNotificationEmailContent(
+        user.name || 'User',
+        message,
+        type || 'warning'
+      );
+      sendEmail({
+        email: user.email,
+        subject: `📢 Important Notification from HostelBuddy Admin`,
+        html: htmlContent
+      }).catch(err => console.error('Failed to send admin notification email:', err.message));
+    }
+
     res.status(200).json({ success: true, message: 'Notification sent to owner.' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });

@@ -40,3 +40,13 @@ test_*.js
 # Android Builds
 *.apk
 !frontend/hostelbuddy.apk
+
+# Gemini AI Agent
+.gemini/
+
+# Diff & scratch files
+diff*.txt
+
+# Logs
+*.log
+logs/
