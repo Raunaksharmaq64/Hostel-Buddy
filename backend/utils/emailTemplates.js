@@ -404,6 +404,40 @@ const getVerificationEmailContent = (ownerName, verificationStatus) => {
 };
 
 
+// ────────────────────────────────────────────────────────
+// 10. Platform Update Broadcast → Email to Students/Owners
+// ────────────────────────────────────────────────────────
+
+const getPlatformUpdateEmailContent = (recipientName, updateTitle, updateMessage, targetRole) => {
+  const safeRecipient = escapeHtml(recipientName);
+  const safeTitle = escapeHtml(updateTitle);
+  const safeMessage = escapeHtml(updateMessage);
+  
+  const audienceLabel = targetRole === 'All' ? 'All Users' : `${targetRole}s`;
+
+  const body = `
+    <h1>📢 Platform Update</h1>
+    <p>Dear <strong>${safeRecipient}</strong>,</p>
+    <p>We have an important announcement from the HostelBuddy team:</p>
+
+    <div style="background: #fdfbfb; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0;">
+      <h2 style="color: #2d3436; font-size: 18px; margin: 0 0 10px 0;">📌 ${safeTitle}</h2>
+      <p style="color: #555; margin: 0; line-height: 1.7;">${safeMessage}</p>
+    </div>
+
+    <div style="text-align: center; margin: 15px 0;">
+      <span class="status-badge" style="background: #dfe6e9; color: #636e72;">
+        🎯 Sent to: ${audienceLabel}
+      </span>
+    </div>
+
+    <p>Log in to your HostelBuddy dashboard for more details and to stay up-to-date with the latest features.</p>
+    <p style="color: #6c5ce7; font-weight: 600;">🚀 Thank you for being part of the HostelBuddy community!</p>
+  `;
+  return wrapEmail('#6c5ce7 0%, #a29bfe 100%', '📢', 'Platform Announcement', body);
+};
+
+
 module.exports = {
   getInvoiceEmailContent,
   getReminderEmailContent,
@@ -413,5 +447,6 @@ module.exports = {
   getEnquiryStatusChangeEmailContent,
   getAdminNotificationEmailContent,
   getHostelApprovalEmailContent,
-  getVerificationEmailContent
+  getVerificationEmailContent,
+  getPlatformUpdateEmailContent
 };

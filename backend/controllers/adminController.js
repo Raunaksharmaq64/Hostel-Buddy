@@ -7,7 +7,8 @@ const sendEmail = require('../utils/sendEmail');
 const {
   getHostelApprovalEmailContent,
   getVerificationEmailContent,
-  getAdminNotificationEmailContent
+  getAdminNotificationEmailContent,
+  getPlatformUpdateEmailContent
 } = require('../utils/emailTemplates');
 
 // @desc    Get all users based on role
@@ -393,7 +394,7 @@ exports.notifyOwner = async (req, res) => {
       type: type || 'warning'
     });
 
-    // Send email to owner (background, non-blocking)
+    // Send email to user (background, non-blocking)
     if (user.email) {
       const htmlContent = getAdminNotificationEmailContent(
         user.name || 'User',
@@ -407,7 +408,7 @@ exports.notifyOwner = async (req, res) => {
       }).catch(err => console.error('Failed to send admin notification email:', err.message));
     }
 
-    res.status(200).json({ success: true, message: 'Notification sent to owner.' });
+    res.status(200).json({ success: true, message: `Notification sent to ${user.name || 'user'}.` });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -422,8 +423,39 @@ exports.createPlatformUpdate = async (req, res) => {
     if (!title || !message) {
       return res.status(400).json({ success: false, message: 'Title and message are required' });
     }
-    const update = await PlatformUpdate.create({ title, message, targetRole: targetRole || 'All' });
+    const role = targetRole || 'All';
+    const update = await PlatformUpdate.create({ title, message, targetRole: role });
+
+    // Send response immediately — don't wait for email blast
     res.status(201).json({ success: true, data: update });
+
+    // Email blast to all targeted users (background, non-blocking)
+    try {
+      const query = role === 'All'
+        ? { role: { $in: ['Student', 'Owner'] } }
+        : { role: role };
+      
+      const targetedUsers = await User.find(query).select('name email');
+
+      for (const user of targetedUsers) {
+        if (user.email) {
+          const htmlContent = getPlatformUpdateEmailContent(
+            user.name || 'User',
+            title,
+            message,
+            role
+          );
+          sendEmail({
+            email: user.email,
+            subject: `📢 ${title} — HostelBuddy Update`,
+            html: htmlContent
+          }).catch(err => console.error(`Failed to send platform update email to ${user.email}:`, err.message));
+        }
+      }
+      console.log(`Platform update email blast sent to ${targetedUsers.length} ${role} users.`);
+    } catch (emailErr) {
+      console.error('Error sending platform update emails:', emailErr.message);
+    }
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
