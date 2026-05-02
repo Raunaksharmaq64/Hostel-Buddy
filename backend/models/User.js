@@ -50,6 +50,10 @@ const userSchema = new mongoose.Schema({
 
   lastReadPlatformUpdate: { type: Date, default: null },
 
+  // Email lifecycle tracking
+  lastLoginAt: { type: Date, default: null },
+  comebackEmailSentAt: { type: Date, default: null },
+
   createdAt: { type: Date, default: Date.now }
 });
 

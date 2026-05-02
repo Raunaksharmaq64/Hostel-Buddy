@@ -438,6 +438,302 @@ const getPlatformUpdateEmailContent = (recipientName, updateTitle, updateMessage
 };
 
 
+
+// ────────────────────────────────────────────────────────
+// 11. Welcome Email → Sent after Email Verification
+// ────────────────────────────────────────────────────────
+
+const getWelcomeEmailContent = (userName, userRole) => {
+  const safeName = escapeHtml(userName);
+
+  const studentGuide = `
+    <div style="margin: 25px 0;">
+      <h2 style="color: #2d3436; font-size: 18px; margin-bottom: 15px;">🚀 Your Quick Start Guide</h2>
+      <p style="color: #636e72; margin-bottom: 20px;">Here's everything you can do on HostelBuddy as a Student:</p>
+      
+      <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+          <tr>
+            <td style="padding: 14px 16px; border-bottom: 1px solid #e9ecef;">
+              <span style="background: #dfe6e9; border-radius: 50%; width: 28px; height: 28px; display: inline-block; text-align: center; line-height: 28px; font-weight: 700; font-size: 13px; color: #2d3436; margin-right: 12px;">1</span>
+              <strong style="color: #2d3436;">🔍 Browse Hostels</strong>
+              <p style="margin: 6px 0 0 40px; color: #636e72; font-size: 14px;">Search & filter properties by city, price range, and amenities to find your perfect stay.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 14px 16px; border-bottom: 1px solid #e9ecef;">
+              <span style="background: #dfe6e9; border-radius: 50%; width: 28px; height: 28px; display: inline-block; text-align: center; line-height: 28px; font-weight: 700; font-size: 13px; color: #2d3436; margin-right: 12px;">2</span>
+              <strong style="color: #2d3436;">❤️ Save Favorites</strong>
+              <p style="margin: 6px 0 0 40px; color: #636e72; font-size: 14px;">Bookmark hostels you love to compare them later from your Saved Hostels tab.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 14px 16px; border-bottom: 1px solid #e9ecef;">
+              <span style="background: #dfe6e9; border-radius: 50%; width: 28px; height: 28px; display: inline-block; text-align: center; line-height: 28px; font-weight: 700; font-size: 13px; color: #2d3436; margin-right: 12px;">3</span>
+              <strong style="color: #2d3436;">📩 Send Enquiries</strong>
+              <p style="margin: 6px 0 0 40px; color: #636e72; font-size: 14px;">Directly message any hostel owner with your questions about pricing, availability, or rules.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 14px 16px; border-bottom: 1px solid #e9ecef;">
+              <span style="background: #dfe6e9; border-radius: 50%; width: 28px; height: 28px; display: inline-block; text-align: center; line-height: 28px; font-weight: 700; font-size: 13px; color: #2d3436; margin-right: 12px;">4</span>
+              <strong style="color: #2d3436;">💬 Chat with Owners</strong>
+              <p style="margin: 6px 0 0 40px; color: #636e72; font-size: 14px;">Continue real-time conversations with owners and get quick responses to your queries.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 14px 16px; border-bottom: 1px solid #e9ecef;">
+              <span style="background: #dfe6e9; border-radius: 50%; width: 28px; height: 28px; display: inline-block; text-align: center; line-height: 28px; font-weight: 700; font-size: 13px; color: #2d3436; margin-right: 12px;">5</span>
+              <strong style="color: #2d3436;">⭐ Leave Reviews</strong>
+              <p style="margin: 6px 0 0 40px; color: #636e72; font-size: 14px;">Rate and review hostels you've visited to help other students make informed decisions.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 14px 16px;">
+              <span style="background: #dfe6e9; border-radius: 50%; width: 28px; height: 28px; display: inline-block; text-align: center; line-height: 28px; font-weight: 700; font-size: 13px; color: #2d3436; margin-right: 12px;">6</span>
+              <strong style="color: #2d3436;">👤 Complete Your Profile</strong>
+              <p style="margin: 6px 0 0 40px; color: #636e72; font-size: 14px;">Add college details, parent contacts, and government ID to build trust with hostel owners.</p>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  `;
+
+  const ownerGuide = `
+    <div style="margin: 25px 0;">
+      <h2 style="color: #2d3436; font-size: 18px; margin-bottom: 15px;">🚀 Your Quick Start Guide</h2>
+      <p style="color: #636e72; margin-bottom: 20px;">Here's everything you can do on HostelBuddy as an Owner:</p>
+      
+      <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 10px;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+          <tr>
+            <td style="padding: 14px 16px; border-bottom: 1px solid #e9ecef;">
+              <span style="background: #dfe6e9; border-radius: 50%; width: 28px; height: 28px; display: inline-block; text-align: center; line-height: 28px; font-weight: 700; font-size: 13px; color: #2d3436; margin-right: 12px;">1</span>
+              <strong style="color: #2d3436;">✅ Get Verified</strong>
+              <p style="margin: 6px 0 0 40px; color: #636e72; font-size: 14px;">Submit your identity documents for a verified badge — verified owners get 3x more enquiries!</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 14px 16px; border-bottom: 1px solid #e9ecef;">
+              <span style="background: #dfe6e9; border-radius: 50%; width: 28px; height: 28px; display: inline-block; text-align: center; line-height: 28px; font-weight: 700; font-size: 13px; color: #2d3436; margin-right: 12px;">2</span>
+              <strong style="color: #2d3436;">🏠 List Your Property</strong>
+              <p style="margin: 6px 0 0 40px; color: #636e72; font-size: 14px;">Add high-quality photos, set pricing, describe amenities, and define house rules to attract students.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 14px 16px; border-bottom: 1px solid #e9ecef;">
+              <span style="background: #dfe6e9; border-radius: 50%; width: 28px; height: 28px; display: inline-block; text-align: center; line-height: 28px; font-weight: 700; font-size: 13px; color: #2d3436; margin-right: 12px;">3</span>
+              <strong style="color: #2d3436;">💳 Activate Subscription</strong>
+              <p style="margin: 6px 0 0 40px; color: #636e72; font-size: 14px;">Pay ₹299/month via Razorpay to make your listing live and visible to thousands of students.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 14px 16px; border-bottom: 1px solid #e9ecef;">
+              <span style="background: #dfe6e9; border-radius: 50%; width: 28px; height: 28px; display: inline-block; text-align: center; line-height: 28px; font-weight: 700; font-size: 13px; color: #2d3436; margin-right: 12px;">4</span>
+              <strong style="color: #2d3436;">📩 Manage Enquiries</strong>
+              <p style="margin: 6px 0 0 40px; color: #636e72; font-size: 14px;">Respond to student messages, update enquiry status, and use bulk actions to stay organized.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 14px 16px; border-bottom: 1px solid #e9ecef;">
+              <span style="background: #dfe6e9; border-radius: 50%; width: 28px; height: 28px; display: inline-block; text-align: center; line-height: 28px; font-weight: 700; font-size: 13px; color: #2d3436; margin-right: 12px;">5</span>
+              <strong style="color: #2d3436;">📊 Track Performance</strong>
+              <p style="margin: 6px 0 0 40px; color: #636e72; font-size: 14px;">Monitor hostel views, enquiry counts, subscription status, and listing health from your dashboard.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 14px 16px;">
+              <span style="background: #dfe6e9; border-radius: 50%; width: 28px; height: 28px; display: inline-block; text-align: center; line-height: 28px; font-weight: 700; font-size: 13px; color: #2d3436; margin-right: 12px;">6</span>
+              <strong style="color: #2d3436;">🔔 Stay Updated</strong>
+              <p style="margin: 6px 0 0 40px; color: #636e72; font-size: 14px;">Get instant email notifications for new enquiries, admin messages, and subscription reminders.</p>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  `;
+
+  const guide = userRole === 'Owner' ? ownerGuide : studentGuide;
+  const roleLabel = userRole === 'Owner' ? 'Hostel Owner' : 'Student';
+  const dashboardPath = userRole === 'Owner' ? 'owner-dashboard.html' : 'student-dashboard.html';
+
+  const body = `
+    <h1>Welcome to HostelBuddy! 🎊</h1>
+    <p>Hey <strong>${safeName}</strong>,</p>
+    <p>We're thrilled to have you on board as a <strong>${roleLabel}</strong>! Your account is now fully activated and ready to go.</p>
+    <p>HostelBuddy is your one-stop platform for ${userRole === 'Owner' ? 'listing and managing your hostel properties to reach thousands of students' : 'discovering, comparing, and connecting with the best hostels and PGs near your college'}.</p>
+
+    ${guide}
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${dashboardPath}" style="display: inline-block; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; text-decoration: none; padding: 14px 36px; border-radius: 8px; font-weight: 700; font-size: 15px; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);">Go to Your Dashboard →</a>
+    </div>
+
+    <p style="color: #636e72;">If you have any questions or need help getting started, don't hesitate to reach out to our support team. We're always here to help! 💪</p>
+    <p style="color: #6c5ce7; font-weight: 600;">🌟 Welcome to the HostelBuddy family!</p>
+  `;
+
+  return wrapEmail('#00b894 0%, #00cec9 100%', '🎉', 'Welcome to HostelBuddy!', body);
+};
+
+
+// ────────────────────────────────────────────────────────
+// 12. Come Back Email → Sent when user inactive 2+ days
+// ────────────────────────────────────────────────────────
+
+const getComebackEmailContent = (userName, userRole, stats) => {
+  const safeName = escapeHtml(userName);
+  const hasActivity = (stats.unreadEnquiries > 0) || (stats.unreadNotifications > 0) || (stats.newViews > 0);
+
+  let activitySection = '';
+
+  if (hasActivity) {
+    activitySection = `
+      <p>While you were away, some things happened on your account:</p>
+      <div style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin: 20px 0;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+          ${stats.unreadEnquiries > 0 ? `
+          <tr>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e9ecef;">
+              <span style="font-size: 20px; margin-right: 12px;">📩</span>
+              <strong style="color: #2d3436;">${stats.unreadEnquiries} unread enquir${stats.unreadEnquiries === 1 ? 'y' : 'ies'}</strong>
+              <span style="color: #636e72;"> waiting for your response</span>
+            </td>
+          </tr>` : ''}
+          ${stats.unreadNotifications > 0 ? `
+          <tr>
+            <td style="padding: 12px 16px; border-bottom: 1px solid #e9ecef;">
+              <span style="font-size: 20px; margin-right: 12px;">🔔</span>
+              <strong style="color: #2d3436;">${stats.unreadNotifications} unread notification${stats.unreadNotifications === 1 ? '' : 's'}</strong>
+              <span style="color: #636e72;"> you haven't seen yet</span>
+            </td>
+          </tr>` : ''}
+          ${stats.newViews > 0 ? `
+          <tr>
+            <td style="padding: 12px 16px;">
+              <span style="font-size: 20px; margin-right: 12px;">👀</span>
+              <strong style="color: #2d3436;">${stats.newViews} new view${stats.newViews === 1 ? '' : 's'}</strong>
+              <span style="color: #636e72;"> on your hostel listing${stats.totalHostels > 1 ? 's' : ''}</span>
+            </td>
+          </tr>` : ''}
+        </table>
+      </div>
+      <p style="color: #e17055; font-weight: 600;">⏰ Don't keep them waiting — quick responses lead to better outcomes!</p>
+    `;
+  } else {
+    const tipMessage = userRole === 'Owner'
+      ? 'Students are actively searching for hostels every day! Make sure your listing details, photos, and pricing are up-to-date to attract more enquiries.'
+      : 'New hostels are being listed every day! Come explore the latest options near your college and find your perfect stay.';
+
+    activitySection = `
+      <div style="background: #ffeaa7; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center;">
+        <p style="font-size: 28px; margin: 0 0 10px 0;">🌟</p>
+        <p style="color: #2d3436; font-weight: 600; margin: 0 0 8px 0;">Here's a tip for you!</p>
+        <p style="color: #636e72; margin: 0; font-size: 14px; line-height: 1.6;">${tipMessage}</p>
+      </div>
+    `;
+  }
+
+  const dashboardPath = userRole === 'Owner' ? 'owner-dashboard.html' : 'student-dashboard.html';
+
+  const body = `
+    <h1>We Miss You! 👋</h1>
+    <p>Hey <strong>${safeName}</strong>,</p>
+    <p>It's been a while since you last visited HostelBuddy. We just wanted to check in and let you know what's been happening.</p>
+
+    ${activitySection}
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="${dashboardPath}" style="display: inline-block; background: linear-gradient(135deg, #e17055, #fdcb6e); color: white; text-decoration: none; padding: 14px 36px; border-radius: 8px; font-weight: 700; font-size: 15px; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(225, 112, 85, 0.3);">Come Back to HostelBuddy →</a>
+    </div>
+
+    <p style="color: #636e72;">We're constantly adding new features and improving the platform to give you the best experience. Log in and see what's new! 🚀</p>
+  `;
+
+  return wrapEmail('#e17055 0%, #fdcb6e 100%', '👋', 'We Miss You!', body);
+};
+
+
+// ────────────────────────────────────────────────────────
+// 13. Milestone Celebration Email → Achievement unlocked
+// ────────────────────────────────────────────────────────
+
+const getMilestoneEmailContent = (userName, milestoneType, milestoneValue) => {
+  const safeName = escapeHtml(userName);
+
+  let milestoneIcon, milestoneTitle, milestoneMessage, motivationalTip;
+
+  switch (milestoneType) {
+    case 'first_enquiry_student':
+      milestoneIcon = '🎯';
+      milestoneTitle = 'First Enquiry Sent!';
+      milestoneMessage = 'You\'ve taken the first step towards finding your perfect hostel! The owner will receive your message and get back to you soon.';
+      motivationalTip = 'Send enquiries to multiple hostels to compare options and find the best deal!';
+      break;
+    case 'first_enquiry_owner':
+      milestoneIcon = '📩';
+      milestoneTitle = 'First Enquiry Received!';
+      milestoneMessage = 'A student is interested in your property! Your first enquiry is a big milestone — it means your listing is getting noticed.';
+      motivationalTip = 'Quick responses increase your booking chances by 80%. Head to your dashboard to reply!';
+      break;
+    case 'enquiry_milestone_student':
+      milestoneIcon = '🔥';
+      milestoneTitle = `${milestoneValue} Enquiries Sent!`;
+      milestoneMessage = `Wow, you've sent ${milestoneValue} enquiries! You're really doing your research — that's the smart way to find the best hostel.`;
+      motivationalTip = 'Check your enquiries tab to follow up on responses and make your final decision!';
+      break;
+    case 'enquiry_milestone_owner':
+      milestoneIcon = '🔥';
+      milestoneTitle = `${milestoneValue} Enquiries Received!`;
+      milestoneMessage = `Incredible! Your property has attracted ${milestoneValue} enquiries. Your listing is clearly standing out on HostelBuddy!`;
+      motivationalTip = 'Keep your listing updated with fresh photos and accurate pricing to maintain this momentum!';
+      break;
+    case 'views_milestone':
+      milestoneIcon = '👀';
+      milestoneTitle = `${milestoneValue} Hostel Views!`;
+      milestoneMessage = `Your hostel listing has been viewed ${milestoneValue} times! That's amazing visibility on the platform.`;
+      motivationalTip = 'More views = more potential bookings. Ensure your photos are high-quality and description is compelling!';
+      break;
+    case 'first_review':
+      milestoneIcon = '⭐';
+      milestoneTitle = 'First Review Received!';
+      milestoneMessage = 'A student left a review on your hostel! Reviews build trust and help other students make informed decisions.';
+      motivationalTip = 'Encourage satisfied students to leave reviews — properties with 5+ reviews get significantly more enquiries!';
+      break;
+    default:
+      milestoneIcon = '🏆';
+      milestoneTitle = 'Achievement Unlocked!';
+      milestoneMessage = 'You\'ve reached a new milestone on HostelBuddy. Keep up the great work!';
+      motivationalTip = 'Stay active on the platform to unlock more achievements and grow your presence!';
+  }
+
+  const body = `
+    <h1>Achievement Unlocked! 🏆</h1>
+    <p>Hey <strong>${safeName}</strong>,</p>
+    <p>We have some exciting news for you!</p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <div style="background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%); border-radius: 16px; padding: 30px; display: inline-block; min-width: 280px;">
+        <p style="font-size: 48px; margin: 0 0 10px 0;">${milestoneIcon}</p>
+        <h2 style="color: #2d3436; font-size: 20px; margin: 0 0 10px 0;">${milestoneTitle}</h2>
+        <p style="color: #636e72; margin: 0; font-size: 14px; line-height: 1.6;">${milestoneMessage}</p>
+      </div>
+    </div>
+
+    <div style="background: #f0f7ff; border-left: 4px solid #0984e3; border-radius: 6px; padding: 16px 20px; margin: 20px 0;">
+      <p style="margin: 0; color: #0984e3; font-weight: 600; font-size: 14px;">💡 Pro Tip</p>
+      <p style="margin: 8px 0 0 0; color: #555; font-size: 14px;">${motivationalTip}</p>
+    </div>
+
+    <p style="color: #636e72;">Keep up the amazing work on HostelBuddy! Every milestone brings you closer to your goal. 💪</p>
+    <p style="color: #6c5ce7; font-weight: 600;">🌟 We're proud to have you in the HostelBuddy community!</p>
+  `;
+
+  return wrapEmail('#f9ca24 0%, #f0932b 100%', '🏆', 'Achievement Unlocked!', body);
+};
+
+
 module.exports = {
   getInvoiceEmailContent,
   getReminderEmailContent,
@@ -448,5 +744,8 @@ module.exports = {
   getAdminNotificationEmailContent,
   getHostelApprovalEmailContent,
   getVerificationEmailContent,
-  getPlatformUpdateEmailContent
+  getPlatformUpdateEmailContent,
+  getWelcomeEmailContent,
+  getComebackEmailContent,
+  getMilestoneEmailContent
 };

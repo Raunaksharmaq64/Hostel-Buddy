@@ -29,7 +29,8 @@ The application is structured around three primary roles, each with a unique das
 ## Key Design & Security Features
 - **Zero XSS Execution**: 100% fortified against Cross-Site Scripting (XSS). Every user input (hostel names, reviews, chat messages, notifications, email content) is escaped before DOM injection and email template rendering.
 - **Enterprise Notification System**: Perfect `isReadByOwner` and `isReadByStudent` database-level tracking ensures real-time badge polling is 100% accurate, similar to WhatsApp's unread logic.
-- **Email Notification Engine**: 9 branded HTML email templates with gradient headers, professional sign-off ("Raunak Sharma — Founder & Lead"), and auto-generated disclaimers. Non-blocking delivery — API responds instantly, emails fire in background.
+- **Email Notification Engine**: 13 branded HTML email templates with gradient headers, professional sign-off ("Raunak Sharma — Founder & Lead"), and auto-generated disclaimers. Non-blocking delivery — API responds instantly, emails fire in background.
+- **Email Lifecycle System**: Intelligent welcome onboarding (role-specific guide), re-engagement emails for inactive users (2+ days, personalized with pending activity), and milestone celebrations (1st enquiry, 50 views, etc.).
 - **Atomic MongoDB Operations**: Highly optimized using MongoDB TTL indexes for auto-deleting notifications/enquiries, and `$inc` for atomic view counter updates.
 - **Premium Responsive UI**: Mobile-first glassmorphism design with `Lucide` SVG iconography, GSAP animations, dynamic 44px touch-targets for mobile chat inputs, and responsive full-screen modals.
 - **Secure Email Verification & OTP Flow**: Accounts are secured with a mandatory 6-digit OTP verification flow sent via NodeMailer using HTML-branded emails.

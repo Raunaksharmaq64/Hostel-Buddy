@@ -9,7 +9,7 @@ Hostel Buddy is a full-stack web application designed to connect Students search
   - **Database**: MongoDB (Mongoose Schema) with atomic `$inc` and TTL indexes.
   - **Cloud Storage**: Cloudinary (for image uploads).
   - **Authentication**: JSON Web Tokens (JWT) & bcryptjs for password hashing.
-  - **Email System**: NodeMailer with Gmail SMTP, connection pooling, and 9 branded HTML email templates for transactional notifications.
+  - **Email System**: NodeMailer with Gmail SMTP, connection pooling, and 13 branded HTML email templates for transactional notifications, welcome onboarding, re-engagement, and milestone celebrations.
   - **Security**: Strict zero-trust XSS prevention architecture via global `escapeHtml()` injection sanitization (frontend DOM + backend email templates).
   - **Mobile App**: Direct Android APK distribution hosted natively via the web frontend.
   
@@ -56,6 +56,8 @@ Handles all three roles (`Student`, `Owner`, `Admin`).
   - `deactivationStatus` (Enum: 'none', 'pending')
   - `deactivationReason` (String)
   - `notifications` (Array of objects containing `message`, `type`, `isRead`, `createdAt`)
+  - `lastLoginAt` (Date) — updated on every login, used by comeback email cron
+  - `comebackEmailSentAt` (Date) — prevents duplicate re-engagement emails (7-day cooldown)
 
 ### Hostel
 Stores property details. Linkable to Owner.
@@ -93,7 +95,9 @@ Handles hostel ratings and feedback from students.
 3. **Add Listing**: Verified Owners can upload Hostels. Upon creation, visually tracks expiration statuses.
 4. **Subscription Payment (Razorpay)**: Creating a new hostel triggers a Razorpay UI popup to enforce a ₹299/mo listing fee. If unpaid, the listing cannot be broadcasted publicly.
 5. **Approval**: Uploaded Hostels default to `isApproved: false`. The Admin safely reviews and approves them.
-6. **Background Automation**: A `node-cron` system runs twice daily (8 AM / 8 PM) executing tasks to identify properties approaching expiration to automatically send HTML branded renewal warnings.
+6. **Background Automation**: A `node-cron` system runs scheduled tasks:
+   - **Renewal Reminders** (8 AM & 8 PM): Identifies properties approaching subscription expiration and sends branded renewal warning emails.
+   - **Comeback Emails** (10 AM daily): Scans for users inactive 2+ days, aggregates their pending activity (unread enquiries, notifications, hostel views), and sends personalized re-engagement emails. Rate-limited to 50 emails/run with 7-day cooldown.
 7. **Discovery**: Students exclusively see Hostels where both `isApproved: true` and `subscriptionStatus: 'active'`.
 
 ### 4.3. Enquiry & Messaging Loop
@@ -107,7 +111,7 @@ Handles hostel ratings and feedback from students.
 8. Owners can use an optimized "Bulk Delete" endpoint to clear hundreds of messages with one API call, significantly boosting dashboard performance.
 
 ### 4.4. Email Notification System
-Every in-app notification event is mirrored with a professional, branded HTML email. The system uses **9 distinct email templates**, all featuring:
+Every in-app notification event is mirrored with a professional, branded HTML email. The system uses **13 distinct email templates**, all featuring:
 - HostelBuddy branded gradient header with logo
 - Context-specific colors (purple for enquiries, green for approvals, red for closures)
 - XSS-safe content rendering via `escapeHtml()` sanitization
@@ -126,6 +130,10 @@ Every in-app notification event is mirrored with a professional, branded HTML em
 | 7 | Admin Notification | Admin sends message or responds to enquiry | Owner/Student |
 | 8 | Hostel Approval | Admin approves/unapproves listing | Owner |
 | 9 | Verification Status | Admin verifies/rejects owner account | Owner |
+| 10 | Platform Update | Admin broadcasts a platform announcement | Targeted role(s) |
+| 11 | Welcome Email + Guide | Email verification completed (OTP verified) | Student/Owner |
+| 12 | Come Back Email | User inactive 2+ days (daily cron at 10 AM) | Student/Owner |
+| 13 | Milestone Celebration | Achievement reached (1st enquiry, 50 views, 1st review, etc.) | Student/Owner |
 
 ### 4.5. Review & Rating Flow
 1. Student stays at or visits a hostel and submits a rating/comment.

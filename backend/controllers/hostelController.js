@@ -3,6 +3,8 @@ const User = require('../models/User');
 const Review = require('../models/Review');
 const cloudinary = require('cloudinary').v2;
 const streamifier = require('streamifier');
+const sendEmail = require('../utils/sendEmail');
+const { getMilestoneEmailContent } = require('../utils/emailTemplates');
 
 // Helper function to upload buffer to Cloudinary
 const uploadFromBuffer = (buffer, folderName) => {
@@ -115,6 +117,23 @@ exports.getHostel = async (req, res) => {
     hostel.views += 1;
 
     res.status(200).json({ success: true, data: hostel });
+
+    // Check for views milestone (background, non-blocking)
+    const VIEW_MILESTONES = [50, 100, 500];
+    if (VIEW_MILESTONES.includes(hostel.views)) {
+      try {
+        const owner = await User.findById(hostel.ownerId);
+        if (owner && owner.email) {
+          sendEmail({
+            email: owner.email,
+            subject: `🏆 Achievement Unlocked: ${hostel.views} Views on "${hostel.name}"! — HostelBuddy`,
+            html: getMilestoneEmailContent(owner.name, 'views_milestone', hostel.views)
+          }).catch(err => console.error('Failed to send views milestone email:', err.message));
+        }
+      } catch (milestoneErr) {
+        console.error('Error checking views milestone:', milestoneErr.message);
+      }
+    }
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

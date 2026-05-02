@@ -1,5 +1,8 @@
 const Review = require('../models/Review');
 const Hostel = require('../models/Hostel');
+const User = require('../models/User');
+const sendEmail = require('../utils/sendEmail');
+const { getMilestoneEmailContent } = require('../utils/emailTemplates');
 
 // @desc    Add review
 // @route   POST /api/reviews
@@ -35,6 +38,25 @@ exports.createReview = async (req, res) => {
     await Hostel.findByIdAndUpdate(hostelId, { rating: avgRating });
 
     res.status(201).json({ success: true, data: review });
+
+    // Check for first review milestone (background, non-blocking)
+    if (allReviews.length === 1) {
+      try {
+        const hostel = await Hostel.findById(hostelId);
+        if (hostel && hostel.ownerId) {
+          const owner = await User.findById(hostel.ownerId);
+          if (owner && owner.email) {
+            sendEmail({
+              email: owner.email,
+              subject: `⭐ Your First Review is In! — HostelBuddy`,
+              html: getMilestoneEmailContent(owner.name, 'first_review', 1)
+            }).catch(err => console.error('Failed to send first review milestone email:', err.message));
+          }
+        }
+      } catch (milestoneErr) {
+        console.error('Error checking review milestone:', milestoneErr.message);
+      }
+    }
   } catch(error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

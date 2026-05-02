@@ -2,6 +2,7 @@ const User = require('../models/User');
 const PlatformUpdate = require('../models/PlatformUpdate');
 const jwt = require('jsonwebtoken');
 const sendEmail = require('../utils/sendEmail');
+const { getWelcomeEmailContent } = require('../utils/emailTemplates');
 
 // Get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
@@ -117,6 +118,10 @@ exports.login = async (req, res) => {
     }
 
     sendTokenResponse(user, 200, res);
+
+    // Track login time & reset comeback email flag (non-blocking)
+    User.updateOne({ _id: user._id }, { lastLoginAt: new Date(), comebackEmailSentAt: null })
+      .catch(err => console.error('Failed to update lastLoginAt:', err.message));
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
@@ -287,9 +292,19 @@ exports.verifyEmail = async (req, res) => {
     user.isEmailVerified = true;
     user.emailVerificationOtp = undefined;
     user.emailVerificationOtpExpiry = undefined;
+    user.lastLoginAt = new Date();
     await user.save();
 
     sendTokenResponse(user, 200, res);
+
+    // Fire welcome email in background (non-blocking)
+    if (user.role !== 'Admin') {
+      sendEmail({
+        email: user.email,
+        subject: '🎉 Welcome to HostelBuddy — Your Quick Start Guide!',
+        html: getWelcomeEmailContent(user.name, user.role)
+      }).catch(err => console.error('Failed to send welcome email:', err.message));
+    }
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }

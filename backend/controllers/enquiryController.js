@@ -7,7 +7,8 @@ const {
   getNewEnquiryEmailContent,
   getEnquiryReplyEmailContent,
   getNewChatMessageEmailContent,
-  getEnquiryStatusChangeEmailContent
+  getEnquiryStatusChangeEmailContent,
+  getMilestoneEmailContent
 } = require('../utils/emailTemplates');
 
 // @desc    Send an enquiry
@@ -65,6 +66,41 @@ exports.createEnquiry = async (req, res) => {
       }
     } catch (emailErr) {
       console.error('Error preparing enquiry email:', emailErr.message);
+    }
+
+    // Check for milestone achievements (background, non-blocking)
+    try {
+      const MILESTONES = [1, 5, 10, 25, 50];
+
+      // Student milestone: total enquiries sent
+      const studentEnquiryCount = await Enquiry.countDocuments({ studentId: req.user.id });
+      if (MILESTONES.includes(studentEnquiryCount)) {
+        const student = await User.findById(req.user.id);
+        if (student && student.email) {
+          const milestoneType = studentEnquiryCount === 1 ? 'first_enquiry_student' : 'enquiry_milestone_student';
+          sendEmail({
+            email: student.email,
+            subject: `🏆 Achievement Unlocked: ${studentEnquiryCount === 1 ? 'First Enquiry Sent' : studentEnquiryCount + ' Enquiries Sent'}! — HostelBuddy`,
+            html: getMilestoneEmailContent(student.name, milestoneType, studentEnquiryCount)
+          }).catch(err => console.error('Failed to send student milestone email:', err.message));
+        }
+      }
+
+      // Owner milestone: total enquiries received
+      const ownerEnquiryCount = await Enquiry.countDocuments({ ownerId: hostel.ownerId });
+      if (MILESTONES.includes(ownerEnquiryCount)) {
+        const owner = await User.findById(hostel.ownerId);
+        if (owner && owner.email) {
+          const milestoneType = ownerEnquiryCount === 1 ? 'first_enquiry_owner' : 'enquiry_milestone_owner';
+          sendEmail({
+            email: owner.email,
+            subject: `🏆 Achievement Unlocked: ${ownerEnquiryCount === 1 ? 'First Enquiry Received' : ownerEnquiryCount + ' Enquiries Received'}! — HostelBuddy`,
+            html: getMilestoneEmailContent(owner.name, milestoneType, ownerEnquiryCount)
+          }).catch(err => console.error('Failed to send owner milestone email:', err.message));
+        }
+      }
+    } catch (milestoneErr) {
+      console.error('Error checking milestones:', milestoneErr.message);
     }
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
