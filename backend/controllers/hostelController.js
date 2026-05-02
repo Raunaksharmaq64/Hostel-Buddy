@@ -122,7 +122,8 @@ exports.getHostel = async (req, res) => {
     const VIEW_MILESTONES = [50, 100, 500];
     if (VIEW_MILESTONES.includes(hostel.views)) {
       try {
-        const owner = await User.findById(hostel.ownerId);
+        // hostel.ownerId is already populated above with name, email etc.
+        const owner = hostel.ownerId;
         if (owner && owner.email) {
           sendEmail({
             email: owner.email,

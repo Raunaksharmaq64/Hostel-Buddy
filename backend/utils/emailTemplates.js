@@ -584,7 +584,7 @@ const getWelcomeEmailContent = (userName, userRole) => {
 
 const getComebackEmailContent = (userName, userRole, stats) => {
   const safeName = escapeHtml(userName);
-  const hasActivity = (stats.unreadEnquiries > 0) || (stats.unreadNotifications > 0) || (stats.newViews > 0);
+  const hasActivity = (stats.unreadEnquiries > 0) || (stats.unreadNotifications > 0) || (stats.totalViews > 0);
 
   let activitySection = '';
 
@@ -609,11 +609,11 @@ const getComebackEmailContent = (userName, userRole, stats) => {
               <span style="color: #636e72;"> you haven't seen yet</span>
             </td>
           </tr>` : ''}
-          ${stats.newViews > 0 ? `
+          ${stats.totalViews > 0 ? `
           <tr>
             <td style="padding: 12px 16px;">
               <span style="font-size: 20px; margin-right: 12px;">👀</span>
-              <strong style="color: #2d3436;">${stats.newViews} new view${stats.newViews === 1 ? '' : 's'}</strong>
+              <strong style="color: #2d3436;">${stats.totalViews} total view${stats.totalViews === 1 ? '' : 's'}</strong>
               <span style="color: #636e72;"> on your hostel listing${stats.totalHostels > 1 ? 's' : ''}</span>
             </td>
           </tr>` : ''}

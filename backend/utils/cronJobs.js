@@ -77,7 +77,7 @@ const sendComebackEmails = async () => {
     for (const user of inactiveUsers) {
       try {
         // Aggregate pending activity for this user
-        const stats = { unreadEnquiries: 0, unreadNotifications: 0, newViews: 0, totalHostels: 0 };
+        const stats = { unreadEnquiries: 0, unreadNotifications: 0, totalViews: 0, totalHostels: 0 };
 
         if (user.role === 'Student') {
           stats.unreadEnquiries = await Enquiry.countDocuments({
@@ -90,10 +90,10 @@ const sendComebackEmails = async () => {
             isReadByOwner: false
           });
 
-          // Count total hostel views since last login
+          // Total views across all owner's hostels
           const ownerHostels = await Hostel.find({ ownerId: user._id }).select('views');
           stats.totalHostels = ownerHostels.length;
-          stats.newViews = ownerHostels.reduce((sum, h) => sum + (h.views || 0), 0);
+          stats.totalViews = ownerHostels.reduce((sum, h) => sum + (h.views || 0), 0);
         }
 
         // Count unread notifications
